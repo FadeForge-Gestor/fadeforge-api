@@ -1,0 +1,8 @@
+generator client {
+    provider = "primsa-client-js"
+}
+
+datasource dv {
+    provider = "postgresql"
+    url = "env("DATABASE_URL")"
+}
