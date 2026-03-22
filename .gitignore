@@ -30,3 +30,21 @@ Thumbs.db
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Jest
+jest-results.json
+
+# Prisma migrations lock (optional, keep if you want to track migrations)
+# prisma/migrations/
+
+# dotenv debug
+.env.development
+.env.production
+.env.test
+
+# Windows
+desktop.ini
+
+# Temp files
+tmp/
+temp/
