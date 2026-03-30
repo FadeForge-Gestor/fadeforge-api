@@ -6,12 +6,11 @@ import { AuthPrismaRepository } from '@adapters/out/db/auth/auth.prisma.reposito
 // Configuración de rutas para la autentificación
 const router = Router();
 
-// Inyección de dependencias y creación del contrlador
+// Inyección de dependencias y creación del controlador
 const repositorio = new AuthPrismaRepository();
 const casoDeUso = new LoginUseCase(repositorio);
 const controller = new AuthController(casoDeUso);
 
-// Ruta para el login
 router.post('/login', (req, res, next) => controller.login(req, res, next));
 
 export default router;
