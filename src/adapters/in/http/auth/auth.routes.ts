@@ -12,6 +12,6 @@ const casoDeUso = new LoginUseCase(repositorio);
 const controller = new AuthController(casoDeUso);
 
 // Ruta para el login
-router.post('api/auth/login', (req, res, next) => controller.login(req, res, next));
+router.post('/login', (req, res, next) => controller.login(req, res, next));
 
 export default router;
