@@ -6,4 +6,5 @@ import { env } from './config/env';
 app.listen(env.PORT, () => {
     console.log(`Server is running on port ${env.PORT}`);
     console.log(`Environment: ${env.NODE_ENV}`);
+    console.log(`Docs: http://localhost:${env.PORT}/api/v1/docs`);
 }) 

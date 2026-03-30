@@ -10,7 +10,7 @@ const options: swaggerJSDoc.Options = {
             description: 'API para sistema de gestión de citas',
         },
         servers: [
-            { url: 'http://localhost:3000', description: 'Desarrollo' },
+            { url: 'http://localhost:3000/api/v1', description: 'Desarrollo' },
         ],
         components: {
             securitySchemes: {

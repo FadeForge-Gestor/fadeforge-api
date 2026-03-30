@@ -4,7 +4,7 @@
  *   name: Auth
  *   description: Endpoints de autenticación
  *
- * /api/auth/login:
+ * /auth/login:
  *   post:
  *     summary: Iniciar sesión
  *     tags: [Auth]

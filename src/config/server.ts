@@ -12,10 +12,10 @@ app.use(cors());
 app.use(express.json());
 
 // Documentación Swagger
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Rutas
-app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
 
 // Middleware para manejo de errores
 app.use(errorMiddleware);
