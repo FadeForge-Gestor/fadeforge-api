@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { IAuthUseCase, LoginInput, LoginOutput } from '../../ports/in/auth/IAuthUseCase';
-import { IAuthRepository } from '../../ports/out/auth/IAuthRepository';
-import { UnauthorizedError } from '../../../shared/errors/HttpError';
+import { IAuthUseCase, LoginInput, LoginOutput } from '@core/ports/in/auth/IAuthUseCase';
+import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
+
+import { UnauthorizedError } from '@shared/errors/HttpError';
 
 // Implemenatación del caso de uso del login
 export class LoginUseCase implements IAuthUseCase {
@@ -30,8 +31,8 @@ export class LoginUseCase implements IAuthUseCase {
         // Si las credenciales son válidad, se genera un token JWT con la información del usuario
         const token = jwt.sign(
             {
-                id: credenciales.usuario.id,
-                rol: credenciales.usuario.idRol,
+                id: credenciales.idUsuario,
+                rol: credenciales.idRol,
                 correo: credenciales.correo,
             },
             process.env.JWT_SECRET!,
@@ -42,9 +43,9 @@ export class LoginUseCase implements IAuthUseCase {
         return {
             token,
             usuario: {
-                id: credenciales.usuario.id,
+                id: credenciales.idUsuario,
                 correo: credenciales.correo,
-                rol: credenciales.usuario.idRol,
+                rol: credenciales.idRol,
             },
         };
     }

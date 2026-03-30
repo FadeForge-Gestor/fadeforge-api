@@ -1,14 +1,12 @@
-import { Usuario } from "@core/domain/usuario/usuario.entity";
-
-// Interfaz para el repositorio de autenticación
-export interface CredencialesUsuario {
-    usuario: Usuario;
+// Interfaz con los datos mínimos necesarios para autenticar un usuario
+export interface CredencialesAuth {
     correo: string;
     hashContrasena: string;
+    idUsuario: number;
+    idRol: number;
 }
 
-// Interfaz para el repositorio de autenticación para buscar un usuario por correo electrónico
+// Interfaz del repositorio de autenticación
 export interface IAuthRepository {
-    buscarPorCorreo(correo: string): Promise<CredencialesUsuario | null>;
+    buscarPorCorreo(correo: string): Promise<CredencialesAuth | null>;
 }
-
