@@ -1,4 +1,3 @@
-import { usuarios } from './../../../../generated/prisma/client';
 // Interface para el caso de uso de autenticación
 export interface LoginInput {
     correo: string;
