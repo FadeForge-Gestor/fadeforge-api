@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["citas", "seguridad", "servicios"]
+}
+
+model citas {
+  id                                     Int            @id @default(autoincrement())
+  id_clientes                            Int
+  id_empleado                            Int
+  fecha_inicio                           DateTime       @db.Timestamptz(6)
+  fecha_fin                              DateTime       @db.Timestamptz(6)
+  estado                                 estado_cita    @default(pendiente)
+  motivo_cancelado                       String?
+  cancelado_por                          Int?
+  fecha_creacion                         DateTime       @default(now()) @db.Timestamptz(6)
+  fecha_modificacion                     DateTime       @default(now()) @db.Timestamptz(6)
+  subtotal                               Decimal        @db.Decimal(10, 2)
+  iva                                    Decimal        @db.Decimal(10, 2)
+  total                                  Decimal        @db.Decimal(10, 2)
+  usuarios_citas_cancelado_porTousuarios usuarios?      @relation("citas_cancelado_porTousuarios", fields: [cancelado_por], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  usuarios_citas_id_clientesTousuarios   usuarios       @relation("citas_id_clientesTousuarios", fields: [id_clientes], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  empleados                              empleados      @relation(fields: [id_empleado], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  detalle_cita                           detalle_cita[]
+
+  @@schema("citas")
+}
+
+model detalle_cita {
+  id               Int       @id @default(autoincrement())
+  id_cita          Int
+  id_servicio      Int
+  precio_aplicado  Decimal   @db.Decimal(10, 2)
+  duracion_minutos Int
+  citas            citas     @relation(fields: [id_cita], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  servicios        servicios @relation(fields: [id_servicio], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("citas")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model credenciales_usuarios {
+  id                 Int      @id @default(autoincrement())
+  id_usuario         Int      @unique
+  correo             String   @db.VarChar(100)
+  hash_contrasena    String
+  fecha_creacion     DateTime @default(now()) @db.Timestamp(6)
+  fecha_modificacion DateTime @default(now()) @db.Timestamp(6)
+  usuarios           usuarios @relation(fields: [id_usuario], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_credenciales_usuarios")
+
+  @@schema("seguridad")
+}
+
+model empleados {
+  id                 Int      @id @default(autoincrement())
+  id_usuario         Int      @unique
+  activo             Boolean  @default(true)
+  fecha_creacion     DateTime @default(now()) @db.Timestamptz(6)
+  fecha_modificacion DateTime @default(now()) @db.Timestamptz(6)
+  citas              citas[]
+  usuarios           usuarios @relation(fields: [id_usuario], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("seguridad")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model roles {
+  id             Int        @id @default(autoincrement())
+  nombre         String     @unique(map: "uq_roles_nombre") @db.VarChar(50)
+  descripcion    String?
+  activo         Boolean    @default(true)
+  fecha_creacion DateTime   @default(now()) @db.Timestamptz(6)
+  usuarios       usuarios[]
+
+  @@schema("seguridad")
+}
+
+model usuarios {
+  id                                  Int                    @id @default(autoincrement())
+  nombre                              String                 @db.VarChar(100)
+  a_paterno                           String                 @db.VarChar(100)
+  a_materno                           String?                @db.VarChar(100)
+  telefono                            String                 @db.VarChar(20)
+  id_rol                              Int
+  citas_citas_cancelado_porTousuarios citas[]                @relation("citas_cancelado_porTousuarios")
+  citas_citas_id_clientesTousuarios   citas[]                @relation("citas_id_clientesTousuarios")
+  credenciales_usuarios               credenciales_usuarios?
+  empleados                           empleados?
+  roles                               roles                  @relation(fields: [id_rol], references: [id], onUpdate: NoAction, map: "fk_usuario_rol")
+
+  @@schema("seguridad")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model categorias_servicios {
+  id             Int         @id @default(autoincrement())
+  nombre         String      @unique @db.VarChar(100)
+  descripcion    String?
+  activo         Boolean     @default(true)
+  fecha_creacion DateTime    @default(now()) @db.Timestamptz(6)
+  servicios      servicios[]
+
+  @@schema("servicios")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model historial_precios {
+  id           Int       @id @default(autoincrement())
+  id_servicio  Int
+  precio       Decimal   @db.Decimal(10, 2)
+  fecha_inicio DateTime  @default(now()) @db.Timestamp(6)
+  fecha_fin    DateTime? @db.Timestamp(6)
+  servicios    servicios @relation(fields: [id_servicio], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_historial_servicio")
+
+  @@schema("servicios")
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model servicios {
+  id                   Int                  @id @default(autoincrement())
+  nombre               String               @db.VarChar(150)
+  descripcion          String?
+  duracion_minutos     Int
+  id_categoria         Int
+  activo               Boolean              @default(true)
+  fecha_creacion       DateTime             @default(now()) @db.Timestamp(6)
+  fecha_modificacion   DateTime             @default(now()) @db.Timestamp(6)
+  detalle_cita         detalle_cita[]
+  historial_precios    historial_precios[]
+  categorias_servicios categorias_servicios @relation(fields: [id_categoria], references: [id], onUpdate: NoAction, map: "fk_servicio_categoria")
+
+  @@schema("servicios")
+}
+
+enum estado_cita {
+  nueva
+  pendiente
+  proceso
+  cancelada
+  finalizada
+
+  @@schema("citas")
+}
