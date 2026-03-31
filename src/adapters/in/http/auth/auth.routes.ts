@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { AuthController } from './auth.controller';
 import { LoginUseCase } from '@core/usecases/auth/login.usecase';
 import { AuthPrismaRepository } from '@adapters/out/db/auth/auth.prisma.repository';
-import { validate } from '../middlewares/validate.middleware';
+import { validate } from '@middlewares/validate.middleware';
 import { loginSchema } from './auth.schema';
 
 // Configuración de rutas para la autentificación
