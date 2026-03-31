@@ -19,7 +19,7 @@
             "@adapters/*": ["src/adapters/*"],
             "@shared/*": ["src/shared/*"],
             "@config/*": ["src/config/*"],
-            "@middlewares/*": ["src/middlewares/*"]
+            "@middlewares/*": ["src/adapters/in/http/middlewares/*"]
         }
     },
     "include": ["src/**/*"],
