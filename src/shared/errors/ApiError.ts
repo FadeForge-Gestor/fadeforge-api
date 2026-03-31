@@ -1,3 +1,5 @@
+import { LoginOutput } from "@core/ports/in/auth/IAuthUseCase";
+
 // Interface para representar el cuerpo de un error de API
 export interface ApiErrorBody {
     ok: false;
@@ -11,3 +13,6 @@ export interface ApiSuccessBody<T> {
     ok: true;
     data: T;
 }
+
+// Tipo para representar una respuesta de API que puede ser un éxito o un error
+export type ApiResponse<T> = ApiSuccessBody<LoginOutput>
