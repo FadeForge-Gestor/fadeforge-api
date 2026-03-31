@@ -18,7 +18,7 @@
  *             properties:
  *               correo:
  *                 type: string
- *                 example: usuario@mail.com
+ *                 example: usuario@gmail.com
  *               contrasena:
  *                 type: string
  *                 example: "123456"
