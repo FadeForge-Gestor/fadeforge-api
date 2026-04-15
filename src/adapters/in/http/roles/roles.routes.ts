@@ -13,17 +13,19 @@ const repositorio = new RolesPrismaRepository();
 const casoDeUso = new RolesUseCase(repositorio);
 const controller = new RolesController(casoDeUso);
 
-// GET /roles — solo usuarios autenticados pueden listar roles
+// GET /roles — solo admins
 router.get(
     '/',
     authenticate,
+    authorize('admin'),
     (req, res, next) => controller.listar(req, res, next)
 );
 
-// GET /roles/:id — solo usuarios autenticados
+// GET /roles/:id — solo admins
 router.get(
     '/:id',
     authenticate,
+    authorize('admin'),
     (req, res, next) => controller.obtenerPorId(req, res, next)
 );
 
