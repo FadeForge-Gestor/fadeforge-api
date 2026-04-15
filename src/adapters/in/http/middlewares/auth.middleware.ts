@@ -7,7 +7,7 @@ import { UnauthorizedError, ForbiddenError } from '@shared/errors/HttpError';
 export interface JwtPayload {
     id: number;
     correo: string;
-    rol: number;
+    rol: string;
 }
 
 // Middleware para autenticar al usuario mediante un token JWT
@@ -34,7 +34,7 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction): 
 };
 
 // Middleware para autorizar al usuario según su rol
-export const authorize = (...roles: number[]) => {
+export const authorize = (...roles: string[]) => {
     // Retornar un middleware que verifica si el usuario tiene uno de los roles permitidos
     return (req: Request, _res: Response, next: NextFunction): void => {
         if (!req.user || !roles.includes(req.user.rol)) {

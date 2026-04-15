@@ -10,7 +10,7 @@ export interface LoginOutput {
     usuario: {
         id: number;
         correo: string;
-        rol: number;
+        rol: string;
     }
 }
 

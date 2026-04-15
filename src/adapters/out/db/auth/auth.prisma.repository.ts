@@ -10,7 +10,10 @@ export class AuthPrismaRepository implements IAuthRepository {
             where: { correo },
             include: {
                 usuarios: {
-                    select: { id: true, id_rol: true }
+                    select: {
+                        id: true,
+                        roles: { select: { clave: true } }
+                    }
                 }
             }
         });
@@ -21,7 +24,7 @@ export class AuthPrismaRepository implements IAuthRepository {
             correo: resultado.correo,
             hashContrasena: resultado.hash_contrasena,
             idUsuario: resultado.usuarios.id,
-            idRol: resultado.usuarios.id_rol,
+            claveRol: resultado.usuarios.roles.clave,
         };
     }
 }

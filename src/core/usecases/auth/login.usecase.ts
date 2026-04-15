@@ -32,7 +32,7 @@ export class LoginUseCase implements IAuthUseCase {
         const token = jwt.sign(
             {
                 id: credenciales.idUsuario,
-                rol: credenciales.idRol,
+                rol: credenciales.claveRol,
                 correo: credenciales.correo,
             },
             process.env.JWT_SECRET!,
@@ -45,7 +45,7 @@ export class LoginUseCase implements IAuthUseCase {
             usuario: {
                 id: credenciales.idUsuario,
                 correo: credenciales.correo,
-                rol: credenciales.idRol,
+                rol: credenciales.claveRol,
             },
         };
     }
