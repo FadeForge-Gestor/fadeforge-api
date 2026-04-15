@@ -5,18 +5,12 @@ import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 
 export class RolesUseCase implements IRolUseCase {
 
-    // El caso de uso recibe el repositorio por inyección de dependencias.
-    // Nunca importa Prisma directamente — solo trabaja con la interfaz.
     constructor(private readonly rolRepository: IRolRepository) {}
 
-    // Retorna todos los roles sin filtrar por activo,
-    // para que el admin pueda ver también los desactivados.
     async listar(): Promise<Rol[]> {
         return this.rolRepository.listarTodos();
     }
 
-    // Si el rol no existe lanzamos NotFoundError.
-    // El error handler global lo convierte en HTTP 404 automáticamente.
     async obtenerPorId(id: number): Promise<Rol> {
         const rol = await this.rolRepository.buscarPorId(id);
         if (!rol) throw new NotFoundError(`Rol con id ${id} no encontrado`);
@@ -27,15 +21,11 @@ export class RolesUseCase implements IRolUseCase {
         return this.rolRepository.crear(input);
     }
 
-    // Verificamos que el rol exista antes de actualizar.
     async actualizar(id: number, input: ActualizarRolInput): Promise<Rol> {
-        const existe = await this.rolRepository.buscarPorId(id);
-        if (!existe) throw new NotFoundError(`Rol con id ${id} no encontrado`);
         return this.rolRepository.actualizar(id, input);
     }
 
-    // Soft delete: en lugar de borrar el registro, marcamos activo = false.
-    // Así conservamos la integridad referencial con usuarios que ya tienen este rol.
+    // Necesitamos buscar primero para diferenciar entre "no existe" y "ya desactivado"
     async eliminar(id: number): Promise<void> {
         const existe = await this.rolRepository.buscarPorId(id);
         if (!existe) throw new NotFoundError(`Rol con id ${id} no encontrado`);

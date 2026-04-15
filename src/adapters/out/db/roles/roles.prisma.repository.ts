@@ -1,6 +1,7 @@
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { Rol, CrearRolInput, ActualizarRolInput } from '@core/domain/rol/rol.entity';
 import { prisma } from '../prisma.client';
+import { NotFoundError } from '@shared/errors/HttpError';
 
 export class RolesPrismaRepository implements IRolRepository {
 
@@ -49,16 +50,22 @@ export class RolesPrismaRepository implements IRolRepository {
     }
 
     async actualizar(id: number, input: ActualizarRolInput): Promise<Rol> {
-        const rol = await prisma.roles.update({
-            where: { id },
-            data: {
-                ...(input.clave && { clave: input.clave }),
-                ...(input.nombre && { nombre: input.nombre }),
-                ...(input.descripcion !== undefined && { descripcion: input.descripcion }),
-                ...(input.activo !== undefined && { activo: input.activo }),
-            },
-        });
-        return this.mapear(rol);
+        try {
+            const rol = await prisma.roles.update({
+                where: { id },
+                data: {
+                    ...(input.clave && { clave: input.clave }),
+                    ...(input.nombre && { nombre: input.nombre }),
+                    ...(input.descripcion !== undefined && { descripcion: input.descripcion }),
+                    ...(input.activo !== undefined && { activo: input.activo }),
+                },
+            });
+            return this.mapear(rol);
+        } catch (error: any) {
+            // P2025: registro no encontrado — Prisma lo lanza cuando el WHERE no coincide
+            if (error?.code === 'P2025') throw new NotFoundError(`Rol con id ${id} no encontrado`);
+            throw error;
+        }
     }
 
     // Soft delete: solo cambiamos activo = false, el registro permanece en la BD.

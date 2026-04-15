@@ -5,6 +5,7 @@ import { RolesPrismaRepository } from '@adapters/out/db/roles/roles.prisma.repos
 import { validate } from '@middlewares/validate.middleware';
 import { authenticate, authorize } from '@middlewares/auth.middleware';
 import { crearRolSchema, actualizarRolSchema } from './roles.schema';
+import { ROLES } from '@shared/constants/roles';
 
 // Inyección de dependencias — el orden importa:
 // repositorio → caso de uso → controller
@@ -17,7 +18,7 @@ const controller = new RolesController(casoDeUso);
 router.get(
     '/',
     authenticate,
-    authorize('admin'),
+    authorize(ROLES.ADMIN),
     (req, res, next) => controller.listar(req, res, next)
 );
 
@@ -25,7 +26,7 @@ router.get(
 router.get(
     '/:id',
     authenticate,
-    authorize('admin'),
+    authorize(ROLES.ADMIN),
     (req, res, next) => controller.obtenerPorId(req, res, next)
 );
 
@@ -33,7 +34,7 @@ router.get(
 router.post(
     '/',
     authenticate,
-    authorize('admin'),
+    authorize(ROLES.ADMIN),
     validate(crearRolSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
@@ -42,7 +43,7 @@ router.post(
 router.put(
     '/:id',
     authenticate,
-    authorize('admin'),
+    authorize(ROLES.ADMIN),
     validate(actualizarRolSchema),
     (req, res, next) => controller.actualizar(req, res, next)
 );
@@ -51,7 +52,7 @@ router.put(
 router.delete(
     '/:id',
     authenticate,
-    authorize('admin'),
+    authorize(ROLES.ADMIN),
     (req, res, next) => controller.eliminar(req, res, next)
 );
 
