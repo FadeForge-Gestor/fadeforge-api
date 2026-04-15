@@ -3,7 +3,7 @@ export interface CredencialesAuth {
     correo: string;
     hashContrasena: string;
     idUsuario: number;
-    idRol: number;
+    claveRol: string;
 }
 
 // Interfaz del repositorio de autenticación

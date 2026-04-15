@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { IAuthUseCase } from "@core/ports/in/auth/IAuthUseCase";
+import { ok } from "@shared/utils/response";
 
 // Controlador de la autentificación
 export class AuthController {
@@ -11,7 +12,7 @@ export class AuthController {
     async login(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const output = await this.authUseCase.login(req.body);
-            res.status(200).json({ ok: true, data: output });
+            res.status(200).json(ok(output));
         } catch (error) {
             next(error);
         }
