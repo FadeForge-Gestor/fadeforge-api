@@ -76,20 +76,20 @@ describe('authorize', () => {
 
     it('debe llamar next() cuando el usuario tiene un rol permitido', () => {
         const req = {
-            user: { id: 1, correo: 'test@test.com', rol: 1 }
-        } as Request;
+            user: { id: 1, correo: 'test@test.com', rol: 'admin' }
+        } as unknown as Request;
 
-        authorize(1, 2)(req, {} as Response, next);
+        authorize('admin', 'empleado')(req, {} as Response, next);
 
         expect(next).toHaveBeenCalledWith();
     });
 
     it('debe llamar next(ForbiddenError) cuando el usuario no tiene el rol requerido', () => {
         const req = {
-            user: { id: 1, correo: 'test@test.com', rol: 3 }
-        } as Request;
+            user: { id: 1, correo: 'test@test.com', rol: 'cliente' }
+        } as unknown as Request;
 
-        authorize(1, 2)(req, {} as Response, next);
+        authorize('admin', 'empleado')(req, {} as Response, next);
 
         expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
@@ -97,7 +97,7 @@ describe('authorize', () => {
     it('debe llamar next(ForbiddenError) cuando no hay usuario en req', () => {
         const req = {} as Request;
 
-        authorize(1)(req, {} as Response, next);
+        authorize('admin')(req, {} as Response, next);
 
         expect(next).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });

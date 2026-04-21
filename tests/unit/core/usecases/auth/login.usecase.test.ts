@@ -15,7 +15,7 @@ const credencialesFake: CredencialesAuth = {
     correo: 'test@test.com',
     hashContrasena: '$2b$10$hasheado',
     idUsuario: 1,
-    idRol: 2,
+    claveRol: 'cliente',
 };
 
 // El repositorio no es un módulo externo sino una clase inyectada —
@@ -73,7 +73,7 @@ describe('LoginUseCase', () => {
         expect(result.usuario).toEqual({
             id: credencialesFake.idUsuario,
             correo: credencialesFake.correo,
-            rol: credencialesFake.idRol,
+            rol: credencialesFake.claveRol,
         });
     });
 });
