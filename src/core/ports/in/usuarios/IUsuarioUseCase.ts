@@ -2,7 +2,7 @@ import { Usuario, CrearUsuarioInput, ActualizarUsuarioInput } from "@core/domain
 
 // Contrato que define las operaciones disponibles sobre usuarios.
 // El controller solo conoce esta interfaz, nunca la implementación concreta.
-export interface IUsuarioCase {
+export interface IUsuarioUseCase {
     listar(): Promise<Usuario[]>;
     obtenerPorId(id: number): Promise<Usuario>;
     crear(input: CrearUsuarioInput): Promise<Usuario>;
