@@ -87,6 +87,9 @@ model usuarios {
   a_materno                           String?                @db.VarChar(100)
   telefono                            String                 @db.VarChar(20)
   id_rol                              Int
+  activo                              Boolean                @default(true)
+  fecha_creacion                      DateTime               @default(now()) @db.Timestamptz(6)
+  fecha_modificacion                  DateTime               @default(now()) @db.Timestamptz(6)
   citas_citas_cancelado_porTousuarios citas[]                @relation("citas_cancelado_porTousuarios")
   citas_citas_id_clientesTousuarios   citas[]                @relation("citas_id_clientesTousuarios")
   credenciales_usuarios               credenciales_usuarios?
