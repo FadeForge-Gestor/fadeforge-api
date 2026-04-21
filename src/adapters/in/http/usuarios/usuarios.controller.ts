@@ -39,8 +39,8 @@ export class UsuariosController {
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            const usuarios = await this.usuarioUseCase.actualizar(id, req.body);
-            res.status(200).json(ok(usuarios));
+            const usuario = await this.usuarioUseCase.actualizar(id, req.body);
+            res.status(200).json(ok(usuario));
         } catch (error) {
             next(error);
         }
