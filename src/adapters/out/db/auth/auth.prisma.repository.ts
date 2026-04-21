@@ -6,7 +6,7 @@ export class AuthPrismaRepository implements IAuthRepository {
 
     // Método para buscar las credenciales de un usuario por su correo electrónico
     async buscarPorCorreo(correo: string): Promise<CredencialesAuth | null> {
-        const resultado = await prisma.credenciales_usuarios.findFirst({
+        const resultado = await prisma.credenciales_usuarios.findUnique({
             where: { correo },
             include: {
                 usuarios: {

@@ -1,7 +1,7 @@
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
 import { Usuario, CrearUsuarioInput, ActualizarUsuarioInput } from "@core/domain/usuario/usuario.entity";
 import { prisma } from "../prisma.client";
-import { NotFoundError } from "@shared/errors/HttpError";
+import { NotFoundError, ConflictError, BadRequestError } from "@shared/errors/HttpError";
 import bcrypt from "bcrypt";
 
 export class UsuariosPrismaRepository implements IUsuarioRepository {
@@ -53,31 +53,36 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
     }
 
     async crear(input: CrearUsuarioInput): Promise<Usuario> {
-        const hash = await bcrypt.hash(input.contrasena, 10);
+        try {
+            const hash = await bcrypt.hash(input.contrasena, 10);
 
-        const usuario = await prisma.$transaction(async (tx) => {
-            const nuevo = await tx.usuarios.create({
-                data: {
-                    nombre: input.nombre,
-                    a_paterno: input.aPaterno,
-                    a_materno: input.aMaterno,
-                    telefono: input.telefono,
-                    id_rol: input.idRol,
-                },
+            const usuario = await prisma.$transaction(async (tx) => {
+                const nuevo = await tx.usuarios.create({
+                    data: {
+                        nombre: input.nombre,
+                        a_paterno: input.aPaterno,
+                        a_materno: input.aMaterno,
+                        telefono: input.telefono,
+                        id_rol: input.idRol,
+                    },
+                });
+
+                await tx.credenciales_usuarios.create({
+                    data: {
+                        id_usuario: nuevo.id,
+                        correo: input.correo,
+                        hash_contrasena: hash,
+                    },
+                });
+
+                return nuevo;
             });
 
-            await tx.credenciales_usuarios.create({
-                data: {
-                    id_usuario: nuevo.id,
-                    correo: input.correo,
-                    hash_contrasena: hash,
-                },
-            });
-
-            return nuevo;
-        });
-
-        return this.mapear(usuario);
+            return this.mapear(usuario);
+        } catch (error: any) {
+            if (error?.code === 'P2002') throw new ConflictError('El correo ya está registrado');
+            throw error;
+        }
     }
 
     async actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario> {
@@ -96,7 +101,8 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
             });
             return this.mapear(usuario);
         } catch (error: any) {
-            if (error?.code === "P2025") throw new NotFoundError(`Usuario con id ${id} no encontrado`);
+            if (error?.code === 'P2025') throw new NotFoundError(`Usuario con id ${id} no encontrado`);
+            if (error?.code === 'P2003') throw new BadRequestError('El rol especificado no existe');
             throw error;
         }
     }
