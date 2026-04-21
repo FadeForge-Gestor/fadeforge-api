@@ -2,6 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { IAuthUseCase, LoginInput, LoginOutput } from '@core/ports/in/auth/IAuthUseCase';
 import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
+import { env } from '@config/env';
 
 import { UnauthorizedError } from '@shared/errors/HttpError';
 
@@ -35,8 +36,8 @@ export class LoginUseCase implements IAuthUseCase {
                 rol: credenciales.claveRol,
                 correo: credenciales.correo,
             },
-            process.env.JWT_SECRET!,
-            { expiresIn: process.env.JWT_EXPIRES_IN ?? '7d' } as jwt.SignOptions
+            env.JWT_SECRET,
+            { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions
         );
 
         // Se retorna el token y la información del usuario

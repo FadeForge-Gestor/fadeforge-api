@@ -1,7 +1,7 @@
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { Rol, CrearRolInput, ActualizarRolInput } from '@core/domain/rol/rol.entity';
 import { prisma } from '../prisma.client';
-import { NotFoundError } from '@shared/errors/HttpError';
+import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 
 export class RolesPrismaRepository implements IRolRepository {
 
@@ -29,7 +29,7 @@ export class RolesPrismaRepository implements IRolRepository {
         const roles = await prisma.roles.findMany({
             orderBy: { id: 'asc' },
         });
-        return roles.map(this.mapear);
+        return roles.map(r => this.mapear(r));
     }
 
     async buscarPorId(id: number): Promise<Rol | null> {
@@ -39,14 +39,19 @@ export class RolesPrismaRepository implements IRolRepository {
     }
 
     async crear(input: CrearRolInput): Promise<Rol> {
-        const rol = await prisma.roles.create({
-            data: {
-                clave: input.clave,
-                nombre: input.nombre,
-                descripcion: input.descripcion,
-            },
-        });
-        return this.mapear(rol);
+        try {
+            const rol = await prisma.roles.create({
+                data: {
+                    clave: input.clave,
+                    nombre: input.nombre,
+                    descripcion: input.descripcion,
+                },
+            });
+            return this.mapear(rol);
+        } catch (error: any) {
+            if (error?.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
+            throw error;
+        }
     }
 
     async actualizar(id: number, input: ActualizarRolInput): Promise<Rol> {
@@ -58,12 +63,13 @@ export class RolesPrismaRepository implements IRolRepository {
                     ...(input.nombre && { nombre: input.nombre }),
                     ...(input.descripcion !== undefined && { descripcion: input.descripcion }),
                     ...(input.activo !== undefined && { activo: input.activo }),
+                    fecha_modificacion: new Date(),
                 },
             });
             return this.mapear(rol);
         } catch (error: any) {
-            // P2025: registro no encontrado — Prisma lo lanza cuando el WHERE no coincide
             if (error?.code === 'P2025') throw new NotFoundError(`Rol con id ${id} no encontrado`);
+            if (error?.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
             throw error;
         }
     }
@@ -72,7 +78,7 @@ export class RolesPrismaRepository implements IRolRepository {
     async desactivar(id: number): Promise<void> {
         await prisma.roles.update({
             where: { id },
-            data: { activo: false },
+            data: { activo: false, fecha_modificacion: new Date() },
         });
     }
 }
