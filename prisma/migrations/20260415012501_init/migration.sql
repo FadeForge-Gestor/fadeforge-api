@@ -71,6 +71,7 @@ CREATE TABLE "seguridad"."roles" (
     "descripcion" TEXT,
     "activo" BOOLEAN NOT NULL DEFAULT true,
     "fecha_creacion" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "fecha_modificacion" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "roles_pkey" PRIMARY KEY ("id")
 );
@@ -83,6 +84,9 @@ CREATE TABLE "seguridad"."usuarios" (
     "a_materno" VARCHAR(100),
     "telefono" VARCHAR(20) NOT NULL,
     "id_rol" INTEGER NOT NULL,
+    "activo" BOOLEAN NOT NULL DEFAULT true,
+    "fecha_creacion" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "fecha_modificacion" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "usuarios_pkey" PRIMARY KEY ("id")
 );
@@ -94,6 +98,7 @@ CREATE TABLE "servicios"."categorias_servicios" (
     "descripcion" TEXT,
     "activo" BOOLEAN NOT NULL DEFAULT true,
     "fecha_creacion" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "fecha_modificacion" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "categorias_servicios_pkey" PRIMARY KEY ("id")
 );
@@ -125,6 +130,9 @@ CREATE TABLE "servicios"."servicios" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "credenciales_usuarios_id_usuario_key" ON "seguridad"."credenciales_usuarios"("id_usuario");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "credenciales_usuarios_correo_key" ON "seguridad"."credenciales_usuarios"("correo");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "empleados_id_usuario_key" ON "seguridad"."empleados"("id_usuario");
