@@ -7,5 +7,5 @@ export interface IUsuarioUseCase {
     obtenerPorId(id: number): Promise<Usuario>;
     crear(input: CrearUsuarioInput): Promise<Usuario>;
     actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario>;
-    eliminar(id: number): Promise<void>;
+    desactivar(id: number): Promise<void>;
 }
