@@ -10,6 +10,7 @@ export interface CredencialRaw {
 // El caso de uso solo conoce esta interfaz, nunca PRISMA directamente.
 export interface ICredencialRepository {
     buscarPorIdUsuario(idUsuario: number): Promise<CredencialRaw | null>;
+    buscarPorCorreo(correo: string): Promise<CredencialRaw | null>;
     actualizarContrasena(idUsuario: number, nuevoHashContrasena: string): Promise<void>;
     actualizarCorreo(idUsuario: number, nuevoCorreo: string): Promise<void>;
 }
