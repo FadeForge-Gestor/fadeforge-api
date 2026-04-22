@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+// Esquema para crear un nuevo usuario
 export const crearUsuarioSchema = z.object({
     nombre: z.string()
         .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -20,9 +21,13 @@ export const crearUsuarioSchema = z.object({
         .email({ message: 'El correo no tiene un formato válido' })
         .max(100, 'El correo no puede superar 100 caracteres'),
     contrasena: z.string()
-        .min(8, 'La contraseña debe tener al menos 8 caracteres'),
+        .min(8, 'La contraseña debe tener al menos 8 caracteres')
+        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])/, 
+        'La contraseña debe tener mayúsculas, minúsculas, números y símbolos')
+        .refine((value) => !/\s/.test(value), 'La contraseña no puede contener espacios'),
 });
 
+// Esquema para actualizar un usuarios existente
 export const actualizarUsuarioSchema = z.object({
     nombre: z.string().min(2).max(100).optional(),
     aPaterno: z.string().min(2).max(100).optional(),
