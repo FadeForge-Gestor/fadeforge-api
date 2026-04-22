@@ -18,7 +18,7 @@ export const cambiarCorreoSchema = z.object({
 })
 
 // Esquema para resetear la contraseña de un usuario
-export const ResetContrasenaSchema = z.object({
+export const resetContrasenaSchema = z.object({
     nuevaContrasena: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(100)
     .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])/, 
     'La contraseña debe tener mayúsculas, minúsculas, números y símbolos')
@@ -27,4 +27,4 @@ export const ResetContrasenaSchema = z.object({
 
 export type CambiarContrasenaDto = z.infer<typeof cambiarContrasenaSchema>;
 export type CambiarCorreoDto = z.infer<typeof cambiarCorreoSchema>;
-export type ResetContrasenaDto = z.infer<typeof ResetContrasenaSchema>;
+export type ResetContrasenaDto = z.infer<typeof resetContrasenaSchema>;
