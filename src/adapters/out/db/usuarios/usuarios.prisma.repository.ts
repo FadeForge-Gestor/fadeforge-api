@@ -30,6 +30,7 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
         };
     }
 
+    // Método para listar todos los usuarios ordenador por ID de forma ascendente
     async listarTodos(): Promise<Usuario[]> {
         const usuarios = await prisma.usuarios.findMany({
             orderBy: { id: "asc" },
@@ -37,12 +38,14 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
         return usuarios.map(u => this.mapear(u));
     }
 
+    // Método para buscar un usuarios por su ID
     async buscarPorId(id: number): Promise<Usuario | null> {
         const usuario = await prisma.usuarios.findUnique({ where: { id } });
         if (!usuario) return null;
         return this.mapear(usuario);
     }
 
+    // Método para buscar un usuarios por su correo electrónico, incluyendo sus credenciales
     async buscarPorCorreo(correo: string): Promise<Usuario | null> {
         const credencial = await prisma.credenciales_usuarios.findUnique({
             where: { correo },
@@ -52,6 +55,7 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
         return this.mapear(credencial.usuarios);
     }
 
+    // Método para crear un nuevo usuario junto con sus credenciales de forma transaccional
     async crear(input: CrearUsuarioInput): Promise<Usuario> {
         try {
             const hash = await bcrypt.hash(input.contrasena, 10);
@@ -85,6 +89,7 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
         }
     }
 
+    // Método para actualizar un usuario existente, permitiendo actualizar solo los campos proporcionados
     async actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario> {
         try {
             const usuario = await prisma.usuarios.update({
@@ -105,8 +110,9 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
             if (error?.code === 'P2003') throw new BadRequestError('El rol especificado no existe');
             throw error;
         }
-    }
+    }  
 
+    // Método para desactivar un usuarios estableciendo su campo "activo" a false
     async desactivar(id: number): Promise<void> {
         await prisma.usuarios.update({
             where: { id },
