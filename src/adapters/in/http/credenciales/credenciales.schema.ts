@@ -24,3 +24,7 @@ export const ResetContrasenaSchema = z.object({
     'La contraseña debe tener mayúsculas, minúsculas, números y símbolos')
     .refine((value) => !/\s/.test(value), 'La contraseña no puede contener espacios'),
 })
+
+export type CambiarContrasenaDto = z.infer<typeof cambiarContrasenaSchema>;
+export type CambiarCorreoDto = z.infer<typeof cambiarCorreoSchema>;
+export type ResetContrasenaDto = z.infer<typeof ResetContrasenaSchema>;
