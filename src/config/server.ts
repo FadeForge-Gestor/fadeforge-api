@@ -1,11 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+
+// Importamos Swagger UI para la documentación y Configuración de Swagger (definida en otro archivo)
 import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger'; 
+
+// Importamos las rutas
 import authRoutes from '@adapters/in/http/auth/auth.routes';
 import rolesRoutes from '@adapters/in/http/roles/roles.routes';
 import usuariosRoutes from '@adapters/in/http/usuarios/usuarios.routes';
+import credencialesRoutes from '@adapters/in/http/credenciales/credenciales.routes';
+
+// Importamos el middleware de manejo de errores
 import { errorMiddleware } from '@adapters/in/http/middlewares/error.middleware';
-import { swaggerSpec } from './swagger';
+
 
 // Configuración del servidor Express
 const app = express();
@@ -20,6 +28,7 @@ app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/roles', rolesRoutes);
 app.use('/api/v1/usuarios', usuariosRoutes);
+app.use('/api/v1/credenciales', credencialesRoutes);
 
 // Middleware para manejo de errores
 app.use(errorMiddleware);
