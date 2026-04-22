@@ -8,12 +8,7 @@ export interface Empleado {
     fechaModificacion: Date;
 }
 
-export interface CrearEmpleadoInput {
-    nombre: string;
-    aPaterno: string;
-    aMaterno?: string;
-    telefono: string;
-    idRol: number;
-    correo: string;
-    contrasena: string;
+export interface PromoverEmpleadoInput {
+    idUsuario: number;
 }
+
