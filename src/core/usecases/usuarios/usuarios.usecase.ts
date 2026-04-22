@@ -7,29 +7,34 @@ export class UsuariosUseCase implements IUsuarioUseCase {
 
     constructor(private readonly usuarioRepository: IUsuarioRepository) {}
 
+        // Método para listar los usuarios
         async listar(): Promise<Usuario[]> {
             return this.usuarioRepository.listarTodos();
         }
 
+        // Método para obtener un usuario por su ID
         async obtenerPorId(id: number): Promise<Usuario> {
             const usuario = await this.usuarioRepository.buscarPorId(id);
             if (!usuario) throw new NotFoundError(`Usuario con id ${id} no encontrado`);
             return usuario;
         }
 
+        // Método para crear un usuario
         async crear(input: CrearUsuarioInput): Promise<Usuario> {
             const correoExiste = await this.usuarioRepository.buscarPorCorreo(input.correo);
             if (correoExiste) throw new ConflictError(`El correo ${input.correo} ya está registrado`);
             return this.usuarioRepository.crear(input);
         }
 
+        // Método para actualizar un usuario
         async actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario> {
             const existe = await this.usuarioRepository.buscarPorId(id);
             if (!existe) throw new NotFoundError(`Usuario con id ${id} no encontrado`);
             return this.usuarioRepository.actualizar(id, input);
         }
 
-        async eliminar(id: number): Promise<void> {
+        // Método para desactivar una cuenta
+        async desactivar(id: number): Promise<void> {
             const existe = await this.usuarioRepository.buscarPorId(id);
             if (!existe) throw new NotFoundError(`Usuario con id ${id} no encontrado`);
             if (!existe.activo) throw new ConflictError(`El usuario con id ${id} ya está desactivado`);
