@@ -51,7 +51,7 @@ router.delete(
     '/:id',
     authenticate,
     authorize(ROLES.ADMIN),
-    (req, res, next) => controller.eliminar(req, res, next)
+    (req, res, next) => controller.desactivar(req, res, next)
 );
 
 export default router;
