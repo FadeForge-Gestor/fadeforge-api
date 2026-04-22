@@ -5,5 +5,6 @@ import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado
 export interface IEmpleadosUseCase {
     listar(): Promise<Empleado[]>;
     obtenerPorId(id: number): Promise<Empleado>;
-    
+    promover(input: PromoverEmpleadoInput): Promise<Empleado>;
+    desactivar(id: number): Promise<void>;
 }
