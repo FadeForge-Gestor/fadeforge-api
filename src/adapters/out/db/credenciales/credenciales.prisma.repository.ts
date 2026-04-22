@@ -29,4 +29,27 @@ export class CredencialesPrismaRepository implements ICredencialRepository {
         if (!credencial) return null;
         return this.mapear(credencial);
     }
+
+    // Método para actualizar la contraseña de un usuario dado su ID, estableciendo un nuevo hash de contraseña
+    async actualizarContrasena(idUsuario: number, nuevoHashContrasena: string): Promise<void> {
+        await prisma.credenciales_usuarios.update({
+            where: { id_usuario: idUsuario },
+            data: {
+                hash_contrasena: nuevoHashContrasena,
+                fecha_modificacion: new Date(),
+            }
+        });
+    }
+
+    // Método para actualizar el correo electrónico de un usuario dado su ID, estableciendo un nuevo correo
+    async actualizarCorreo(idUsuario: number, nuevoCorreo: string): Promise<void> {
+        await prisma.credenciales_usuarios.update({
+            where: { id_usuario: idUsuario },
+            data: {
+                correo: nuevoCorreo,
+                fecha_modificacion: new Date(),
+            }
+        });
+    }
+
 }
