@@ -5,6 +5,7 @@ import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado
 export interface IEmpleadoRepository {
     listarTodos(): Promise<Empleado[]>;
     buscarPorId(id: number): Promise<Empleado | null>;
+    buscarPorIdUsuario(idUsuario: number): Promise<Empleado | null>;
     promover(input: PromoverEmpleadoInput): Promise<Empleado>;
     desactivar(id: number): Promise<void>;
 }
