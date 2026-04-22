@@ -8,6 +8,7 @@ export class UsuariosController {
     // igual que con auth — nunca instancia nada directamente.
     constructor(private readonly usuarioUseCase: IUsuarioUseCase) {}
 
+    // Método para listar los usuarios
     async listar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const usuarios = await this.usuarioUseCase.listar();
@@ -17,6 +18,7 @@ export class UsuariosController {
         }
     }
 
+    // Método para obtener un usuario por ID
     async obtenerPorId(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
@@ -27,6 +29,7 @@ export class UsuariosController {
         }
     }
 
+    // Método para crear un usuario
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const usuario = await this.usuarioUseCase.crear(req.body);
@@ -36,6 +39,7 @@ export class UsuariosController {
         }
     }
 
+    // Método para actualizar un usuario
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
@@ -46,10 +50,11 @@ export class UsuariosController {
         }
     } 
 
-    async eliminar(req: Request, res: Response, next: NextFunction): Promise<void> {
+    // Método para desactivar un usuario
+    async desactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            await this.usuarioUseCase.eliminar(id);
+            await this.usuarioUseCase.desactivar(id);
             res.status(204).send();
         } catch (error) {
             next(error);
