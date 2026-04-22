@@ -1,4 +1,3 @@
-import { ResetContrasenaInput } from './../../../../core/domain/credencial/credencial.entity';
 import { z } from 'zod';
 
 // Esquema para cambiar la contraseña de un usuario
