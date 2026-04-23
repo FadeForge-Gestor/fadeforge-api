@@ -8,7 +8,7 @@ export class RolesController {
     // igual que con auth — nunca instancia nada directamente.
     constructor(private readonly rolUseCase: IRolUseCase) {}
 
-    async listar(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async listar(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const roles = await this.rolUseCase.listar();
             res.status(200).json(ok(roles));

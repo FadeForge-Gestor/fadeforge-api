@@ -9,7 +9,7 @@ export class EmpleadosController {
     constructor(private readonly empleadoUseCase: IEmpleadoUseCase) {}
 
     // Método para listar todo los empleados
-    async listar(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async listar(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const empleados = await this.empleadoUseCase.listar();
             res.status(200).json(ok(empleados))
@@ -19,7 +19,7 @@ export class EmpleadosController {
     }
 
     // Método para listar los empleados que están activos
-    async listarActivos(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async listarActivos(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const empleados = await this.empleadoUseCase.listarActivos();
             res.status(200).json(ok(empleados))

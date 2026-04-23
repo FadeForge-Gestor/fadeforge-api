@@ -9,7 +9,7 @@ export class UsuariosController {
     constructor(private readonly usuarioUseCase: IUsuarioUseCase) {}
 
     // Método para listar los usuarios
-    async listar(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async listar(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const usuarios = await this.usuarioUseCase.listar();
             res.status(200).json(ok(usuarios));
