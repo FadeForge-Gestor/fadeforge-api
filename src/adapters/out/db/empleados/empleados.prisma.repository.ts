@@ -1,7 +1,6 @@
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
 import { prisma } from "../prisma.client";
-import { NotFoundError, ConflictError, BadRequestError } from "@shared/errors/HttpError";
 
 export class EmpleadosPrismaRepository implements IEmpleadoRepository {
 
