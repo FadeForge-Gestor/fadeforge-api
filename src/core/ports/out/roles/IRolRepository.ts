@@ -5,6 +5,8 @@ import { Rol, CrearRolInput, ActualizarRolInput } from '@core/domain/rol/rol.ent
 export interface IRolRepository {
     listarTodos(): Promise<Rol[]>;
     buscarPorId(id: number): Promise<Rol | null>;
+    buscarPorNombre(nombre: string): Promise<Rol | null>;
+    buscarPorClave(clave: string): Promise<Rol | null>;
     crear(input: CrearRolInput): Promise<Rol>;
     actualizar(id: number, input: ActualizarRolInput): Promise<Rol>;
     desactivar(id: number): Promise<void>;
