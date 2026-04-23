@@ -30,6 +30,7 @@ export class UsuariosUseCase implements IUsuarioUseCase {
         async actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario> {
             const existe = await this.usuarioRepository.buscarPorId(id);
             if (!existe) throw new NotFoundError(`Usuario con id ${id} no encontrado`);
+            if (!existe.activo) throw new ConflictError(`El usuario con id ${id} ya está desactivado`);
             return this.usuarioRepository.actualizar(id, input);
         }
 
