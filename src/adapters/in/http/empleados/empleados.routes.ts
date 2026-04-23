@@ -4,3 +4,5 @@ import { EmpleadosUseCase } from "@core/usecases/empleados/empleados.usecase";
 import { EmpleadosPrismaRepository } from "@adapters/out/db/empleados/empleados.prisma.repository";
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
+import { promoverEmpleadoSchema } from "./empleados.schema";
+import { ROLES } from "@shared/constants/roles";
