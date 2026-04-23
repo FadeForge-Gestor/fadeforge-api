@@ -4,6 +4,7 @@ import { CategoriaServicio, CrearCategoriaServicioInput, ActualizarCategoriaServ
 // El controller solo conoce esta interfaz, nunca la implementación concreta.
 export interface ICategoriaServicioUseCase {
     listar(): Promise<CategoriaServicio[]>;
+    listarActivos(): Promise<CategoriaServicio[]>;
     obtenerPorId(id: number): Promise<CategoriaServicio>;
     crear(input: CrearCategoriaServicioInput): Promise<CategoriaServicio>;
     actualizar(id: number, input: ActualizarCategoriaServicioInput): Promise<CategoriaServicio>;
