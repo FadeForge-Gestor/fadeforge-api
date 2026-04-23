@@ -1,3 +1,4 @@
+import { usuarios } from './../../../../generated/prisma/models/usuarios';
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
 import { prisma } from "../prisma.client";
@@ -47,7 +48,7 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
     // Método para listar todos los empleados activos y los ordena por su nombre alfabeticamente
     async listarActivos(): Promise<Empleado[]> {
         const empleados = await prisma.empleados.findMany({
-            orderBy: { usuarios: { nombre: 'asc' } },
+            orderBy: { usuarios: { id: 'asc' } },
             where: { activo: true },
             include: {
                 usuarios: {
@@ -70,6 +71,33 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
         });
         if (!empleado) return null;
         return this.mapear(empleado); 
+    }
+
+    // Método para bucar un empleado por su id de usuario
+    async buscarPorIdUsuario(idUsuario: number): Promise<Empleado | null> {
+        const empleado = await prisma.empleados.findUnique({
+            where: { id_usuario: idUsuario },
+            include: {
+                usuarios: {
+                    include: { credenciales_usuarios: true }
+                }
+            }
+        });
+        if (!empleado) return null;
+        return this.mapear(empleado);
+    }
+
+    // Método para agregarle el puesto a un empleado
+    async promover(input: PromoverEmpleadoInput): Promise<Empleado> {
+        
+    }
+
+    // Método para desactivar un empleado estableciendo su campo "activo" a false
+    async desactivar(id: number): Promise<void> {
+        await prisma.empleados.update({
+            where: { id },
+            data: { activo: false, fecha_modificacion: new Date() },
+        })
     }
 
 }
