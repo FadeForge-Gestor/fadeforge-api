@@ -58,4 +58,18 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
         return empleados.map(e => this.mapear(e));
     }
 
+    // Método para buscar un empleado por ID
+    async buscarPorId(id: number): Promise<Empleado | null> {
+        const empleado = await prisma.empleados.findUnique({
+            where: { id },
+            include: {
+                usuarios: {
+                    include: { credenciales_usuarios: true }
+                }
+            }
+        });
+        if (!empleado) return null;
+        return this.mapear(empleado); 
+    }
+
 }
