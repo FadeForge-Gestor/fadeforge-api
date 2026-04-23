@@ -6,6 +6,7 @@ export interface ICategoriaServicioRepository {
     listarTodos(): Promise<CategoriaServicio[]>;
     listarActivos(): Promise<CategoriaServicio[]>
     buscarPorId(id: number): Promise<CategoriaServicio | null>;
+    buscarPorNombre(nombre: string): Promise<CategoriaServicio | null>
     crear(input: CrearCategoriaServicioInput): Promise<CategoriaServicio>;
     actualizar(id: number, input: ActualizarCategoriaServicioInput): Promise<CategoriaServicio>;
     desactivar(id: number): Promise<void>;
