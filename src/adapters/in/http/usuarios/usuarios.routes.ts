@@ -46,12 +46,12 @@ router.put(
     (req, res, next) => controller.actualizar(req, res, next)
 );
 
-// DELETE /usuarios/:id — solo admins pueden desactivar usuarios
-router.delete(
-    '/:id',
+// PUT /usuarios/:id/desactivar — solo admins pueden desactivar usuarios
+router.put(
+    '/:id/desactivar',
     authenticate,
     authorize(ROLES.ADMIN),
-    (req, res, next) => controller.eliminar(req, res, next)
+    (req, res, next) => controller.desactivar(req, res, next)
 );
 
 export default router;

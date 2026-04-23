@@ -7,5 +7,5 @@ export interface IRolUseCase {
     obtenerPorId(id: number): Promise<Rol>;
     crear(input: CrearRolInput): Promise<Rol>;
     actualizar(id: number, input: ActualizarRolInput): Promise<Rol>;
-    eliminar(id: number): Promise<void>;
+    desactivar(id: number): Promise<void>;
 }

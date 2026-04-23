@@ -48,12 +48,12 @@ router.put(
     (req, res, next) => controller.actualizar(req, res, next)
 );
 
-// DELETE /roles/:id — solo admins pueden desactivar roles
-router.delete(
-    '/:id',
+// PUT /roles/:id/desactivar — solo admins pueden desactivar roles
+router.put(
+    '/:id/desactivar',
     authenticate,
     authorize(ROLES.ADMIN),
-    (req, res, next) => controller.eliminar(req, res, next)
+    (req, res, next) => controller.desactivar(req, res, next)
 );
 
 export default router;

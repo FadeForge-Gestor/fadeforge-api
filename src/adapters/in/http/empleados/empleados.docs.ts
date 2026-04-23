@@ -1,43 +1,45 @@
 /**
  * @swagger
  * tags:
- *   name: Roles
- *   description: Gestión de roles del sistema (solo admins)
+ *   name: Empleados
+ *   description: Gestión de empleados del sistema
  *
  * components:
  *   schemas:
- *     Rol:
+ *     Empleado:
  *       type: object
  *       properties:
  *         id:
  *           type: number
  *           example: 1
- *         clave:
+ *         idUsuario:
+ *           type: number
+ *           example: 5
+ *         nombreCompletoEmpleado:
  *           type: string
- *           example: admin
- *         nombre:
+ *           example: Juan Pérez García
+ *         correo:
  *           type: string
- *           example: Administrador
- *         descripcion:
- *           type: string
- *           nullable: true
- *           example: Acceso total al sistema
+ *           example: juan.perez@email.com
  *         activo:
  *           type: boolean
  *           example: true
  *         fechaCreacion:
  *           type: string
  *           format: date-time
+ *         fechaModificacion:
+ *           type: string
+ *           format: date-time
  *
- * /roles:
+ * /empleados:
  *   get:
- *     summary: Listar todos los roles
- *     tags: [Roles]
+ *     summary: Listar todos los empleados (activos e inactivos)
+ *     tags: [Empleados]
  *     security:
  *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Lista de roles
+ *         description: Lista de empleados
  *         content:
  *           application/json:
  *             schema:
@@ -49,15 +51,15 @@
  *                 data:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/Rol'
+ *                     $ref: '#/components/schemas/Empleado'
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
  *         description: Permisos insuficientes
  *
  *   post:
- *     summary: Crear un nuevo rol
- *     tags: [Roles]
+ *     summary: Promover un usuario existente a empleado
+ *     tags: [Empleados]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -66,20 +68,14 @@
  *         application/json:
  *           schema:
  *             type: object
- *             required: [clave, nombre]
+ *             required: [idUsuario]
  *             properties:
- *               clave:
- *                 type: string
- *                 example: empleado
- *               nombre:
- *                 type: string
- *                 example: Empleado
- *               descripcion:
- *                 type: string
- *                 example: Acceso a agenda y servicios
+ *               idUsuario:
+ *                 type: number
+ *                 example: 5
  *     responses:
  *       201:
- *         description: Rol creado exitosamente
+ *         description: Empleado promovido exitosamente
  *         content:
  *           application/json:
  *             schema:
@@ -89,18 +85,48 @@
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   $ref: '#/components/schemas/Rol'
+ *                   $ref: '#/components/schemas/Empleado'
  *       400:
  *         description: Datos inválidos
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
  *         description: Permisos insuficientes
+ *       404:
+ *         description: Usuario no encontrado
+ *       409:
+ *         description: El usuario ya es empleado o está desactivado
  *
- * /roles/{id}:
+ * /empleados/activos:
  *   get:
- *     summary: Obtener un rol por ID
- *     tags: [Roles]
+ *     summary: Listar solo los empleados activos
+ *     tags: [Empleados]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Lista de empleados activos
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Empleado'
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *
+ * /empleados/{id}:
+ *   get:
+ *     summary: Obtener un empleado por ID
+ *     tags: [Empleados]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -112,7 +138,7 @@
  *         example: 1
  *     responses:
  *       200:
- *         description: Rol encontrado
+ *         description: Empleado encontrado
  *         content:
  *           application/json:
  *             schema:
@@ -122,72 +148,18 @@
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   $ref: '#/components/schemas/Rol'
+ *                   $ref: '#/components/schemas/Empleado'
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
  *         description: Permisos insuficientes
  *       404:
- *         description: Rol no encontrado
+ *         description: Empleado no encontrado
  *
+ * /empleados/{id}/desactivar:
  *   put:
- *     summary: Actualizar un rol
- *     tags: [Roles]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: number
- *         example: 1
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               clave:
- *                 type: string
- *                 example: admin
- *               nombre:
- *                 type: string
- *                 example: Administrador
- *               descripcion:
- *                 type: string
- *                 example: Acceso total al sistema
- *               activo:
- *                 type: boolean
- *                 example: true
- *     responses:
- *       200:
- *         description: Rol actualizado exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/Rol'
- *       400:
- *         description: Datos inválidos
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Permisos insuficientes
- *       404:
- *         description: Rol no encontrado
- *
- *
- * /roles/{id}/desactivar:
- *   put:
- *     summary: Desactivar un rol (soft delete)
- *     tags: [Roles]
+ *     summary: Desactivar un empleado (soft delete)
+ *     tags: [Empleados]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -199,13 +171,13 @@
  *         example: 1
  *     responses:
  *       204:
- *         description: Rol desactivado exitosamente
+ *         description: Empleado desactivado exitosamente
  *       401:
  *         description: Token no proporcionado o inválido
  *       403:
  *         description: Permisos insuficientes
  *       404:
- *         description: Rol no encontrado
+ *         description: Empleado no encontrado
  *       409:
- *         description: El rol ya está desactivado
+ *         description: El empleado ya está desactivado
  */

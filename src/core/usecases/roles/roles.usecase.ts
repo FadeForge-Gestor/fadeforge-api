@@ -25,8 +25,7 @@ export class RolesUseCase implements IRolUseCase {
         return this.rolRepository.actualizar(id, input);
     }
 
-    // Necesitamos buscar primero para diferenciar entre "no existe" y "ya desactivado"
-    async eliminar(id: number): Promise<void> {
+    async desactivar(id: number): Promise<void> {
         const existe = await this.rolRepository.buscarPorId(id);
         if (!existe) throw new NotFoundError(`Rol con id ${id} no encontrado`);
         if (!existe.activo) throw new ConflictError(`El rol con id ${id} ya está desactivado`);
