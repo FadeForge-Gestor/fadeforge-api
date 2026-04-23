@@ -1,12 +1,15 @@
-import { id } from 'zod/locales';
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { IEmpleadosUseCase } from "@core/ports/in/empleados/IEmpleadosUseCase";
 import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
+import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
 
 export class EmpleadosUseCase implements IEmpleadosUseCase {
 
-    constructor(private readonly empleadoRepository: IEmpleadoRepository) {}
+    constructor(
+        private readonly empleadoRepository: IEmpleadoRepository,
+        private readonly usuarioRepository: IUsuarioRepository
+    ) {}
 
     // Método para listar los empleados
     async listar(): Promise<Empleado[]> {
@@ -22,8 +25,15 @@ export class EmpleadosUseCase implements IEmpleadosUseCase {
 
     // Método para promover un usuarios a empleado
     async promover(input: PromoverEmpleadoInput): Promise<Empleado> {
-        const existe = await this.empleadoRepository.buscarPorId(id);
-        
+        // Constante para encontrar el usuario por ID y asegurarno que ecista y este activo
+        const usuario = await this.usuarioRepository.buscarPorId(input.idUsuario);
+        if (!usuario) throw new NotFoundError(`Usuario con id ${input.idUsuario} no encontrado`);
+        if (!usuario.activo) throw new ConflictError(`El usuario con id ${input.idUsuario} está desactivado`);
+
+        // Nos aseguramos de encontrar el empleado y asegurarno que no sea ya empleado
+        const existe = await this.empleadoRepository.buscarPorIdUsuario(input.idUsuario);
+        if (existe) throw new ConflictError(`El usuario con id ${input.idUsuario} ya es empleado`);
+        return this.empleadoRepository.promover(input);
     }
 
     // Método para desactivar un empleado
