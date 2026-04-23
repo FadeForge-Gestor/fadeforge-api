@@ -33,7 +33,7 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
     // Método para listar todos los usuarios ordenador por ID de forma ascendente
     async listarTodos(): Promise<Usuario[]> {
         const usuarios = await prisma.usuarios.findMany({
-            orderBy: { id: "asc" },
+            orderBy: { id: 'asc' },
         });
         return usuarios.map(u => this.mapear(u));
     }

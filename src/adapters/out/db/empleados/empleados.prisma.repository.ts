@@ -31,4 +31,31 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
         }
     };
 
+    // Método para listar todos los empleados de forma ascendente
+    async listarTodos(): Promise<Empleado[]> {
+        const empleados = await prisma.empleados.findMany({
+            orderBy: { id: "asc" },
+            include: {
+                usuarios: {
+                    include: { credenciales_usuarios: true }
+                }
+            }
+        });
+        return empleados.map(e => this.mapear(e));
+    }
+
+    // Método para listar todos los empleados activos y los ordena por su nombre alfabeticamente
+    async listarActivos(): Promise<Empleado[]> {
+        const empleados = await prisma.empleados.findMany({
+            orderBy: { usuarios: { nombre: 'asc' } },
+            where: { activo: true },
+            include: {
+                usuarios: {
+                    include: { credenciales_usuarios: true }
+                }
+            }
+        });
+        return empleados.map(e => this.mapear(e));
+    }
+
 }
