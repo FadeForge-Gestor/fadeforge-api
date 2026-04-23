@@ -25,10 +25,22 @@ export class CategoriasServiciosUseCase implements ICategoriaServicioUseCase {
         return categoriaServicio;
     }
 
-    // Método para actualizar un usuario
+    // Método para crear la categoría de un servicio
+    async crear(input: CrearCategoriaServicioInput): Promise<CategoriaServicio> {
+        const nombreExiste = await this.categoriaServicioRepository.buscarPorNombre(input.nombre);
+        if (nombreExiste) throw new ConflictError(`La categoría ${input.nombre} ya existe`);
+        return this.categoriaServicioRepository.crear(input)
+    }
+
+    // Método para actualizar la categoria de un servicio
     async actualizar(id: number, input: ActualizarCategoriaServicioInput): Promise<CategoriaServicio> {
         const existe = await this.categoriaServicioRepository.buscarPorId(id);
         if (!existe) throw new NotFoundError(`Categoria del servicio con id ${id} no encontrado`);
+        if (input.nombre) {
+            const nombreExiste = await this.categoriaServicioRepository.buscarPorNombre(input.nombre);
+            if (nombreExiste && nombreExiste.id !== id) throw new ConflictError(`La categoría ${input.nombre} ya existe`);
+        }
+        if (!existe.activo) throw new ConflictError(`La categoría con id ${id} está desactivada`);
         return this.categoriaServicioRepository.actualizar(id, input);
     }
 
