@@ -16,6 +16,11 @@ export class EmpleadosUseCase implements IEmpleadosUseCase {
         return this.empleadoRepository.listarTodos();
     }
 
+    // Método para listar los empleados activos
+    async listarActivos(): Promise<Empleado[]> {
+        return this.empleadoRepository.listarActivos();
+    }
+
     // Método para obtener un empleado por ID
     async obtenerPorId(id: number): Promise<Empleado> {
         const empleado = await this.empleadoRepository.buscarPorId(id);
