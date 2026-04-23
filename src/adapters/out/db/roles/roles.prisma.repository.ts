@@ -25,6 +25,7 @@ export class RolesPrismaRepository implements IRolRepository {
         };
     }
 
+    // Método para listar todos los roles
     async listarTodos(): Promise<Rol[]> {
         const roles = await prisma.roles.findMany({
             orderBy: { id: 'asc' },
@@ -32,12 +33,14 @@ export class RolesPrismaRepository implements IRolRepository {
         return roles.map(r => this.mapear(r));
     }
 
+    // Método para buscar por id un ROL
     async buscarPorId(id: number): Promise<Rol | null> {
         const rol = await prisma.roles.findUnique({ where: { id } });
         if (!rol) return null;
         return this.mapear(rol);
     }
 
+    // Método para crear un nuevo ROL
     async crear(input: CrearRolInput): Promise<Rol> {
         try {
             const rol = await prisma.roles.create({
@@ -54,6 +57,7 @@ export class RolesPrismaRepository implements IRolRepository {
         }
     }
 
+    // Método para actualizar un ROL
     async actualizar(id: number, input: ActualizarRolInput): Promise<Rol> {
         try {
             const rol = await prisma.roles.update({
