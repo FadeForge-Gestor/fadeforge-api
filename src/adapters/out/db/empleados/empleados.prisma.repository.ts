@@ -1,4 +1,3 @@
-import { usuarios } from './../../../../generated/prisma/models/usuarios';
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
 import { prisma } from "../prisma.client";
@@ -89,7 +88,15 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
 
     // Método para agregarle el puesto a un empleado
     async promover(input: PromoverEmpleadoInput): Promise<Empleado> {
-        
+        const empleado = await prisma.empleados.create({
+            data: { id_usuario: input.idUsuario },
+            include: {
+                usuarios: {
+                    include: { credenciales_usuarios: true }
+                }
+            }
+        });
+        return this.mapear(empleado);
     }
 
     // Método para desactivar un empleado estableciendo su campo "activo" a false
