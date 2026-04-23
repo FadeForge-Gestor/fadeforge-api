@@ -1,5 +1,5 @@
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
-import { IEmpleadosUseCase } from "@core/ports/in/empleados/IEmpleadosUseCase";
+import { IEmpleadosUseCase } from "@core/ports/in/empleados/IEmpleadoUseCase";
 import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";

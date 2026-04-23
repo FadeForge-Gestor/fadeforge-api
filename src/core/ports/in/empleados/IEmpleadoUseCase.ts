@@ -2,7 +2,7 @@ import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado
 
 // Contrato que define las operaciones disponibles de los empleados
 // El controller solo conoce esta interfaz, nunca la implementación concreta
-export interface IEmpleadosUseCase {
+export interface IEmpleadoUseCase {
     listar(): Promise<Empleado[]>;
     listarActivos(): Promise<Empleado[]>
     obtenerPorId(id: number): Promise<Empleado>;
