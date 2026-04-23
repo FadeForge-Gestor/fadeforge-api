@@ -132,6 +132,9 @@ model servicios {
   descripcion          String?
   duracion_minutos     Int
   id_categoria         Int
+  imagen_url           String?
+  id_imagen            String?
+  nombre_imagen        String?
   activo               Boolean              @default(true)
   fecha_creacion       DateTime             @default(now()) @db.Timestamp(6)
   fecha_modificacion   DateTime             @default(now()) @db.Timestamp(6)
