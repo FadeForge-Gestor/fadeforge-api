@@ -97,25 +97,25 @@ describe('UsuariosUseCase', () => {
         });
     });
 
-    describe('eliminar', () => {
+    describe('desactivar', () => {
 
         it('debe lanzar NotFoundError si el usuario no existe', async () => {
             mockRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.eliminar(99)).rejects.toThrow(NotFoundError);
+            await expect(useCase.desactivar(99)).rejects.toThrow(NotFoundError);
         });
 
         it('debe lanzar ConflictError si el usuario ya está desactivado', async () => {
             mockRepo.buscarPorId.mockResolvedValue({ ...usuarioFake, activo: false });
 
-            await expect(useCase.eliminar(1)).rejects.toThrow(ConflictError);
+            await expect(useCase.desactivar(1)).rejects.toThrow(ConflictError);
         });
 
         it('debe llamar desactivar cuando el usuario existe y está activo', async () => {
             mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockRepo.desactivar.mockResolvedValue();
 
-            await useCase.eliminar(1);
+            await useCase.desactivar(1);
 
             expect(mockRepo.desactivar).toHaveBeenCalledWith(1);
         });
