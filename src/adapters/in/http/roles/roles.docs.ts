@@ -183,7 +183,9 @@
  *       404:
  *         description: Rol no encontrado
  *
- *   delete:
+ *
+ * /roles/{id}/desactivar:
+ *   put:
  *     summary: Desactivar un rol (soft delete)
  *     tags: [Roles]
  *     security:

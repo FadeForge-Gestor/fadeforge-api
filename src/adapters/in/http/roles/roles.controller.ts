@@ -46,12 +46,10 @@ export class RolesController {
         }
     }
 
-    // DELETE devuelve 204 No Content — operación exitosa sin cuerpo de respuesta.
-    // Es el estándar HTTP para eliminaciones.
-    async eliminar(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async desactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            await this.rolUseCase.eliminar(id);
+            await this.rolUseCase.desactivar(id);
             res.status(204).send();
         } catch (error) {
             next(error);

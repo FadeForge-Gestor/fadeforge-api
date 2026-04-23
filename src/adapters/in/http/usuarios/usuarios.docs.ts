@@ -206,7 +206,9 @@
  *       404:
  *         description: Usuario no encontrado
  *
- *   delete:
+ *
+ * /usuarios/{id}/desactivar:
+ *   put:
  *     summary: Desactivar un usuario (soft delete)
  *     tags: [Usuarios]
  *     security:
