@@ -4,7 +4,7 @@ import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
 
-export class EmpleadoUseCase implements IEmpleadoUseCase {
+export class EmpleadosUseCase implements IEmpleadoUseCase {
 
     constructor(
         private readonly empleadoRepository: IEmpleadoRepository,
