@@ -21,7 +21,7 @@ export class RolesController {
     // Listamos los roles activos
     async listarActivos(_req: Request, res: Response, next: NextFunction) {
         try {
-            const roles = await this.rolUseCase.listar();
+            const roles = await this.rolUseCase.listarActivos();
             res.status(200).json(ok(roles));
         } catch (error) {
             next(error);
