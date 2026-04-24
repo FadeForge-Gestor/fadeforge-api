@@ -4,6 +4,7 @@ import { Rol, CrearRolInput, ActualizarRolInput } from '@core/domain/rol/rol.ent
 // El caso de uso solo conoce esta interfaz, nunca Prisma directamente.
 export interface IRolRepository {
     listarTodos(): Promise<Rol[]>;
+    listarActivos(): Promise<Rol[]>;
     buscarPorId(id: number): Promise<Rol | null>;
     buscarPorNombre(nombre: string): Promise<Rol | null>;
     buscarPorClave(clave: string): Promise<Rol | null>;
