@@ -14,6 +14,7 @@ export class RolesPrismaRepository implements IRolRepository {
         descripcion: string | null;
         activo: boolean;
         fecha_creacion: Date;
+        fecha_modificacion: Date;
     }): Rol {
         return {
             id: rol.id,
@@ -22,6 +23,7 @@ export class RolesPrismaRepository implements IRolRepository {
             descripcion: rol.descripcion,
             activo: rol.activo,
             fechaCreacion: rol.fecha_creacion,
+            fechaModificacion: rol.fecha_modificacion,
         };
     }
 
@@ -33,9 +35,32 @@ export class RolesPrismaRepository implements IRolRepository {
         return roles.map(r => this.mapear(r));
     }
 
+    // Método para listar todos los roles que esten activos
+    async listarActivos(): Promise<Rol[]> {
+        const roles = await prisma.roles.findMany({
+            orderBy: { id: 'asc' },
+            where: { activo: true },
+        });
+        return roles.map(r => this.mapear(r));
+    }
+
     // Método para buscar por id un ROL
     async buscarPorId(id: number): Promise<Rol | null> {
         const rol = await prisma.roles.findUnique({ where: { id } });
+        if (!rol) return null;
+        return this.mapear(rol);
+    }
+
+    // Método para buscar por nombre un rol
+    async buscarPorNombre(nombre: string): Promise<Rol | null> {
+        const rol = await prisma.roles.findUnique({ where: { nombre: nombre } });
+        if (!rol) return null;
+        return this.mapear(rol);
+    }
+
+    // Método para buscar por clave un rol
+    async buscarPorClave(clave: string): Promise<Rol | null> {
+        const rol = await prisma.roles.findUnique({ where: { clave: clave } });
         if (!rol) return null;
         return this.mapear(rol);
     }

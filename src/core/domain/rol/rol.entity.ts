@@ -7,6 +7,7 @@ export interface Rol {
     descripcion: string | null;
     activo: boolean;
     fechaCreacion: Date;
+    fechaModificacion: Date;
 }
 
 // Datos necesarios para crear un rol (id y fechaCreacion los genera la BD)

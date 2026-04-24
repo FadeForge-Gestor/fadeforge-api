@@ -8,6 +8,7 @@ export class RolesController {
     // igual que con auth — nunca instancia nada directamente.
     constructor(private readonly rolUseCase: IRolUseCase) {}
 
+    // Listamos los roles
     async listar(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const roles = await this.rolUseCase.listar();
@@ -17,6 +18,17 @@ export class RolesController {
         }
     }
 
+    // Listamos los roles activos
+    async listarActivos(_req: Request, res: Response, next: NextFunction) {
+        try {
+            const roles = await this.rolUseCase.listarActivos();
+            res.status(200).json(ok(roles));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Obtenemos por id un rol
     async obtenerPorId(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
@@ -27,6 +39,7 @@ export class RolesController {
         }
     }
 
+    // Creamos un nuevo rol
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const rol = await this.rolUseCase.crear(req.body);
@@ -36,6 +49,7 @@ export class RolesController {
         }
     }
 
+    // Actualizmaos un rol
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
@@ -46,6 +60,7 @@ export class RolesController {
         }
     }
 
+    // Desactivamos un rol
     async desactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
