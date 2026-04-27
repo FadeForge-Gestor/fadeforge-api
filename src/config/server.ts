@@ -11,7 +11,7 @@ import rolesRoutes from '@adapters/in/http/roles/roles.routes';
 import usuariosRoutes from '@adapters/in/http/usuarios/usuarios.routes';
 import credencialesRoutes from '@adapters/in/http/credenciales/credenciales.routes';
 import empleadosRoutes from '@adapters/in/http/empleados/empleados.routes';
-import CategoriaServiciosRoutes from '@adapters/in/http/categoria-servicio/CategoriaServicios.routes';
+import categoriaServiciosRoutes from '@adapters/in/http/categoria-servicio/categoriaServiciosRoutes.routes';
 
 // Importamos el middleware de manejo de errores
 import { errorMiddleware } from '@adapters/in/http/middlewares/error.middleware';
@@ -32,7 +32,7 @@ app.use('/api/v1/roles', rolesRoutes);
 app.use('/api/v1/usuarios', usuariosRoutes);
 app.use('/api/v1/credenciales', credencialesRoutes);
 app.use('/api/v1/empleados', empleadosRoutes);
-app.use('/api/v1/categoriaServicios', CategoriaServiciosRoutes);
+app.use('/api/v1/categoriaServicios', categoriaServiciosRoutes);
 
 // Middleware para manejo de errores
 app.use(errorMiddleware);
