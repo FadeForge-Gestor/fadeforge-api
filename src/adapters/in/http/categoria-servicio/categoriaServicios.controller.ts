@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { ICategoriaServicioUseCase } from "@core/ports/in/categoria-servicio/ICategoriaServicioUseCase";
 import { ok } from "@shared/utils/response";
 
-export class CategoriaServicios {
+export class CategoriaServiciosController {
 
     // El controller recibe el caso de uso por inyección de dependencias,
     // igual que con auth — nunca instancia nada directamente.
