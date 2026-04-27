@@ -3,7 +3,7 @@ import { CategoriaServicio, CrearCategoriaServicioInput, ActualizarCategoriaServ
 import { prisma } from "../prisma.client";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 
-export class CategoriaPrismaRepository implements ICategoriaServicioRepository {
+export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepository {
 
     private mapear(categoriaServicios: {
         id: number;
