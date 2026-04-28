@@ -42,4 +42,32 @@ export class ServiciosUseCase implements IServicioUseCase {
         return this.servicioRepository.crear(input);
     }
 
+    // Método para actualizar un servicio
+    async actualizar(id: number, input: ActualizarServicioInput): Promise<Servicio> {
+        const servicio = await this.servicioRepository.buscarPorId(id);
+        if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+
+        if (input.idCategoria) {
+            const categoria = await this.categoriaRepository.buscarPorId(input.idCategoria);
+            if (!categoria) throw new NotFoundError(`Categoría con id ${input.idCategoria} no encontrada`);
+            if (!categoria.activo) throw new ConflictError(`La categoría con id ${input.idCategoria} está desactivada`);
+        }
+
+        if (input.nombre) {
+            const nombreExiste = await this.servicioRepository.buscarPorNombre(input.nombre);
+            if (nombreExiste && nombreExiste.id !== id) throw new ConflictError(`El servicio ${input.nombre} ya existe`);
+        }
+
+        return this.servicioRepository.actualizar(id, input);
+    }
+
+
+    // Método para desactivar un servicio
+    async desactivar(id: number): Promise<void> {
+        const existe = await this.servicioRepository.buscarPorId(id);
+        if (!existe) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (!existe.activo) throw new ConflictError(`Servicio con el id ${id} ya está desactivado`);
+        return this.servicioRepository.desactivar(id);
+    }
+
 }
