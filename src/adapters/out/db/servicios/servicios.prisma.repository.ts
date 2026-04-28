@@ -55,7 +55,7 @@ export class ServicioPrismaRepository implements IServicioRepository {
 
     // Método para buscar un servicio por su nombre
     async buscarPorNombre(nombre: string): Promise<Servicio | null> {
-        const servicio = await prisma.servicios.findFirst({ where: { nombre } });
+        const servicio = await prisma.servicios.findFirst({ where: { nombre: { equals: nombre, mode: 'insensitive' } } });
         if (!servicio) return null;
         return this.mapear(servicio);
     }

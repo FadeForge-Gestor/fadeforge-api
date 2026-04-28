@@ -53,14 +53,14 @@ export class RolesPrismaRepository implements IRolRepository {
 
     // Método para buscar por nombre un rol
     async buscarPorNombre(nombre: string): Promise<Rol | null> {
-        const rol = await prisma.roles.findUnique({ where: { nombre: nombre } });
+        const rol = await prisma.roles.findFirst({ where: { nombre: { equals: nombre, mode: 'insensitive' } } });
         if (!rol) return null;
         return this.mapear(rol);
     }
 
     // Método para buscar por clave un rol
     async buscarPorClave(clave: string): Promise<Rol | null> {
-        const rol = await prisma.roles.findUnique({ where: { clave: clave } });
+        const rol = await prisma.roles.findFirst({ where: { clave: { equals: clave, mode: 'insensitive' } } });
         if (!rol) return null;
         return this.mapear(rol);
     }
