@@ -1,5 +1,5 @@
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
-import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
+import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleado/empleado.entity";
 import { prisma } from "../prisma.client";
 
 export class EmpleadosPrismaRepository implements IEmpleadoRepository {
