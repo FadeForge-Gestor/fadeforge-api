@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { CategoriaServiciosController } from "./categoriaServicios.controller";
-import { CategoriasServiciosUseCase } from "@core/usecases/categoria-servicio/categoriaServicios.usecase";
+import { CategoriasServiciosUseCase } from "@core/usecases/categorias-servicios/categoriaServicios.usecase";
 import { CategoriaServicioPrismaRepository } from "@adapters/out/db/categoria-servicio/categoriaServicios.prisma.repository";
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
