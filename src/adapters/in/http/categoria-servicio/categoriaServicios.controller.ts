@@ -4,8 +4,7 @@ import { ok } from "@shared/utils/response";
 
 export class CategoriaServiciosController {
 
-    // El controller recibe el caso de uso por inyección de dependencias,
-    // igual que con auth — nunca instancia nada directamente.
+    // El controller recibe el caso de uso por inyección de dependencias
     constructor(private readonly categoriaServiciosUseCase: ICategoriaServicioUseCase) {}
 
     // Método para listar todas las categorias de servicios
