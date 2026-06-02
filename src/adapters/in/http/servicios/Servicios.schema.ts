@@ -4,10 +4,10 @@ import { z } from 'zod';
 export const CrearServicioSchema = z.object({
     nombre: z.string()
         .min(2, 'El nombre debe tener al menos 2 caracteres')
-        .max(100, 'El nombre no puede superar 100 caracteres'),
+        .max(150, 'El nombre no puede superar 150 caracteres'),
     descripcion: z.string()
         .min(2, 'La descripción debe tener al menos 2 caracteres')
-        .max(100, 'La descripción no puede superar 100 caracteres')
+        .max(500, 'La descripción no puede superar 500 caracteres')
         .optional(),
     duracionMinutos: z.number()
         .int('La duración debe ser un número entero')
@@ -23,7 +23,7 @@ export const CrearServicioSchema = z.object({
 // Esquema para actualizar un servicio existente
 export const ActualizarServicioSchema = z.object({
     nombre: z.string().min(2).max(150).optional(),
-    descripcion: z.string().min(2).optional(),
+    descripcion: z.string().min(2).max(500).optional(),
     duracionMinutos: z.number().int().positive().optional(),
     idCategoria: z.number().int().positive().optional(),
     imagenUrl: z.string().url('La URL de imagen no es válida').optional(),
