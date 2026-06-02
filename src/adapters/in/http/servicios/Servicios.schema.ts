@@ -32,3 +32,6 @@ export const ActualizarServicioSchema = z.object({
     (data) => Object.keys(data).length > 0,
     { message: 'Debes enviar al menos un campo para actualizar' }
 );
+
+export type CrearServicioDto = z.infer<typeof CrearServicioSchema>;
+export type ActualizarServicioDto = z.infer<typeof ActualizarServicioSchema>;
