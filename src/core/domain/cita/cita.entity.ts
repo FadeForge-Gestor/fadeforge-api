@@ -1,4 +1,4 @@
-type EstadoCita = 'nueva' | 'pendiente' | 'en proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no asistio';
+export type EstadoCita = 'nueva' | 'pendiente' | 'en proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no asistio';
 
 export interface Cita {
     id: number;
@@ -31,9 +31,13 @@ export interface ActualizarCitaInput {
     idEmpleado?: number;
     fechaInicio?: Date;
     fechaFin?: Date;
-    estado?: EstadoCita;
-    motivoCancelado?: string;
     subtotal?: number;
     iva?: number;
     total?: number;
+}
+
+export interface CambiarEstadoCitaInput {
+    estado: EstadoCita;
+    motivoCancelado?: string;
+    canceladoPor?: number;
 }
