@@ -1,7 +1,7 @@
 import { EmpleadosUseCase } from '@core/usecases/empleados/empleados.usecase';
 import { IEmpleadoRepository } from '@core/ports/out/empleados/IEmpleadoRepository';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
-import { Empleado, PromoverEmpleadoInput } from '@core/domain/empleados/empleado.entity';
+import { Empleado, PromoverEmpleadoInput } from '@core/domain/empleado/empleado.entity';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 

@@ -1,4 +1,4 @@
-import { CategoriasServiciosUseCase } from '@core/usecases/categoria-servicio/categoriaServicios.usecase';
+import { CategoriasServiciosUseCase } from '@core/usecases/categorias-servicios/categoriaServicios.usecase';
 import { ICategoriaServicioRepository } from '@core/ports/out/categoria-servicio/ICategoriaServicioRepository';
 import { CategoriaServicio } from '@core/domain/categoria-servicio/categoriaServicio.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
