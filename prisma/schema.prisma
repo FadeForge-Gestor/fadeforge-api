@@ -10,6 +10,7 @@ datasource db {
 
 model citas {
   id                                     Int            @id @default(autoincrement())
+  folio                                  String         @unique @db.VarChar(10)
   id_clientes                            Int
   id_empleado                            Int
   fecha_inicio                           DateTime       @db.Timestamptz(6)
