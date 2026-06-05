@@ -1,5 +1,13 @@
 export type EstadoCita = 'nueva' | 'pendiente' | 'en proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no asistio';
 
+export interface DetalleCita {
+    id: number;
+    idCita: number;
+    idServicio: number;
+    precioAplicado: number;
+    duracionMinutos: number;
+}
+
 export interface Cita {
     id: number;
     folio: string;
@@ -15,9 +23,27 @@ export interface Cita {
     subtotal: number;
     iva: number;
     total: number;
+    detalle: DetalleCita[];
+}
+
+export interface ServicioEnCitaInput {
+    idServicio: number;
 }
 
 export interface CrearCitaInput {
+    idCliente: number;
+    idEmpleado: number;
+    fechaInicio: Date;
+    servicios: ServicioEnCitaInput[];
+}
+
+export interface CrearDetalleCitaInput {
+    idServicio: number;
+    precioAplicado: number;
+    duracionMinutos: number;
+}
+
+export interface CrearCitaRepositoryInput {
     idCliente: number;
     idEmpleado: number;
     fechaInicio: Date;
@@ -25,6 +51,7 @@ export interface CrearCitaInput {
     subtotal: number;
     iva: number;
     total: number;
+    detalle: CrearDetalleCitaInput[];
 }
 
 export interface ActualizarCitaInput {
