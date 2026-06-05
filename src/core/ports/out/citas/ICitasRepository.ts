@@ -1,4 +1,4 @@
-import { Cita, CrearCitaInput, ActualizarCitaInput } from "@core/domain/cita/cita.entity";
+import { Cita, CrearCitaInput, ActualizarCitaInput, CambiarEstadoCitaInput } from "@core/domain/cita/cita.entity";
 
 export interface ICitasRepository {
     listarPorRangoFecha(desde: Date, hasta: Date): Promise<Cita[]>;
@@ -7,4 +7,5 @@ export interface ICitasRepository {
     buscarPorCliente(idCliente: number): Promise<Cita[]>;
     crear(input: CrearCitaInput): Promise<Cita>;
     actualizar(id: number, input: ActualizarCitaInput): Promise<Cita>;
+    cambiarEstado(id: number, input: CambiarEstadoCitaInput): Promise<Cita>;
 }
