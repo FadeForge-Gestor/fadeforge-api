@@ -34,6 +34,7 @@ const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    buscarPrecioActual: jest.fn(),
 };
 
 const mockCategoriaRepo: jest.Mocked<ICategoriaServicioRepository> = {
