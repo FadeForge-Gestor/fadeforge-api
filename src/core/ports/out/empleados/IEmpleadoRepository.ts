@@ -1,4 +1,4 @@
-import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
+import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleado/empleado.entity";
 
 // Contrato que define las operaciones disponibles sobre empleados.
 // El caso de uso solo conoce esta interfaz, nunca Prisma directamente

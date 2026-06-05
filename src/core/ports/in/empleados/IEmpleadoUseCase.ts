@@ -1,4 +1,4 @@
-import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleados/empleado.entity";
+import { Empleado, PromoverEmpleadoInput } from "@core/domain/empleado/empleado.entity";
 
 // Contrato que define las operaciones disponibles de los empleados
 // El controller solo conoce esta interfaz, nunca la implementación concreta

@@ -49,7 +49,7 @@ export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepo
 
     // Método para buscar una categoría de servicio por su nombre
     async buscarPorNombre(nombre: string): Promise<CategoriaServicio | null> {
-        const categoriaServicio = await prisma.categorias_servicios.findUnique({ where: { nombre } });
+        const categoriaServicio = await prisma.categorias_servicios.findFirst({ where: { nombre: { equals: nombre, mode: 'insensitive' } } });
         if (!categoriaServicio) return null;
         return this.mapear(categoriaServicio);
     }
