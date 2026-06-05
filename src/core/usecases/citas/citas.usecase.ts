@@ -39,6 +39,9 @@ export class CitasUseCase implements ICitasUseCase {
 
     // Método para crear una nueva cita
     async crear(input: CrearCitaInput): Promise<Cita> {
+        if (input.fechaInicio >= input.fechaFin) throw new ConflictError('La fecha de inicio debe ser menor que la fecha de fin');
+        if (input.fechaInicio <= new Date()) throw new ConflictError('La fecha de inicio debe ser en el futuro');
+
         const cliente = await this.usuarioRepository.buscarPorId(input.idCliente);
         if (!cliente) throw new NotFoundError(`Cliente con id ${input.idCliente} no encontrado`);
         if (!cliente.activo) throw new ConflictError(`El cliente con id ${input.idCliente} está desactivado`);
@@ -46,9 +49,6 @@ export class CitasUseCase implements ICitasUseCase {
         const empleado = await this.empleadoRepository.buscarPorId(input.idEmpleado);
         if (!empleado) throw new NotFoundError(`Empleado con id ${input.idEmpleado} no encontrado`);
         if (!empleado.activo) throw new ConflictError(`El empleado con id ${input.idEmpleado} está desactivado`);
-
-        if (input.fechaInicio >= input.fechaFin) throw new ConflictError('La fecha de inicio debe ser menor que la fecha de fin');
-        if (input.fechaInicio <= new Date()) throw new ConflictError('La fecha de inicio debe ser en el futuro');
 
         return this.citasRepository.crear(input);
     }
