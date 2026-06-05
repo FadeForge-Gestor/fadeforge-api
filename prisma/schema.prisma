@@ -10,6 +10,7 @@ datasource db {
 
 model citas {
   id                                     Int            @id @default(autoincrement())
+  folio                                  String         @unique @db.VarChar(10)
   id_clientes                            Int
   id_empleado                            Int
   fecha_inicio                           DateTime       @db.Timestamptz(6)
@@ -148,9 +149,11 @@ model servicios {
 enum estado_cita {
   nueva
   pendiente
-  proceso
+  en_proceso   @map("en proceso")
   cancelada
   finalizada
+  reprogramada
+  no_asistio   @map("no asistio")
 
   @@schema("citas")
 }

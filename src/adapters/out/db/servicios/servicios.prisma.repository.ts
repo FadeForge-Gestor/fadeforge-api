@@ -110,4 +110,13 @@ export class ServiciosPrismaRepository implements IServicioRepository {
         });
     }
 
+    async buscarPrecioActual(idServicio: number): Promise<number | null> {
+        const historial = await prisma.historial_precios.findFirst({
+            where: { id_servicio: idServicio, fecha_fin: null },
+            orderBy: { fecha_inicio: 'desc' },
+        });
+        if (!historial) return null;
+        return historial.precio.toNumber();
+    }
+
 }
