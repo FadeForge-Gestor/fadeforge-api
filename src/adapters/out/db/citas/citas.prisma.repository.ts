@@ -1,5 +1,6 @@
 import { ICitaRepository } from "@core/ports/out/citas/ICitaRepository";
-import { Cita, DetalleCita, CrearCitaRepositoryInput, ActualizarCitaInput, CambiarEstadoCitaInput, EstadoCita } from "@core/domain/cita/cita.entity";
+import { Cita, CrearCitaRepositoryInput, ActualizarCitaInput, CambiarEstadoCitaInput, EstadoCita } from "@core/domain/cita/cita.entity";
+import { DetalleCita } from "@core/domain/detalle-cita/detalleCita.entity";
 import { estado_cita } from "src/generated/prisma/enums";
 import { prisma } from "../prisma.client";
 

@@ -1,12 +1,6 @@
-export type EstadoCita = 'nueva' | 'pendiente' | 'en proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no asistio';
+import { DetalleCita, CrearDetalleCitaInput } from "@core/domain/detalle-cita/detalleCita.entity";
 
-export interface DetalleCita {
-    id: number;
-    idCita: number;
-    idServicio: number;
-    precioAplicado: number;
-    duracionMinutos: number;
-}
+export type EstadoCita = 'nueva' | 'pendiente' | 'en proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no asistio';
 
 export interface Cita {
     id: number;
@@ -37,12 +31,6 @@ export interface CrearCitaInput {
     servicios: ServicioEnCitaInput[];
 }
 
-export interface CrearDetalleCitaInput {
-    idServicio: number;
-    precioAplicado: number;
-    duracionMinutos: number;
-}
-
 export interface CrearCitaRepositoryInput {
     idCliente: number;
     idEmpleado: number;
@@ -68,3 +56,4 @@ export interface CambiarEstadoCitaInput {
     motivoCancelado?: string;
     canceladoPor?: number;
 }
+

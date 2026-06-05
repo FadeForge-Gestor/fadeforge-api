@@ -3,7 +3,8 @@ import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository"
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { IServicioRepository } from "@core/ports/out/servicios/IServicioRepository";
 import { ICitasUseCase } from "@core/ports/in/citas/ICitasUseCase";
-import { Cita, CrearCitaInput, CrearDetalleCitaInput, ActualizarCitaInput, EstadoCita } from "@core/domain/cita/cita.entity";
+import { Cita, CrearCitaInput, ActualizarCitaInput, EstadoCita } from "@core/domain/cita/cita.entity";
+import { CrearDetalleCitaInput } from "@core/domain/detalle-cita/detalleCita.entity";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 import { IVA_RATE } from "@shared/constants/iva";
 
