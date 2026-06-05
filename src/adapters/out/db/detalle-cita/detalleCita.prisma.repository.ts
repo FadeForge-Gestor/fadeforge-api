@@ -20,6 +20,7 @@ export class DetalleCitaPrismaRepository implements IDetalleCitaRepository {
         };
     }
 
+    // Método para listar los detalles de una cita específica, ordenados por ID de forma ascendente
     async listarPorCita(idCita: number): Promise<DetalleCita[]> {
         const detalles = await prisma.detalle_cita.findMany({
             where: { id_cita: idCita },

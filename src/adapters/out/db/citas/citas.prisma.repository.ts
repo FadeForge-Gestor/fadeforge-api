@@ -84,6 +84,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         };
     }
 
+    // Método para listar todas las citas dentro de un rango de fechas, ordenadas por fecha de inicio de forma ascendente
     async listarPorRangoFecha(desde: Date, hasta: Date): Promise<Cita[]> {
         const citas = await prisma.citas.findMany({
             where: {
@@ -96,6 +97,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         return citas.map(c => this.mapear(c));
     }
 
+    // Método para buscar una cita por su ID, incluyendo su detalle, y devuelve null si no se encuentra
     async buscarPorId(id: number): Promise<Cita | null> {
         const cita = await prisma.citas.findUnique({
             where: { id },
@@ -105,6 +107,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         return this.mapear(cita);
     }
 
+    // Método para buscar una cita por su folio, incluyendo su detalle, y devuelve null si no se encuentra
     async buscarPorFolio(folio: string): Promise<Cita | null> {
         const cita = await prisma.citas.findUnique({
             where: { folio },
@@ -114,6 +117,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         return this.mapear(cita);
     }
 
+    // Método para buscar todas las citas de un cliente específico, ordenadas por fecha de inicio de forma descendente
     async buscarPorCliente(idCliente: number): Promise<Cita[]> {
         const citas = await prisma.citas.findMany({
             where: { id_clientes: idCliente },
@@ -123,6 +127,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         return citas.map(c => this.mapear(c));
     }
 
+    // Método para crear una nueva cita junto con su detalle, y asignarle un folio único basado en su ID después de crearla
     async crear(input: CrearCitaRepositoryInput): Promise<Cita> {
         const cita = await prisma.citas.create({
             data: {
@@ -149,6 +154,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         return this.mapear(cita);
     }
 
+    // Método para actualizar los campos editables de una cita, sin modificar su estado
     async actualizar(id: number, input: ActualizarCitaInput): Promise<Cita> {
         const cita = await prisma.citas.update({
             where: { id },
@@ -166,6 +172,7 @@ export class CitasPrismaRepository implements ICitaRepository {
         return this.mapear(cita);
     }
 
+    // Método para cambiar el estado de una cita, con la opción de agregar motivo y quién canceló en caso de que el nuevo estado sea "cancelada"
     async cambiarEstado(id: number, input: CambiarEstadoCitaInput): Promise<Cita> {
         const cita = await prisma.citas.update({
             where: { id },
