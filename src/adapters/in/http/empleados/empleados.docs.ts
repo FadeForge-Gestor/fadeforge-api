@@ -15,7 +15,7 @@
  *         idUsuario:
  *           type: number
  *           example: 5
- *         nombreCompletoEmpleado:
+ *         nombreCompleto:
  *           type: string
  *           example: Juan Pérez García
  *         correo:
