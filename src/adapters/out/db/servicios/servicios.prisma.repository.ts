@@ -12,6 +12,8 @@ export class ServiciosPrismaRepository implements IServicioRepository {
         duracion_minutos: number;
         id_categoria: number;
         imagen_url: string | null;
+        id_imagen: string | null;
+        nombre_imagen: string | null;
         activo: boolean;
         fecha_creacion: Date;
         fecha_modificacion: Date;
@@ -23,6 +25,8 @@ export class ServiciosPrismaRepository implements IServicioRepository {
             duracionMinutos: servicios.duracion_minutos,
             idCategoria: servicios.id_categoria,
             imagenUrl: servicios.imagen_url,
+            idImagen: servicios.id_imagen,
+            nombreImagen: servicios.nombre_imagen,
             activo: servicios.activo,
             fechaCreacion: servicios.fecha_creacion,
             fechaModificacion: servicios.fecha_modificacion,
@@ -70,6 +74,8 @@ export class ServiciosPrismaRepository implements IServicioRepository {
                     duracion_minutos: input.duracionMinutos,
                     id_categoria: input.idCategoria,
                     imagen_url: input.imagenUrl,
+                    id_imagen: input.idImagen,
+                    nombre_imagen: input.nombreImagen,
                 }
             });
             return this.mapear(servicio);
@@ -90,6 +96,8 @@ export class ServiciosPrismaRepository implements IServicioRepository {
                     ...(input.duracionMinutos && { duracion_minutos: input.duracionMinutos }),
                     ...(input.idCategoria && { id_categoria: input.idCategoria }),
                     ...(input.imagenUrl !== undefined && { imagen_url: input.imagenUrl }),
+                    ...(input.idImagen !== undefined && { id_imagen: input.idImagen }),
+                    ...(input.nombreImagen !== undefined && { nombre_imagen: input.nombreImagen }),
                     ...(input.activo !== undefined && { activo: input.activo }),
                     fecha_modificacion: new Date(),
                 }

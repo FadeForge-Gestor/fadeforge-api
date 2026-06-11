@@ -18,6 +18,8 @@ export const CrearServicioSchema = z.object({
     imagenUrl: z.string()
         .url('La URL de imagen no es válida')
         .optional(),
+    idImagen: z.string().optional(),
+    nombreImagen: z.string().max(255).optional(),
 });
 
 // Esquema para actualizar un servicio existente
@@ -27,6 +29,8 @@ export const ActualizarServicioSchema = z.object({
     duracionMinutos: z.number().int().positive().optional(),
     idCategoria: z.number().int().positive().optional(),
     imagenUrl: z.string().url('La URL de imagen no es válida').optional(),
+    idImagen: z.string().optional(),
+    nombreImagen: z.string().max(255).optional(),
     activo: z.boolean().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,

@@ -6,7 +6,7 @@ import { IServicioRepository } from '@core/ports/out/servicios/IServicioReposito
 import { Cita } from '@core/domain/cita/cita.entity';
 import { DetalleCita } from '@core/domain/detalle-cita/detalleCita.entity';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
-import { Empleado } from '@core/domain/empleado/empleado.entity';
+import { EmpleadoDetalle } from '@core/domain/empleado/empleado.entity';
 import { Servicio } from '@core/domain/servicio/servicio.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 
@@ -48,10 +48,10 @@ const usuarioFake: Usuario = {
     fechaModificacion: new Date(),
 };
 
-const empleadoFake: Empleado = {
+const empleadoFake: EmpleadoDetalle = {
     id: 2,
     idUsuario: 3,
-    nombreCompletoEmpleado: 'María García',
+    nombreCompleto: 'María García',
     correo: 'maria@example.com',
     activo: true,
     fechaCreacion: new Date(),
@@ -65,6 +65,8 @@ const servicioFake: Servicio = {
     duracionMinutos: 30,
     idCategoria: 1,
     imagenUrl: null,
+    idImagen: null,
+    nombreImagen: null,
     activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),

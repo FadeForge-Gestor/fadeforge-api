@@ -29,6 +29,14 @@
  *           type: string
  *           nullable: true
  *           example: https://ejemplo.com/imagen.jpg
+ *         idImagen:
+ *           type: string
+ *           nullable: true
+ *           example: abc123xyz
+ *         nombreImagen:
+ *           type: string
+ *           nullable: true
+ *           example: corte-cabello.jpg
  *         activo:
  *           type: boolean
  *           example: true
@@ -107,6 +115,12 @@
  *               imagenUrl:
  *                 type: string
  *                 example: https://ejemplo.com/imagen.jpg
+ *               idImagen:
+ *                 type: string
+ *                 example: abc123xyz
+ *               nombreImagen:
+ *                 type: string
+ *                 example: corte-cabello.jpg
  *     responses:
  *       201:
  *         description: Servicio creado exitosamente
@@ -192,6 +206,12 @@
  *               imagenUrl:
  *                 type: string
  *                 example: https://ejemplo.com/imagen.jpg
+ *               idImagen:
+ *                 type: string
+ *                 example: abc123xyz
+ *               nombreImagen:
+ *                 type: string
+ *                 example: corte-cabello.jpg
  *               activo:
  *                 type: boolean
  *                 example: true
