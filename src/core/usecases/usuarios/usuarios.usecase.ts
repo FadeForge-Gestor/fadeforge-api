@@ -2,6 +2,7 @@ import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository"
 import { IUsuarioUseCase } from "@core/ports/in/usuarios/IUsuarioUseCase";
 import { Usuario, CrearUsuarioInput, ActualizarUsuarioInput } from "@core/domain/usuario/usuario.entity";
 import { NotFoundError, ConflictError } from "@shared/errors/HttpError";
+import bcrypt from "bcrypt";
 
 export class UsuariosUseCase implements IUsuarioUseCase {
 
@@ -23,7 +24,17 @@ export class UsuariosUseCase implements IUsuarioUseCase {
         async crear(input: CrearUsuarioInput): Promise<Usuario> {
             const correoExiste = await this.usuarioRepository.buscarPorCorreo(input.correo);
             if (correoExiste) throw new ConflictError(`El correo ${input.correo} ya está registrado`);
-            return this.usuarioRepository.crear(input);
+
+            const hashContrasena = await bcrypt.hash(input.contrasena, 10);
+            return this.usuarioRepository.crear({
+                nombre: input.nombre,
+                aPaterno: input.aPaterno,
+                aMaterno: input.aMaterno,
+                telefono: input.telefono,
+                idRol: input.idRol,
+                correo: input.correo,
+                hashContrasena,
+            });
         }
 
         // Método para actualizar un usuario

@@ -9,21 +9,21 @@ export class CitasPrismaRepository implements ICitaRepository {
     private readonly ESTADO_A_DOMINIO: Record<estado_cita, EstadoCita> = {
         nueva:        'nueva',
         pendiente:    'pendiente',
-        en_proceso:   'en proceso',
+        en_proceso:   'en_proceso',
         cancelada:    'cancelada',
         finalizada:   'finalizada',
         reprogramada: 'reprogramada',
-        no_asistio:   'no asistio',
+        no_asistio:   'no_asistio',
     };
 
     private readonly ESTADO_A_PRISMA: Record<EstadoCita, estado_cita> = {
         'nueva':        estado_cita.nueva,
         'pendiente':    estado_cita.pendiente,
-        'en proceso':   estado_cita.en_proceso,
+        'en_proceso':   estado_cita.en_proceso,
         'cancelada':    estado_cita.cancelada,
         'finalizada':   estado_cita.finalizada,
         'reprogramada': estado_cita.reprogramada,
-        'no asistio':   estado_cita.no_asistio,
+        'no_asistio':   estado_cita.no_asistio,
     };
 
     private mapearDetalle(d: {

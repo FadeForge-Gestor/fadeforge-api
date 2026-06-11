@@ -5,6 +5,8 @@ export interface Servicio {
     duracionMinutos: number;
     idCategoria: number;
     imagenUrl: string | null;
+    idImagen: string | null;
+    nombreImagen: string | null;
     activo: boolean;
     fechaCreacion: Date;
     fechaModificacion: Date;
@@ -16,6 +18,8 @@ export interface CrearServicioInput {
     duracionMinutos: number;
     idCategoria: number;
     imagenUrl?: string;
+    idImagen?: string;
+    nombreImagen?: string;
 }
 
 export interface ActualizarServicioInput {
@@ -24,5 +28,7 @@ export interface ActualizarServicioInput {
     duracionMinutos?: number;
     idCategoria?: number;
     imagenUrl?: string;
+    idImagen?: string;
+    nombreImagen?: string;
     activo?: boolean;
 }

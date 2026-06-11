@@ -1,6 +1,6 @@
 import { DetalleCita, CrearDetalleCitaInput } from "@core/domain/detalle-cita/detalleCita.entity";
 
-export type EstadoCita = 'nueva' | 'pendiente' | 'en proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no asistio';
+export type EstadoCita = 'nueva' | 'pendiente' | 'en_proceso' | 'finalizada' | 'cancelada' | 'reprogramada' | 'no_asistio';
 
 export interface Cita {
     id: number;

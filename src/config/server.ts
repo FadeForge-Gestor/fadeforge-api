@@ -15,6 +15,7 @@ import categoriaServiciosRoutes from '@adapters/in/http/categoria-servicio/categ
 import serviciosRoutes from '@adapters/in/http/servicios/serviciosRoutes.routes';
 import citasRoutes from '@adapters/in/http/citas/citas.routes';
 import detalleCitaRoutes from '@adapters/in/http/detalle-cita/detalleCita.routes';
+import historialPrecioRoutes from '@adapters/in/http/historial-precio/historialPrecio.routes';
 
 // Importamos el middleware de manejo de errores
 import { errorMiddleware } from '@adapters/in/http/middlewares/error.middleware';
@@ -39,6 +40,7 @@ app.use('/api/v1/categoriaServicios', categoriaServiciosRoutes);
 app.use('/api/v1/servicios', serviciosRoutes);
 app.use('/api/v1/citas', citasRoutes);
 app.use('/api/v1/detalle-cita', detalleCitaRoutes);
+app.use('/api/v1/historial-precios', historialPrecioRoutes);
 // Middleware para manejo de errores
 app.use(errorMiddleware);
 

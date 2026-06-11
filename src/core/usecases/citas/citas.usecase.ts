@@ -107,8 +107,8 @@ export class CitasUseCase implements ICitasUseCase {
 
         const transicionesValidas: Partial<Record<EstadoCita, EstadoCita[]>> = {
             'nueva':      ['pendiente', 'cancelada'],
-            'pendiente':  ['en proceso', 'cancelada', 'reprogramada'],
-            'en proceso': ['finalizada', 'cancelada'],
+            'pendiente':   ['en_proceso', 'cancelada', 'reprogramada'],
+            'en_proceso':  ['finalizada', 'cancelada'],
         };
 
         const permitidos = transicionesValidas[cita.estado];

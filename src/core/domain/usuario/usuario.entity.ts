@@ -20,6 +20,16 @@ export interface CrearUsuarioInput {
     contrasena: string;
 }
 
+export interface CrearUsuarioRepositoryInput {
+    nombre: string;
+    aPaterno: string;
+    aMaterno?: string;
+    telefono: string;
+    idRol: number;
+    correo: string;
+    hashContrasena: string; // hash ya calculado, NO la contraseña plana
+}
+
 export interface ActualizarUsuarioInput {
     nombre?: string;
     aPaterno?: string;

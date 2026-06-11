@@ -1,14 +1,14 @@
 import { EmpleadosUseCase } from '@core/usecases/empleados/empleados.usecase';
 import { IEmpleadoRepository } from '@core/ports/out/empleados/IEmpleadoRepository';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
-import { Empleado, PromoverEmpleadoInput } from '@core/domain/empleado/empleado.entity';
+import { Empleado, EmpleadoDetalle, PromoverEmpleadoInput } from '@core/domain/empleado/empleado.entity';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 
-const empleadoFake: Empleado = {
+const empleadoFake: EmpleadoDetalle = {
     id: 1,
     idUsuario: 5,
-    nombreCompletoEmpleado: 'Juan Pérez García',
+    nombreCompleto: 'Juan Pérez García',
     correo: 'juan@test.com',
     activo: true,
     fechaCreacion: new Date(),

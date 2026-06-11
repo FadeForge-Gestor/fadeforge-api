@@ -21,6 +21,8 @@ const servicioFake: Servicio = {
     duracionMinutos: 30,
     idCategoria: 1,
     imagenUrl: null,
+    idImagen: null,
+    nombreImagen: null,
     activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),

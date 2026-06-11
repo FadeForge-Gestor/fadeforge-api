@@ -50,7 +50,7 @@
  *           example: 2026-06-10T11:00:00.000Z
  *         estado:
  *           type: string
- *           enum: [nueva, pendiente, en proceso, finalizada, cancelada, reprogramada, no asistio]
+ *           enum: [nueva, pendiente, en_proceso, finalizada, cancelada, reprogramada, no_asistio]
  *           example: nueva
  *         subtotal:
  *           type: number
@@ -344,7 +344,7 @@
  *             properties:
  *               estado:
  *                 type: string
- *                 enum: [nueva, pendiente, en proceso, finalizada, cancelada, reprogramada, no asistio]
+ *                 enum: [nueva, pendiente, en_proceso, finalizada, cancelada, reprogramada, no_asistio]
  *                 example: pendiente
  *               motivoCancelado:
  *                 type: string
