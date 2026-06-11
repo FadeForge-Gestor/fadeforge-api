@@ -1,8 +1,7 @@
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
-import { Usuario, CrearUsuarioInput, ActualizarUsuarioInput } from "@core/domain/usuario/usuario.entity";
+import { Usuario, CrearUsuarioRepositoryInput, ActualizarUsuarioInput } from "@core/domain/usuario/usuario.entity";
 import { prisma } from "../prisma.client";
 import { NotFoundError, ConflictError, BadRequestError } from "@shared/errors/HttpError";
-import bcrypt from "bcrypt";
 
 export class UsuariosPrismaRepository implements IUsuarioRepository {
 
@@ -56,10 +55,8 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
     }
 
     // Método para crear un nuevo usuario junto con sus credenciales de forma transaccional
-    async crear(input: CrearUsuarioInput): Promise<Usuario> {
+    async crear(input: CrearUsuarioRepositoryInput): Promise<Usuario> {
         try {
-            const hash = await bcrypt.hash(input.contrasena, 10);
-
             const usuario = await prisma.$transaction(async (tx) => {
                 const nuevo = await tx.usuarios.create({
                     data: {
@@ -75,7 +72,7 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
                     data: {
                         id_usuario: nuevo.id,
                         correo: input.correo,
-                        hash_contrasena: hash,
+                        hash_contrasena: input.hashContrasena,
                     },
                 });
 

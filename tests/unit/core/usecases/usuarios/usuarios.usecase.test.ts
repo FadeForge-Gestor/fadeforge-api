@@ -3,6 +3,10 @@ import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository'
 import { Usuario, CrearUsuarioInput } from '@core/domain/usuario/usuario.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 
+jest.mock('bcrypt', () => ({
+    hash: jest.fn().mockResolvedValue('hashed_password'),
+}));
+
 const usuarioFake: Usuario = {
     id: 1,
     nombre: 'Juan',
@@ -73,7 +77,12 @@ describe('UsuariosUseCase', () => {
 
             const result = await useCase.crear(inputCrear);
 
-            expect(mockRepo.crear).toHaveBeenCalledWith(inputCrear);
+            expect(mockRepo.crear).toHaveBeenCalledWith(
+                expect.objectContaining({ hashContrasena: expect.any(String) })
+            );
+            expect(mockRepo.crear).not.toHaveBeenCalledWith(
+                expect.objectContaining({ contrasena: expect.anything() })
+            );
             expect(result).toEqual(usuarioFake);
         });
     });
