@@ -22,7 +22,7 @@ export const ActualizarCitaSchema = z.object({
 );
 
 export const CambiarEstadoCitaSchema = z.object({
-    estado: z.enum(['nueva', 'pendiente', 'en proceso', 'finalizada', 'cancelada', 'reprogramada', 'no asistio']),
+    estado: z.enum(['nueva', 'pendiente', 'en_proceso', 'finalizada', 'cancelada', 'reprogramada', 'no_asistio']),
     motivoCancelado: z.string().min(1, 'El motivo de cancelación no puede estar vacío').optional(),
     canceladoPor: z.number().int().positive().optional(),
 }).refine(
