@@ -7,8 +7,7 @@ import { authenticate, authorize } from "@middlewares/auth.middleware";
 import { cambiarContrasenaSchema, cambiarCorreoSchema, resetContrasenaSchema } from "./credenciales.schema";
 import { ROLES } from "@shared/constants/roles";
 
-// Inyección de dependencias - el orden importa:
-// repositorio → caso de uso → controller
+// Inyección de dependencias
 const router = Router();
 const repositorio = new CredencialesPrismaRepository();
 const casoDeUso = new CredencialUseCase(repositorio);

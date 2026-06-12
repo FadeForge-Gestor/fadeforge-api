@@ -70,6 +70,15 @@ export class CitasUseCase implements ICitasUseCase {
         }
 
         const fechaFin = new Date(input.fechaInicio.getTime() + totalMinutos * 60 * 1000);
+
+        const solapamiento = await this.citasRepository.verificarSolapamientoEmpleado(
+            input.idEmpleado,
+            input.fechaInicio,
+            fechaFin
+        );
+        if (solapamiento)
+            throw new ConflictError(`El empleado con id ${input.idEmpleado} ya tiene una cita en ese horario`);
+
         const iva = Math.round(subtotal * IVA_RATE * 100) / 100;
         const total = Math.round((subtotal + iva) * 100) / 100;
 
@@ -96,6 +105,26 @@ export class CitasUseCase implements ICitasUseCase {
             const empleado = await this.empleadoRepository.buscarPorId(input.idEmpleado);
             if (!empleado) throw new NotFoundError(`Empleado con id ${input.idEmpleado} no encontrado`);
             if (!empleado.activo) throw new ConflictError(`El empleado con id ${input.idEmpleado} está desactivado`);
+        }
+
+        const hayConflictoPotencial =
+            input.idEmpleado !== undefined ||
+            input.fechaInicio !== undefined ||
+            input.fechaFin !== undefined;
+
+        if (hayConflictoPotencial) {
+            const empleadoEfectivo = input.idEmpleado ?? cita.idEmpleado;
+            const inicioEfectivo   = input.fechaInicio ?? cita.fechaInicio;
+            const finEfectivo      = input.fechaFin    ?? cita.fechaFin;
+
+            const solapamiento = await this.citasRepository.verificarSolapamientoEmpleado(
+                empleadoEfectivo,
+                inicioEfectivo,
+                finEfectivo,
+                id
+            );
+            if (solapamiento)
+                throw new ConflictError(`El empleado con id ${empleadoEfectivo} ya tiene una cita en ese horario`);
         }
 
         return this.citasRepository.actualizar(id, input);

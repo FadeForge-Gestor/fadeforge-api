@@ -80,6 +80,7 @@ const mockCitaRepo: jest.Mocked<ICitaRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     cambiarEstado: jest.fn(),
+    verificarSolapamientoEmpleado: jest.fn(),
 };
 
 const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
@@ -259,6 +260,7 @@ describe('CitasUseCase', () => {
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
             const result = await useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] });
@@ -278,6 +280,7 @@ describe('CitasUseCase', () => {
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
             const fechaInicio = new Date(Date.now() + 3600000);
@@ -287,6 +290,19 @@ describe('CitasUseCase', () => {
             expect(mockCitaRepo.crear).toHaveBeenCalledWith(expect.objectContaining({
                 fechaFin: fechaFinEsperada,
             }));
+        });
+
+        it('debe lanzar ConflictError si el empleado ya tiene una cita en ese horario', async () => {
+            mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
+            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
+
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+                .rejects.toThrow(ConflictError);
+
+            expect(mockCitaRepo.crear).not.toHaveBeenCalled();
         });
     });
 
@@ -328,12 +344,58 @@ describe('CitasUseCase', () => {
             const citaActualizada = { ...citaFake, idEmpleado: 3 };
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.actualizar.mockResolvedValue(citaActualizada);
 
             const result = await useCase.actualizar(1, { idEmpleado: 3 });
 
             expect(mockCitaRepo.actualizar).toHaveBeenCalledWith(1, { idEmpleado: 3 });
             expect(result.idEmpleado).toBe(3);
+        });
+
+        it('debe lanzar ConflictError si hay solapamiento al cambiar empleado', async () => {
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
+
+            await expect(useCase.actualizar(1, { idEmpleado: 3 })).rejects.toThrow(ConflictError);
+
+            expect(mockCitaRepo.actualizar).not.toHaveBeenCalled();
+        });
+
+        it('debe lanzar ConflictError si hay solapamiento al cambiar fechaInicio', async () => {
+            const nuevaFecha = new Date(Date.now() + 7200000);
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
+
+            await expect(useCase.actualizar(1, { fechaInicio: nuevaFecha })).rejects.toThrow(ConflictError);
+
+            expect(mockCitaRepo.actualizar).not.toHaveBeenCalled();
+        });
+
+        it('debe verificar solapamiento usando los valores existentes para campos no provistos', async () => {
+            const nuevaFecha = new Date(Date.now() + 7200000);
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
+            mockCitaRepo.actualizar.mockResolvedValue({ ...citaFake, fechaInicio: nuevaFecha });
+
+            await useCase.actualizar(1, { fechaInicio: nuevaFecha });
+
+            expect(mockCitaRepo.verificarSolapamientoEmpleado).toHaveBeenCalledWith(
+                citaFake.idEmpleado,
+                nuevaFecha,
+                citaFake.fechaFin,
+                1
+            );
+        });
+
+        it('no debe verificar solapamiento si el input no toca empleado ni fechas', async () => {
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+            mockCitaRepo.actualizar.mockResolvedValue(citaFake);
+
+            await useCase.actualizar(1, { subtotal: 300 });
+
+            expect(mockCitaRepo.verificarSolapamientoEmpleado).not.toHaveBeenCalled();
         });
     });
 

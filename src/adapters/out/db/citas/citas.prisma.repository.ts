@@ -187,4 +187,17 @@ export class CitasPrismaRepository implements ICitaRepository {
         return this.mapear(cita);
     }
 
-}
+    // Método para verificar si un empleado tiene citas que se solapan con un rango de fechas dado, excluyendo una cita específica opcionalmente
+    async verificarSolapamientoEmpleado(idEmpleado: number, fechaInicio: Date, fechaFin: Date, idCitaExcluir?: number): Promise<boolean> {
+        const solapamiento = await prisma.citas.findFirst({
+            where: {
+                id_empleado: idEmpleado,
+                NOT: { estado: { in: [estado_cita.cancelada, estado_cita.finalizada, estado_cita.no_asistio] } },
+                ...(idCitaExcluir !== undefined && { id: { not: idCitaExcluir } }),
+                fecha_inicio: { lt: fechaFin },
+                fecha_fin: { gt: fechaInicio },
+            },
+        });
+            return solapamiento !== null;
+        }
+    }

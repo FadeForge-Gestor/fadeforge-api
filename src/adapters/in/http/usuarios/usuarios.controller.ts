@@ -4,8 +4,6 @@ import { ok } from "@shared/utils/response";
 
 export class UsuariosController {
 
-    // El controller recibe el caso de uso por inyección de dependencias,
-    // igual que con auth — nunca instancia nada directamente.
     constructor(private readonly usuarioUseCase: IUsuarioUseCase) {}
 
     // Método para listar los usuarios
