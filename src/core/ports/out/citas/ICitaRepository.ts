@@ -8,4 +8,5 @@ export interface ICitaRepository {
     crear(input: CrearCitaRepositoryInput): Promise<Cita>;
     actualizar(id: number, input: ActualizarCitaInput): Promise<Cita>;
     cambiarEstado(id: number, input: CambiarEstadoCitaInput): Promise<Cita>;
+    verificarSolapamientoEmpleado(idEmpleado: number, fechaInicio: Date, fechaFin: Date, idCitaExcluida?: number): Promise<boolean>;
 }
