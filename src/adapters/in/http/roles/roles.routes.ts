@@ -7,8 +7,7 @@ import { authenticate, authorize } from '@middlewares/auth.middleware';
 import { crearRolSchema, actualizarRolSchema } from './roles.schema';
 import { ROLES } from '@shared/constants/roles';
 
-// Inyección de dependencias — el orden importa:
-// repositorio → caso de uso → controller
+// Inyección de dependencias 
 const router = Router();
 const repositorio = new RolesPrismaRepository();
 const casoDeUso = new RolesUseCase(repositorio);

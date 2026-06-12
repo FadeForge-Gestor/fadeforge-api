@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ServiciosController } from './Servicios.controller';
+import { ServiciosController } from './servicios.controller';
 import { ServiciosUseCase } from '@core/usecases/servicios/servicios.usecase';
 import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.prisma.repository';
 import { CategoriaServicioPrismaRepository } from '@adapters/out/db/categorias-servicios/categoriaServicios.prisma.repository';
@@ -8,8 +8,7 @@ import { authenticate, authorize } from "@middlewares/auth.middleware";
 import { CrearServicioSchema, ActualizarServicioSchema } from "./Servicios.schema";
 import { ROLES } from "@shared/constants/roles";
 
-// Inyección de dependencias — el orden importa:
-// repositorio → caso de uso → controller
+// Inyección de dependencias 
 const router = Router();
 const repositorio = new ServiciosPrismaRepository();
 const categoriaRepositorio = new CategoriaServicioPrismaRepository();

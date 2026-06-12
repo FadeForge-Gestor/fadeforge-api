@@ -4,8 +4,6 @@ import { ok } from '@shared/utils/response';
 
 export class RolesController {
 
-    // El controller recibe el caso de uso por inyección de dependencias,
-    // igual que con auth — nunca instancia nada directamente.
     constructor(private readonly rolUseCase: IRolUseCase) {}
 
     // Listamos los roles
