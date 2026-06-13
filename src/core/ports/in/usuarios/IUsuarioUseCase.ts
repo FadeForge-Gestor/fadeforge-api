@@ -6,6 +6,6 @@ export interface IUsuarioUseCase {
     listar(): Promise<Usuario[]>;
     obtenerPorId(id: number): Promise<Usuario>;
     crear(input: CrearUsuarioInput): Promise<Usuario>;
-    actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario>;
+    actualizar(id: number, input: ActualizarUsuarioInput, actorId: number): Promise<Usuario>;
     desactivar(id: number): Promise<void>;
 }
