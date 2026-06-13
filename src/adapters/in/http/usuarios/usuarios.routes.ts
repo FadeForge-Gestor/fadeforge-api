@@ -2,6 +2,7 @@ import { Router } from "express";
 import { UsuariosController } from "./usuarios.controller";
 import { UsuariosUseCase } from "@core/usecases/usuarios/usuarios.usecase";
 import { UsuariosPrismaRepository } from "@adapters/out/db/usuarios/usuarios.prisma.repository";
+import { RolesPrismaRepository } from "@adapters/out/db/roles/roles.prisma.repository";
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
 import { crearUsuarioSchema, actualizarUsuarioSchema } from "./usuarios.schema";
@@ -10,7 +11,8 @@ import { ROLES } from "@shared/constants/roles";
 // Inyección de dependencias 
 const router = Router();
 const repositorio = new UsuariosPrismaRepository();
-const casoDeUso = new UsuariosUseCase(repositorio);
+const rolRepositorio = new RolesPrismaRepository();
+const casoDeUso = new UsuariosUseCase(repositorio, rolRepositorio);
 const controller = new UsuariosController(casoDeUso);
 
 // GET /usuarios — solo admins

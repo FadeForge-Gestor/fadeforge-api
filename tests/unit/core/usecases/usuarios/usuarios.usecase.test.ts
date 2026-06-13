@@ -1,7 +1,9 @@
 import { UsuariosUseCase } from '@core/usecases/usuarios/usuarios.usecase';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
+import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { Usuario, CrearUsuarioInput } from '@core/domain/usuario/usuario.entity';
-import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
+import { Rol } from '@core/domain/rol/rol.entity';
+import { NotFoundError, ConflictError, ForbiddenError, BadRequestError } from '@shared/errors/HttpError';
 
 jest.mock('bcrypt', () => ({
     hash: jest.fn().mockResolvedValue('hashed_password'),
@@ -14,6 +16,16 @@ const usuarioFake: Usuario = {
     aMaterno: null,
     telefono: '1234567890',
     idRol: 2,
+    activo: true,
+    fechaCreacion: new Date(),
+    fechaModificacion: new Date(),
+};
+
+const rolFake: Rol = {
+    id: 2,
+    clave: 'CLIENTE',
+    nombre: 'Cliente',
+    descripcion: null,
     activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),
@@ -37,13 +49,26 @@ const mockRepo: jest.Mocked<IUsuarioRepository> = {
     desactivar: jest.fn(),
 };
 
+const mockRolRepo: jest.Mocked<IRolRepository> = {
+    listarTodos: jest.fn(),
+    listarActivos: jest.fn(),
+    buscarPorId: jest.fn(),
+    buscarPorNombre: jest.fn(),
+    buscarPorClave: jest.fn(),
+    crear: jest.fn(),
+    actualizar: jest.fn(),
+    desactivar: jest.fn(),
+};
+
+const ACTOR_ID = 99;
+
 describe('UsuariosUseCase', () => {
 
     let useCase: UsuariosUseCase;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        useCase = new UsuariosUseCase(mockRepo);
+        useCase = new UsuariosUseCase(mockRepo, mockRolRepo);
     });
 
     describe('obtenerPorId', () => {
@@ -92,17 +117,57 @@ describe('UsuariosUseCase', () => {
         it('debe lanzar NotFoundError si el usuario no existe', async () => {
             mockRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.actualizar(99, { nombre: 'Otro' })).rejects.toThrow(NotFoundError);
+            await expect(useCase.actualizar(99, { nombre: 'Otro' }, ACTOR_ID)).rejects.toThrow(NotFoundError);
         });
 
-        it('debe actualizar cuando el usuario existe', async () => {
+        it('debe lanzar ConflictError si el usuario está desactivado', async () => {
+            mockRepo.buscarPorId.mockResolvedValue({ ...usuarioFake, activo: false });
+
+            await expect(useCase.actualizar(1, { nombre: 'Otro' }, ACTOR_ID)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe actualizar cuando el input no incluye idRol', async () => {
             mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockRepo.actualizar.mockResolvedValue({ ...usuarioFake, nombre: 'Otro' });
 
-            const result = await useCase.actualizar(1, { nombre: 'Otro' });
+            const result = await useCase.actualizar(1, { nombre: 'Otro' }, ACTOR_ID);
 
+            expect(mockRolRepo.buscarPorId).not.toHaveBeenCalled();
             expect(mockRepo.actualizar).toHaveBeenCalledWith(1, { nombre: 'Otro' });
             expect(result.nombre).toBe('Otro');
+        });
+
+        it('debe lanzar ForbiddenError si el actor intenta cambiar su propio rol', async () => {
+            mockRepo.buscarPorId.mockResolvedValue({ ...usuarioFake, id: ACTOR_ID });
+
+            await expect(useCase.actualizar(ACTOR_ID, { idRol: 3 }, ACTOR_ID)).rejects.toThrow(ForbiddenError);
+            expect(mockRolRepo.buscarPorId).not.toHaveBeenCalled();
+        });
+
+        it('debe lanzar BadRequestError si el rol no existe', async () => {
+            mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockRolRepo.buscarPorId.mockResolvedValue(null);
+
+            await expect(useCase.actualizar(1, { idRol: 999 }, ACTOR_ID)).rejects.toThrow(BadRequestError);
+        });
+
+        it('debe lanzar BadRequestError si el rol existe pero está inactivo', async () => {
+            mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockRolRepo.buscarPorId.mockResolvedValue({ ...rolFake, activo: false });
+
+            await expect(useCase.actualizar(1, { idRol: 2 }, ACTOR_ID)).rejects.toThrow(BadRequestError);
+        });
+
+        it('debe actualizar cuando el rol existe y está activo', async () => {
+            mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockRolRepo.buscarPorId.mockResolvedValue(rolFake);
+            mockRepo.actualizar.mockResolvedValue({ ...usuarioFake, idRol: 2 });
+
+            const result = await useCase.actualizar(1, { idRol: 2 }, ACTOR_ID);
+
+            expect(mockRolRepo.buscarPorId).toHaveBeenCalledWith(2);
+            expect(mockRepo.actualizar).toHaveBeenCalledWith(1, { idRol: 2 });
+            expect(result).toEqual(expect.objectContaining({ idRol: 2 }));
         });
     });
 
