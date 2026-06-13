@@ -29,9 +29,11 @@ router.get(
     (req, res, next) => controller.obtenerPorId(req, res, next)
 );
 
-// POST /usuarios — público, cualquier persona puede registrarse
+// POST /usuarios — solo admins pueden crear usuarios
 router.post(
     '/',
+    authenticate,
+    authorize(ROLES.ADMIN),
     validate(crearUsuarioSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
