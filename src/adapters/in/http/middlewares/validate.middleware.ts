@@ -13,3 +13,14 @@ export const validate = (schema: ZodSchema) => {
         next();
     };
 };
+
+export const validateParams = (schema: ZodSchema) => {
+    return (req: Request, _res: Response, next: NextFunction) => {
+        const result = schema.safeParse(req.params);
+        if (!result.success) {
+            return next(new BadRequestError(result.error.issues[0].message));
+        }
+        req.validatedParams = result.data;
+        next();
+    };
+};

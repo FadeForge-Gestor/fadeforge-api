@@ -11,4 +11,5 @@ export interface IRolRepository {
     crear(input: CrearRolInput): Promise<Rol>;
     actualizar(id: number, input: ActualizarRolInput): Promise<Rol>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }

@@ -7,6 +7,7 @@ declare global {
                 correo: string;
                 rol: string;
             };
+            validatedParams?: Record<string, unknown>;
         }
     }
 }

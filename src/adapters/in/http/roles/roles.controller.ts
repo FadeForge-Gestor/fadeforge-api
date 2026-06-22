@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { IRolUseCase } from '@core/ports/in/roles/IRolUseCase';
+import { IdParamDto } from './roles.schema';
 import { ok } from '@shared/utils/response';
 
 export class RolesController {
 
     constructor(private readonly rolUseCase: IRolUseCase) {}
 
-    // Listamos los roles
     async listar(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const roles = await this.rolUseCase.listar();
@@ -16,7 +16,6 @@ export class RolesController {
         }
     }
 
-    // Listamos los roles activos
     async listarActivos(_req: Request, res: Response, next: NextFunction) {
         try {
             const roles = await this.rolUseCase.listarActivos();
@@ -26,10 +25,9 @@ export class RolesController {
         }
     }
 
-    // Obtenemos por id un rol
     async obtenerPorId(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const id = Number(req.params.id);
+            const { id } = req.validatedParams as IdParamDto;
             const rol = await this.rolUseCase.obtenerPorId(id);
             res.status(200).json(ok(rol));
         } catch (error) {
@@ -37,7 +35,6 @@ export class RolesController {
         }
     }
 
-    // Creamos un nuevo rol
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const rol = await this.rolUseCase.crear(req.body);
@@ -47,10 +44,9 @@ export class RolesController {
         }
     }
 
-    // Actualizmaos un rol
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const id = Number(req.params.id);
+            const { id } = req.validatedParams as IdParamDto;
             const rol = await this.rolUseCase.actualizar(id, req.body);
             res.status(200).json(ok(rol));
         } catch (error) {
@@ -58,11 +54,20 @@ export class RolesController {
         }
     }
 
-    // Desactivamos un rol
     async desactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const id = Number(req.params.id);
+            const { id } = req.validatedParams as IdParamDto;
             await this.rolUseCase.desactivar(id);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async reactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const { id } = req.validatedParams as IdParamDto;
+            await this.rolUseCase.reactivar(id);
             res.status(204).send();
         } catch (error) {
             next(error);

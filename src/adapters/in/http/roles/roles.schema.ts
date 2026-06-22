@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+export const idParamSchema = z.object({
+    id: z.coerce.number().int().positive('El id debe ser un número entero positivo'),
+});
+
 // Schema para crear un rol.
 // clave: identificador técnico estable (ej: 'admin', 'empleado')
 // nombre: nombre visible para el usuario final
@@ -24,7 +28,6 @@ export const actualizarRolSchema = z.object({
         .optional(),
     nombre: z.string().min(2).max(50).optional(),
     descripcion: z.string().max(255).optional(),
-    activo: z.boolean().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,
     { message: 'Debes enviar al menos un campo para actualizar' }
@@ -32,3 +35,4 @@ export const actualizarRolSchema = z.object({
 
 export type CrearRolDto = z.infer<typeof crearRolSchema>;
 export type ActualizarRolDto = z.infer<typeof actualizarRolSchema>;
+export type IdParamDto = z.infer<typeof idParamSchema>;
