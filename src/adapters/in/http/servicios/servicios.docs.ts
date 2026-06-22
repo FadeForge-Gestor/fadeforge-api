@@ -263,4 +263,29 @@
  *         description: Servicio no encontrado
  *       409:
  *         description: El servicio ya está desactivado
+ *
+ * /admin/servicios/{id}/reactivar:
+ *   put:
+ *     summary: Reactivar un servicio previamente desactivado
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *         example: 1
+ *     responses:
+ *       204:
+ *         description: Servicio reactivado exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Servicio no encontrado
+ *       409:
+ *         description: El servicio ya está activo
  */

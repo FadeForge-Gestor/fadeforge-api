@@ -62,6 +62,14 @@ export class ServiciosUseCase implements IServicioUseCase {
     }
 
 
+    // Método para reactivar un servicio
+    async reactivar(id: number): Promise<void> {
+        const existe = await this.servicioRepository.buscarPorId(id);
+        if (!existe) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (existe.activo) throw new ConflictError(`Servicio con el id ${id} ya está activo`);
+        return this.servicioRepository.reactivar(id);
+    }
+
     // Método para desactivar un servicio
     async desactivar(id: number): Promise<void> {
         const existe = await this.servicioRepository.buscarPorId(id);

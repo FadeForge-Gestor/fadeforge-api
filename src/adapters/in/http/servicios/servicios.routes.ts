@@ -5,7 +5,7 @@ import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.
 import { CategoriaServicioPrismaRepository } from '@adapters/out/db/categorias-servicios/categoriaServicios.prisma.repository';
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
-import { CrearServicioSchema, ActualizarServicioSchema } from "./Servicios.schema";
+import { CrearServicioSchema, ActualizarServicioSchema } from "./servicios.schema";
 import { ROLES } from "@shared/constants/roles";
 
 // Inyección de dependencias 
@@ -18,6 +18,8 @@ const controller = new ServiciosController(casoDeUso);
 // GET /servicios
 router.get(
     '/',
+    authenticate,
+    authorize(ROLES.ADMIN),
     (req, res, next) => controller.listar(req, res, next)
 );
 
@@ -57,6 +59,14 @@ router.put(
     authenticate,
     authorize(ROLES.ADMIN),
     (req, res, next) => controller.desactivar(req, res, next)
+);
+
+// PUT /servicios/:id/reactivar — solo admins pueden reactivar servicios
+router.put(
+    '/:id/reactivar',
+    authenticate,
+    authorize(ROLES.ADMIN),
+    (req, res, next) => controller.reactivar(req, res, next)
 );
 
 export default router;
