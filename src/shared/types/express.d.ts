@@ -8,6 +8,7 @@ declare global {
                 rol: string;
             };
             validatedParams?: Record<string, unknown>;
+            validatedQuery?: Record<string, unknown>;
         }
     }
 }

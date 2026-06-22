@@ -11,8 +11,8 @@ export class CitasController {
     // Métodos para listar y obtener las citas por un rango de fechas, por ID, por folio y por cliente
     async listarPorRangoFecha(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { desde, hasta } = req.query;
-            const citas = await this.citasUseCase.listarPorRangoFecha(new Date(desde as string), new Date(hasta as string));
+            const { desde, hasta } = req.validatedQuery as { desde: Date; hasta: Date };
+            const citas = await this.citasUseCase.listarPorRangoFecha(desde, hasta);
             res.status(200).json(ok(citas));
         } catch (error) {
             next(error);
