@@ -70,4 +70,11 @@ export class RolesUseCase implements IRolUseCase {
         if (!existe.activo) throw new ConflictError(`El rol con id ${id} ya está desactivado`);
         return this.rolRepository.desactivar(id);
     }
+
+    async reactivar(id: number): Promise<void> {
+        const existe = await this.rolRepository.buscarPorId(id);
+        if (!existe) throw new NotFoundError(`Rol con id ${id} no encontrado`);
+        if (existe.activo) throw new ConflictError(`El rol con id ${id} ya está activo`);
+        return this.rolRepository.reactivar(id);
+    }
 }

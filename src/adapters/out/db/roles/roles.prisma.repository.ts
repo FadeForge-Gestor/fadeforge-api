@@ -91,7 +91,6 @@ export class RolesPrismaRepository implements IRolRepository {
                     ...(input.clave && { clave: input.clave }),
                     ...(input.nombre && { nombre: input.nombre }),
                     ...(input.descripcion !== undefined && { descripcion: input.descripcion }),
-                    ...(input.activo !== undefined && { activo: input.activo }),
                     fecha_modificacion: new Date(),
                 },
             });
@@ -101,6 +100,13 @@ export class RolesPrismaRepository implements IRolRepository {
             if (error?.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
             throw error;
         }
+    }
+
+    async reactivar(id: number): Promise<void> {
+        await prisma.roles.update({
+            where: { id },
+            data: { activo: true, fecha_modificacion: new Date() },
+        });
     }
 
     // Soft delete: solo cambiamos activo = false, el registro permanece en la BD.

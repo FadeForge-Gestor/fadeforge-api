@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { RolesController } from './roles.controller';
 import { RolesUseCase } from '@core/usecases/roles/roles.usecase';
 import { RolesPrismaRepository } from '@adapters/out/db/roles/roles.prisma.repository';
-import { validate } from '@middlewares/validate.middleware';
+import { validate, validateParams } from '@middlewares/validate.middleware';
 import { authenticate, authorize } from '@middlewares/auth.middleware';
-import { crearRolSchema, actualizarRolSchema } from './roles.schema';
+import { crearRolSchema, actualizarRolSchema, idParamSchema } from './roles.schema';
 import { ROLES } from '@shared/constants/roles';
 
 // Inyección de dependencias 
@@ -34,6 +34,7 @@ router.get(
     '/:id',
     authenticate,
     authorize(ROLES.ADMIN),
+    validateParams(idParamSchema),
     (req, res, next) => controller.obtenerPorId(req, res, next)
 );
 
@@ -46,13 +47,13 @@ router.post(
     (req, res, next) => controller.crear(req, res, next)
 );
 
-// PUT /roles/:id — solo admins pueden actualizar roles
+// PUT /roles/:id/reactivar — solo admins pueden reactivar roles
 router.put(
-    '/:id',
+    '/:id/reactivar',
     authenticate,
     authorize(ROLES.ADMIN),
-    validate(actualizarRolSchema),
-    (req, res, next) => controller.actualizar(req, res, next)
+    validateParams(idParamSchema),
+    (req, res, next) => controller.reactivar(req, res, next)
 );
 
 // PUT /roles/:id/desactivar — solo admins pueden desactivar roles
@@ -60,7 +61,18 @@ router.put(
     '/:id/desactivar',
     authenticate,
     authorize(ROLES.ADMIN),
+    validateParams(idParamSchema),
     (req, res, next) => controller.desactivar(req, res, next)
+);
+
+// PUT /roles/:id — solo admins pueden actualizar roles
+router.put(
+    '/:id',
+    authenticate,
+    authorize(ROLES.ADMIN),
+    validateParams(idParamSchema),
+    validate(actualizarRolSchema),
+    (req, res, next) => controller.actualizar(req, res, next)
 );
 
 export default router;

@@ -187,9 +187,6 @@
  *               descripcion:
  *                 type: string
  *                 example: Acceso total al sistema
- *               activo:
- *                 type: boolean
- *                 example: true
  *     responses:
  *       200:
  *         description: Rol actualizado exitosamente
@@ -237,4 +234,29 @@
  *         description: Rol no encontrado
  *       409:
  *         description: El rol ya está desactivado
+ *
+ * /roles/{id}/reactivar:
+ *   put:
+ *     summary: Reactivar un rol
+ *     tags: [Roles]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *         example: 1
+ *     responses:
+ *       204:
+ *         description: Rol reactivado exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Rol no encontrado
+ *       409:
+ *         description: El rol ya está activo
  */
