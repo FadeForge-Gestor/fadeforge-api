@@ -32,7 +32,7 @@
  *           type: string
  *           format: date-time
  *
- * /roles/activos:
+ * /admin/roles/activos:
  *   get:
  *     summary: Listar roles activos
  *     tags: [Roles]
@@ -58,7 +58,7 @@
  *       403:
  *         description: Permisos insuficientes
  *
- * /roles:
+ * /admin/roles:
  *   get:
  *     summary: Listar todos los roles
  *     tags: [Roles]
@@ -126,7 +126,7 @@
  *       403:
  *         description: Permisos insuficientes
  *
- * /roles/{id}:
+ * /admin/roles/{id}:
  *   get:
  *     summary: Obtener un rol por ID
  *     tags: [Roles]
@@ -210,7 +210,7 @@
  *         description: Rol no encontrado
  *
  *
- * /roles/{id}/desactivar:
+ * /admin/roles/{id}/desactivar:
  *   put:
  *     summary: Desactivar un rol (soft delete)
  *     tags: [Roles]
@@ -235,7 +235,7 @@
  *       409:
  *         description: El rol ya está desactivado
  *
- * /roles/{id}/reactivar:
+ * /admin/roles/{id}/reactivar:
  *   put:
  *     summary: Reactivar un rol
  *     tags: [Roles]

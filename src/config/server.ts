@@ -1,5 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import { Router } from 'express';
+import { authenticate, authorize } from '@adapters/in/http/middlewares/auth.middleware';
+import { ROLES } from '@shared/constants/roles';
 
 // Importamos Swagger UI para la documentación y Configuración de Swagger (definida en otro archivo)
 import swaggerUi from 'swagger-ui-express';
@@ -30,12 +33,16 @@ app.use(express.json());
 // Documentación Swagger
 app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+const adminRouter = Router();
+adminRouter.use(authenticate, authorize(ROLES.ADMIN));
+adminRouter.use('/roles', rolesRoutes);
+adminRouter.use('/usuarios', usuariosRoutes);
+adminRouter.use('/empleados', empleadosRoutes);
+
 // Rutas
 app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/roles', rolesRoutes);
-app.use('/api/v1/usuarios', usuariosRoutes);
+app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/credenciales', credencialesRoutes);
-app.use('/api/v1/empleados', empleadosRoutes);
 app.use('/api/v1/categoriaServicios', categoriaServiciosRoutes);
 app.use('/api/v1/servicios', serviciosRoutes);
 app.use('/api/v1/citas', citasRoutes);

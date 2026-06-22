@@ -38,7 +38,7 @@
  *           type: string
  *           format: date-time
  *
- * /usuarios:
+ * /admin/usuarios:
  *   get:
  *     summary: Listar todos los usuarios
  *     tags: [Usuarios]
@@ -114,7 +114,7 @@
  *       409:
  *         description: El correo ya está registrado
  *
- * /usuarios/{id}:
+ * /admin/usuarios/{id}:
  *   get:
  *     summary: Obtener un usuario por ID
  *     tags: [Usuarios]
@@ -207,7 +207,7 @@
  *         description: Usuario no encontrado
  *
  *
- * /usuarios/{id}/desactivar:
+ * /admin/usuarios/{id}/desactivar:
  *   put:
  *     summary: Desactivar un usuario (soft delete)
  *     tags: [Usuarios]
