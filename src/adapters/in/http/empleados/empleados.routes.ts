@@ -45,4 +45,10 @@ router.put(
     (req, res, next) => controller.desactivar(req, res, next)
 );
 
+// PUT /empleados/:id/reactivar — solo admins pueden reactivar empleados
+router.put(
+    '/:id/reactivar',
+    (req, res, next) => controller.reactivar(req, res, next)
+);
+
 export default router;

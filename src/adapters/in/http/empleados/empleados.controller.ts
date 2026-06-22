@@ -57,5 +57,16 @@ export class EmpleadosController {
             next(error);
         }
     }
-    
+
+    // Método para reactivar un empleado
+    async reactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            await this.empleadoUseCase.reactivar(id);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }

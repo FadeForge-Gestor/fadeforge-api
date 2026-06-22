@@ -8,4 +8,5 @@ export interface IEmpleadoUseCase {
     obtenerPorId(id: number): Promise<EmpleadoDetalle>;
     promover(input: PromoverEmpleadoInput): Promise<EmpleadoDetalle>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }

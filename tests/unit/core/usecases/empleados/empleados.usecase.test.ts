@@ -38,6 +38,7 @@ const mockEmpleadoRepo: jest.Mocked<IEmpleadoRepository> = {
     buscarPorIdUsuario: jest.fn(),
     promover: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
 };
 
 const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
@@ -129,6 +130,26 @@ describe('EmpleadosUseCase', () => {
             await useCase.desactivar(1);
 
             expect(mockEmpleadoRepo.desactivar).toHaveBeenCalledWith(1);
+        });
+    });
+
+    describe('reactivar', () => {
+
+        it('debe lanzar NotFoundError si el empleado no existe', async () => {
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue(null);
+            await expect(useCase.reactivar(99)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar ConflictError si el empleado ya está activo', async () => {
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake); // activo: true
+            await expect(useCase.reactivar(1)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe llamar reactivar cuando el empleado existe y está inactivo', async () => {
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue({ ...empleadoFake, activo: false });
+            mockEmpleadoRepo.reactivar.mockResolvedValue();
+            await useCase.reactivar(1);
+            expect(mockEmpleadoRepo.reactivar).toHaveBeenCalledWith(1);
         });
     });
 });
