@@ -98,7 +98,6 @@ export class ServiciosPrismaRepository implements IServicioRepository {
                     ...(input.imagenUrl !== undefined && { imagen_url: input.imagenUrl }),
                     ...(input.idImagen !== undefined && { id_imagen: input.idImagen }),
                     ...(input.nombreImagen !== undefined && { nombre_imagen: input.nombreImagen }),
-                    ...(input.activo !== undefined && { activo: input.activo }),
                     fecha_modificacion: new Date(),
                 }
             });
@@ -115,6 +114,14 @@ export class ServiciosPrismaRepository implements IServicioRepository {
         await prisma.servicios.update({
             where: { id },
             data: { activo: false, fecha_modificacion: new Date() },
+        });
+    }
+
+    // Método para reactivar un servicio estableciendo su campo "activo" a true
+    async reactivar(id: number): Promise<void> {
+        await prisma.servicios.update({
+            where: { id },
+            data: { activo: true, fecha_modificacion: new Date() },
         });
     }
 

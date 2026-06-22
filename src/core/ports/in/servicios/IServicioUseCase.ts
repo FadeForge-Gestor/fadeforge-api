@@ -9,4 +9,5 @@ export interface IServicioUseCase {
     crear(input: CrearServicioInput): Promise<Servicio>;
     actualizar(id: number, input: ActualizarServicioInput): Promise<Servicio>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }

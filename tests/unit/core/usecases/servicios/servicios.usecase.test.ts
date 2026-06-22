@@ -36,6 +36,7 @@ const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
     buscarPrecioActual: jest.fn(),
 };
 
@@ -195,6 +196,26 @@ describe('ServiciosUseCase', () => {
             await useCase.desactivar(1);
 
             expect(mockServicioRepo.desactivar).toHaveBeenCalledWith(1);
+        });
+    });
+
+    describe('reactivar', () => {
+
+        it('debe lanzar NotFoundError si el servicio no existe', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(null);
+            await expect(useCase.reactivar(99)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar ConflictError si el servicio ya está activo', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // activo: true
+            await expect(useCase.reactivar(1)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe llamar reactivar cuando el servicio existe y está inactivo', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
+            mockServicioRepo.reactivar.mockResolvedValue();
+            await useCase.reactivar(1);
+            expect(mockServicioRepo.reactivar).toHaveBeenCalledWith(1);
         });
     });
 });

@@ -30,5 +30,4 @@ export interface ActualizarServicioInput {
     imagenUrl?: string;
     idImagen?: string;
     nombreImagen?: string;
-    activo?: boolean;
 }

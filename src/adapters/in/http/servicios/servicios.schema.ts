@@ -31,7 +31,6 @@ export const ActualizarServicioSchema = z.object({
     imagenUrl: z.string().url('La URL de imagen no es válida').optional(),
     idImagen: z.string().optional(),
     nombreImagen: z.string().max(255).optional(),
-    activo: z.boolean().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,
     { message: 'Debes enviar al menos un campo para actualizar' }

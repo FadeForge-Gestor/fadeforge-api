@@ -69,4 +69,15 @@ export class ServiciosController {
         }
     }
 
+    // Método para reactivar un servicio
+    async reactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            await this.serviciosUseCase.reactivar(id);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }
