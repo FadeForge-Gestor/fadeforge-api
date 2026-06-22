@@ -31,7 +31,7 @@
  *           type: string
  *           format: date-time
  *
- * /empleados:
+ * /admin/empleados:
  *   get:
  *     summary: Listar todos los empleados (activos e inactivos)
  *     tags: [Empleados]
@@ -97,7 +97,7 @@
  *       409:
  *         description: El usuario ya es empleado o está desactivado
  *
- * /empleados/activos:
+ * /admin/empleados/activos:
  *   get:
  *     summary: Listar solo los empleados activos
  *     tags: [Empleados]
@@ -123,7 +123,7 @@
  *       403:
  *         description: Permisos insuficientes
  *
- * /empleados/{id}:
+ * /admin/empleados/{id}:
  *   get:
  *     summary: Obtener un empleado por ID
  *     tags: [Empleados]
@@ -156,7 +156,7 @@
  *       404:
  *         description: Empleado no encontrado
  *
- * /empleados/{id}/desactivar:
+ * /admin/empleados/{id}/desactivar:
  *   put:
  *     summary: Desactivar un empleado (soft delete)
  *     tags: [Empleados]
