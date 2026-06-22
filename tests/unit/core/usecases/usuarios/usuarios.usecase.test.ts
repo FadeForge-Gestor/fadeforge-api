@@ -58,6 +58,7 @@ const mockRolRepo: jest.Mocked<IRolRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
 };
 
 const ACTOR_ID = 99;

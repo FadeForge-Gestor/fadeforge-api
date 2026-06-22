@@ -5,7 +5,7 @@ const ServicioEnCitaSchema = z.object({
 });
 
 export const CrearCitaSchema = z.object({
-    idCliente: z.number().int().positive('El id del cliente debe ser mayor a 0'),
+    idCliente: z.number().int().positive('El id del cliente debe ser mayor a 0').optional(),
     idEmpleado: z.number().int().positive('El id del empleado debe ser mayor a 0'),
     fechaInicio: z.coerce.date({ message: 'La fecha de inicio no es válida' }),
     servicios: z.array(ServicioEnCitaSchema)

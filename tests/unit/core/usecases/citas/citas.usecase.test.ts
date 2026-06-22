@@ -72,6 +72,10 @@ const servicioFake: Servicio = {
     fechaModificacion: new Date(),
 };
 
+const actorAdmin = { id: 1, rol: 'admin' };
+const actorCliente = { id: 5, rol: 'cliente' };
+const actorClienteAjeno = { id: 99, rol: 'cliente' };
+
 const mockCitaRepo: jest.Mocked<ICitaRepository> = {
     listarPorRangoFecha: jest.fn(),
     buscarPorId: jest.fn(),
@@ -140,7 +144,7 @@ describe('CitasUseCase', () => {
         it('debe retornar la cita si existe', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
 
-            const result = await useCase.obtenerPorId(1);
+            const result = await useCase.obtenerPorId(1, actorAdmin);
 
             expect(result).toEqual(citaFake);
         });
@@ -148,7 +152,21 @@ describe('CitasUseCase', () => {
         it('debe lanzar NotFoundError si la cita no existe', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.obtenerPorId(99)).rejects.toThrow(NotFoundError);
+            await expect(useCase.obtenerPorId(99, actorAdmin)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar NotFoundError si el cliente intenta ver una cita ajena', async () => {
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+
+            await expect(useCase.obtenerPorId(1, actorClienteAjeno)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe retornar la cita si el cliente es el dueño', async () => {
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+
+            const result = await useCase.obtenerPorId(1, actorCliente);
+
+            expect(result).toEqual(citaFake);
         });
     });
 
@@ -157,7 +175,7 @@ describe('CitasUseCase', () => {
         it('debe retornar la cita si el folio existe', async () => {
             mockCitaRepo.buscarPorFolio.mockResolvedValue(citaFake);
 
-            const result = await useCase.obtenerPorFolio('CIT-00001');
+            const result = await useCase.obtenerPorFolio('CIT-00001', actorAdmin);
 
             expect(result).toEqual(citaFake);
         });
@@ -165,7 +183,21 @@ describe('CitasUseCase', () => {
         it('debe lanzar NotFoundError si el folio no existe', async () => {
             mockCitaRepo.buscarPorFolio.mockResolvedValue(null);
 
-            await expect(useCase.obtenerPorFolio('CIT-99999')).rejects.toThrow(NotFoundError);
+            await expect(useCase.obtenerPorFolio('CIT-99999', actorAdmin)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar NotFoundError si el cliente intenta ver una cita ajena por folio', async () => {
+            mockCitaRepo.buscarPorFolio.mockResolvedValue(citaFake);
+
+            await expect(useCase.obtenerPorFolio('CIT-00001', actorClienteAjeno)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe retornar la cita si el cliente es el dueño', async () => {
+            mockCitaRepo.buscarPorFolio.mockResolvedValue(citaFake);
+
+            const result = await useCase.obtenerPorFolio('CIT-00001', actorCliente);
+
+            expect(result).toEqual(citaFake);
         });
     });
 
@@ -174,9 +206,23 @@ describe('CitasUseCase', () => {
         it('debe retornar las citas del cliente', async () => {
             mockCitaRepo.buscarPorCliente.mockResolvedValue([citaFake]);
 
-            const result = await useCase.listarPorCliente(5);
+            const result = await useCase.listarPorCliente(5, actorAdmin);
 
             expect(mockCitaRepo.buscarPorCliente).toHaveBeenCalledWith(5);
+            expect(result).toEqual([citaFake]);
+        });
+
+        it('debe lanzar NotFoundError si el cliente intenta ver citas de otro cliente', async () => {
+            await expect(useCase.listarPorCliente(5, actorClienteAjeno)).rejects.toThrow(NotFoundError);
+
+            expect(mockCitaRepo.buscarPorCliente).not.toHaveBeenCalled();
+        });
+
+        it('debe retornar las citas si el cliente consulta las suyas', async () => {
+            mockCitaRepo.buscarPorCliente.mockResolvedValue([citaFake]);
+
+            const result = await useCase.listarPorCliente(5, actorCliente);
+
             expect(result).toEqual([citaFake]);
         });
     });
@@ -311,33 +357,33 @@ describe('CitasUseCase', () => {
         it('debe lanzar NotFoundError si la cita no existe', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.actualizar(99, { idEmpleado: 3 })).rejects.toThrow(NotFoundError);
+            await expect(useCase.actualizar(99, { idEmpleado: 3 }, actorAdmin)).rejects.toThrow(NotFoundError);
         });
 
         it('debe lanzar ConflictError si la cita está cancelada', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue({ ...citaFake, estado: 'cancelada' });
 
-            await expect(useCase.actualizar(1, { idEmpleado: 3 })).rejects.toThrow(ConflictError);
+            await expect(useCase.actualizar(1, { idEmpleado: 3 }, actorAdmin)).rejects.toThrow(ConflictError);
         });
 
         it('debe lanzar ConflictError si la cita está finalizada', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue({ ...citaFake, estado: 'finalizada' });
 
-            await expect(useCase.actualizar(1, { idEmpleado: 3 })).rejects.toThrow(ConflictError);
+            await expect(useCase.actualizar(1, { idEmpleado: 3 }, actorAdmin)).rejects.toThrow(ConflictError);
         });
 
         it('debe lanzar NotFoundError si el nuevo empleado no existe', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.actualizar(1, { idEmpleado: 99 })).rejects.toThrow(NotFoundError);
+            await expect(useCase.actualizar(1, { idEmpleado: 99 }, actorAdmin)).rejects.toThrow(NotFoundError);
         });
 
         it('debe lanzar ConflictError si el nuevo empleado está desactivado', async () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue({ ...empleadoFake, activo: false });
 
-            await expect(useCase.actualizar(1, { idEmpleado: 2 })).rejects.toThrow(ConflictError);
+            await expect(useCase.actualizar(1, { idEmpleado: 2 }, actorAdmin)).rejects.toThrow(ConflictError);
         });
 
         it('debe actualizar si todo es válido', async () => {
@@ -347,7 +393,7 @@ describe('CitasUseCase', () => {
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.actualizar.mockResolvedValue(citaActualizada);
 
-            const result = await useCase.actualizar(1, { idEmpleado: 3 });
+            const result = await useCase.actualizar(1, { idEmpleado: 3 }, actorAdmin);
 
             expect(mockCitaRepo.actualizar).toHaveBeenCalledWith(1, { idEmpleado: 3 });
             expect(result.idEmpleado).toBe(3);
@@ -358,7 +404,7 @@ describe('CitasUseCase', () => {
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
 
-            await expect(useCase.actualizar(1, { idEmpleado: 3 })).rejects.toThrow(ConflictError);
+            await expect(useCase.actualizar(1, { idEmpleado: 3 }, actorAdmin)).rejects.toThrow(ConflictError);
 
             expect(mockCitaRepo.actualizar).not.toHaveBeenCalled();
         });
@@ -368,7 +414,7 @@ describe('CitasUseCase', () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
 
-            await expect(useCase.actualizar(1, { fechaInicio: nuevaFecha })).rejects.toThrow(ConflictError);
+            await expect(useCase.actualizar(1, { fechaInicio: nuevaFecha }, actorAdmin)).rejects.toThrow(ConflictError);
 
             expect(mockCitaRepo.actualizar).not.toHaveBeenCalled();
         });
@@ -379,7 +425,7 @@ describe('CitasUseCase', () => {
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.actualizar.mockResolvedValue({ ...citaFake, fechaInicio: nuevaFecha });
 
-            await useCase.actualizar(1, { fechaInicio: nuevaFecha });
+            await useCase.actualizar(1, { fechaInicio: nuevaFecha }, actorAdmin);
 
             expect(mockCitaRepo.verificarSolapamientoEmpleado).toHaveBeenCalledWith(
                 citaFake.idEmpleado,
@@ -393,9 +439,17 @@ describe('CitasUseCase', () => {
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockCitaRepo.actualizar.mockResolvedValue(citaFake);
 
-            await useCase.actualizar(1, { subtotal: 300 });
+            await useCase.actualizar(1, { subtotal: 300 }, actorAdmin);
 
             expect(mockCitaRepo.verificarSolapamientoEmpleado).not.toHaveBeenCalled();
+        });
+
+        it('debe lanzar NotFoundError si el cliente intenta actualizar una cita ajena', async () => {
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
+
+            await expect(useCase.actualizar(1, { idEmpleado: 3 }, actorClienteAjeno)).rejects.toThrow(NotFoundError);
+
+            expect(mockCitaRepo.actualizar).not.toHaveBeenCalled();
         });
     });
 

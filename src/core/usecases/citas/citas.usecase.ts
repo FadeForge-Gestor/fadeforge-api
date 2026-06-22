@@ -7,6 +7,8 @@ import { Cita, CrearCitaInput, ActualizarCitaInput, EstadoCita } from "@core/dom
 import { CrearDetalleCitaInput } from "@core/domain/detalle-cita/detalleCita.entity";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 import { IVA_RATE } from "@shared/constants/iva";
+import { Actor } from "@shared/types/actor";
+import { ROLES } from "@shared/constants/roles";
 
 export class CitasUseCase implements ICitasUseCase {
 
@@ -21,19 +23,23 @@ export class CitasUseCase implements ICitasUseCase {
         return this.citasRepository.listarPorRangoFecha(desde, hasta);
     }
 
-    async obtenerPorId(id: number): Promise<Cita> {
+    async obtenerPorId(id: number, actor: Actor): Promise<Cita> {
         const cita = await this.citasRepository.buscarPorId(id);
         if (!cita) throw new NotFoundError(`Cita con id ${id} no encontrada`);
+        this.validarAcceso(cita, actor);
         return cita;
     }
 
-    async obtenerPorFolio(folio: string): Promise<Cita> {
+    async obtenerPorFolio(folio: string, actor: Actor): Promise<Cita> {
         const cita = await this.citasRepository.buscarPorFolio(folio);
         if (!cita) throw new NotFoundError(`Cita con folio ${folio} no encontrada`);
+        this.validarAcceso(cita, actor);
         return cita;
     }
 
-    async listarPorCliente(idCliente: number): Promise<Cita[]> {
+    async listarPorCliente(idCliente: number, actor: Actor): Promise<Cita[]> {
+        if (actor.rol === ROLES.CLIENTE && actor.id !== idCliente)
+            throw new NotFoundError('Cita no encontrada');
         return this.citasRepository.buscarPorCliente(idCliente);
     }
 
@@ -94,9 +100,10 @@ export class CitasUseCase implements ICitasUseCase {
         });
     }
 
-    async actualizar(id: number, input: ActualizarCitaInput): Promise<Cita> {
+    async actualizar(id: number, input: ActualizarCitaInput, actor: Actor): Promise<Cita> {
         const cita = await this.citasRepository.buscarPorId(id);
         if (!cita) throw new NotFoundError(`Cita con id ${id} no encontrada`);
+        this.validarAcceso(cita, actor);
 
         if (cita.estado === 'cancelada' || cita.estado === 'finalizada')
             throw new ConflictError(`La cita con id ${id} no puede modificarse porque está ${cita.estado}`);
@@ -128,6 +135,12 @@ export class CitasUseCase implements ICitasUseCase {
         }
 
         return this.citasRepository.actualizar(id, input);
+    }
+
+    private validarAcceso(cita: Cita, actor: Actor): void {
+        if (actor.rol === ROLES.CLIENTE && cita.idCliente !== actor.id) {
+            throw new NotFoundError('Cita no encontrada');
+        }
     }
 
     async cambiarEstado(id: number, estado: EstadoCita, motivoCancelado?: string, canceladoPor?: number): Promise<Cita> {
