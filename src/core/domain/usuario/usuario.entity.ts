@@ -36,5 +36,4 @@ export interface ActualizarUsuarioInput {
     aMaterno?: string;
     telefono?: string;
     idRol?: number;
-    activo?: boolean;
 }

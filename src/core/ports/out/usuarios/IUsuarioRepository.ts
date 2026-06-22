@@ -9,4 +9,5 @@ export interface IUsuarioRepository {
     crear(input: CrearUsuarioRepositoryInput): Promise<Usuario>;
     actualizar(id: number, input: ActualizarUsuarioInput): Promise<Usuario>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }

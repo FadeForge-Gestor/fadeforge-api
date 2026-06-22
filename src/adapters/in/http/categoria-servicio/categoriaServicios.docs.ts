@@ -211,4 +211,29 @@
  *         description: Permisos insuficientes
  *       404:
  *         description: Categoría no encontrada
+ *
+ * /admin/categorias-servicios/{id}/reactivar:
+ *   put:
+ *     summary: Reactivar una categoría de servicio
+ *     tags: [Categorias de Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *         example: 1
+ *     responses:
+ *       204:
+ *         description: Categoría reactivada exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Categoría no encontrada
+ *       409:
+ *         description: La categoría ya está activa
  */

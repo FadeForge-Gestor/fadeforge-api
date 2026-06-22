@@ -181,9 +181,6 @@
  *               idRol:
  *                 type: number
  *                 example: 2
- *               activo:
- *                 type: boolean
- *                 example: true
  *     responses:
  *       200:
  *         description: Usuario actualizado exitosamente
@@ -231,4 +228,29 @@
  *         description: Usuario no encontrado
  *       409:
  *         description: El usuario ya está desactivado
+ *
+ * /admin/usuarios/{id}/reactivar:
+ *   put:
+ *     summary: Reactivar un usuario
+ *     tags: [Usuarios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *         example: 1
+ *     responses:
+ *       204:
+ *         description: Usuario reactivado exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Usuario no encontrado
+ *       409:
+ *         description: El usuario ya está activo
  */

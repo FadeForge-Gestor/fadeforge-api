@@ -59,4 +59,15 @@ export class UsuariosController {
         }
     }
 
+    // Método para reactivar un usuario
+    async reactivar(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            await this.usuarioUseCase.reactivar(id);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
+
 }

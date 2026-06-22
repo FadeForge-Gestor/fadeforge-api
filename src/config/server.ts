@@ -14,7 +14,7 @@ import rolesRoutes from '@adapters/in/http/roles/roles.routes';
 import usuariosRoutes from '@adapters/in/http/usuarios/usuarios.routes';
 import credencialesRoutes from '@adapters/in/http/credenciales/credenciales.routes';
 import empleadosRoutes from '@adapters/in/http/empleados/empleados.routes';
-import categoriaServiciosRoutes from '@adapters/in/http/categoria-servicio/categoriaServiciosRoutes.routes';
+import categoriaServiciosRoutes from '@adapters/in/http/categoria-servicio/categoriaServicios.routes';
 import serviciosRoutes from '@adapters/in/http/servicios/servicios.routes';
 import citasRoutes from '@adapters/in/http/citas/citas.routes';
 import detalleCitaRoutes from '@adapters/in/http/detalle-cita/detalleCita.routes';

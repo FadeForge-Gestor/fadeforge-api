@@ -78,7 +78,6 @@ export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepo
                 data: {
                     ...(input.nombre && { nombre: input.nombre }),
                     ...(input.descripcion !== undefined && { descripcion: input.descripcion }),
-                    ...(input.activo !== undefined && { activo: input.activo }),
                     fecha_modificacion: new Date(),
                 }
             });
@@ -95,6 +94,14 @@ export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepo
         await prisma.categorias_servicios.update({
             where: { id },
             data: { activo: false, fecha_modificacion: new Date() },
+        });
+    }
+
+    // Método para reactivar una categoría de servicio estableciendo su campo "activo" a true
+    async reactivar(id: number): Promise<void> {
+        await prisma.categorias_servicios.update({
+            where: { id },
+            data: { activo: true, fecha_modificacion: new Date() },
         });
     }
 

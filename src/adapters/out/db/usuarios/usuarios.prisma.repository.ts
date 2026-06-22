@@ -97,7 +97,6 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
                     ...(input.aMaterno !== undefined && { a_materno: input.aMaterno }),
                     ...(input.telefono && { telefono: input.telefono }),
                     ...(input.idRol && { id_rol: input.idRol }),
-                    ...(input.activo !== undefined && { activo: input.activo }),
                     fecha_modificacion: new Date(),
                 },
             });
@@ -114,6 +113,14 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
         await prisma.usuarios.update({
             where: { id },
             data: { activo: false, fecha_modificacion: new Date() },
+        });
+    }
+
+    // Método para reactivar un usuario estableciendo su campo "activo" a true
+    async reactivar(id: number): Promise<void> {
+        await prisma.usuarios.update({
+            where: { id },
+            data: { activo: true, fecha_modificacion: new Date() },
         });
     }
 }
