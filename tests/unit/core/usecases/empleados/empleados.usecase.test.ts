@@ -90,9 +90,16 @@ describe('EmpleadosUseCase', () => {
             await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
         });
 
-        it('debe lanzar ConflictError si el usuario ya es empleado', async () => {
+        it('debe lanzar ConflictError si el usuario ya es empleado activo', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
-            mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue(empleadoFake);
+            mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue(empleadoFake); // activo: true
+
+            await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe lanzar ConflictError si el usuario ya fue empleado pero está inactivo', async () => {
+            mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue({ ...empleadoFake, activo: false });
 
             await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
         });
