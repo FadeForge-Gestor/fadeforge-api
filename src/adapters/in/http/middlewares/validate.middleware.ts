@@ -20,7 +20,7 @@ export const validateParams = (schema: ZodSchema) => {
         if (!result.success) {
             return next(new BadRequestError(result.error.issues[0].message));
         }
-        req.validatedParams = result.data;
+        req.validatedParams = result.data as Record<string, unknown>;
         next();
     };
 };

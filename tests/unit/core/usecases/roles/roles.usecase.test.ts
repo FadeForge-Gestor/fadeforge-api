@@ -22,6 +22,7 @@ const mockRepo: jest.Mocked<IRolRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
 };
 
 describe('RolesUseCase', () => {
@@ -140,6 +141,30 @@ describe('RolesUseCase', () => {
             await useCase.desactivar(1);
 
             expect(mockRepo.desactivar).toHaveBeenCalledWith(1);
+        });
+    });
+
+    describe('reactivar', () => {
+
+        it('debe lanzar NotFoundError si el rol no existe', async () => {
+            mockRepo.buscarPorId.mockResolvedValue(null);
+
+            await expect(useCase.reactivar(99)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar ConflictError si el rol ya está activo', async () => {
+            mockRepo.buscarPorId.mockResolvedValue(rolFake);
+
+            await expect(useCase.reactivar(1)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe llamar reactivar cuando el rol existe y está inactivo', async () => {
+            mockRepo.buscarPorId.mockResolvedValue({ ...rolFake, activo: false });
+            mockRepo.reactivar.mockResolvedValue();
+
+            await useCase.reactivar(1);
+
+            expect(mockRepo.reactivar).toHaveBeenCalledWith(1);
         });
     });
 });

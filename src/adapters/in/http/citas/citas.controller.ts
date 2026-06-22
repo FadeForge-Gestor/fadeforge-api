@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { ICitasUseCase } from "@core/ports/in/citas/ICitasUseCase";
 import { ok } from "@shared/utils/response";
+import { ROLES } from "@shared/constants/roles";
+import { BadRequestError } from "@shared/errors/HttpError";
 
 export class CitasController {
 
@@ -21,7 +23,7 @@ export class CitasController {
     async obtenerPorId(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            const cita = await this.citasUseCase.obtenerPorId(id);
+            const cita = await this.citasUseCase.obtenerPorId(id, req.user!);
             res.status(200).json(ok(cita));
         } catch (error) {
             next(error);
@@ -32,7 +34,7 @@ export class CitasController {
     async obtenerPorFolio(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const folio = String(req.params.folio);
-            const cita = await this.citasUseCase.obtenerPorFolio(folio);
+            const cita = await this.citasUseCase.obtenerPorFolio(folio, req.user!);
             res.status(200).json(ok(cita));
         } catch (error) {
             next(error);
@@ -43,7 +45,7 @@ export class CitasController {
     async listarPorCliente(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const idCliente = Number(req.params.idCliente);
-            const citas = await this.citasUseCase.listarPorCliente(idCliente);
+            const citas = await this.citasUseCase.listarPorCliente(idCliente, req.user!);
             res.status(200).json(ok(citas));
         } catch (error) {
             next(error);
@@ -53,7 +55,10 @@ export class CitasController {
     // Método para crear una nueva cita
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const cita = await this.citasUseCase.crear(req.body);
+            const { id: userId, rol } = req.user!;
+            const idCliente = rol === ROLES.CLIENTE ? userId : req.body.idCliente;
+            if (!idCliente) return next(new BadRequestError('El campo idCliente es requerido'));
+            const cita = await this.citasUseCase.crear({ ...req.body, idCliente });
             res.status(201).json(ok(cita));
         } catch (error) {
             next(error);
@@ -64,7 +69,7 @@ export class CitasController {
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            const cita = await this.citasUseCase.actualizar(id, req.body);
+            const cita = await this.citasUseCase.actualizar(id, req.body, req.user!);
             res.status(200).json(ok(cita));
         } catch (error) {
             next(error);
