@@ -5,6 +5,8 @@ import { UsuariosPrismaRepository } from "@adapters/out/db/usuarios/usuarios.pri
 import { RolesPrismaRepository } from "@adapters/out/db/roles/roles.prisma.repository";
 import { validate } from "@middlewares/validate.middleware";
 import { crearUsuarioSchema, actualizarUsuarioSchema } from "./usuarios.schema";
+import { authenticate, authorize } from "@middlewares/auth.middleware";
+import { ROLES } from "@shared/constants/roles";
 
 // Inyección de dependencias
 const router = Router();
@@ -16,18 +18,21 @@ const controller = new UsuariosController(casoDeUso);
 // GET /usuarios — solo admins
 router.get(
     '/',
+    authenticate, authorize(ROLES.ADMIN),
     (req, res, next) => controller.listar(req, res, next)
 );
 
 // GET /usuarios/:id — solo admins
 router.get(
     '/:id',
+    authenticate, authorize(ROLES.ADMIN),
     (req, res, next) => controller.obtenerPorId(req, res, next)
 );
 
 // POST /usuarios — solo admins pueden crear usuarios
 router.post(
     '/',
+    authenticate, authorize(ROLES.ADMIN),
     validate(crearUsuarioSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
@@ -35,6 +40,7 @@ router.post(
 // PUT /usuarios/:id — solo admins pueden actualizar usuarios
 router.put(
     '/:id',
+    authenticate, authorize(ROLES.ADMIN),
     validate(actualizarUsuarioSchema),
     (req, res, next) => controller.actualizar(req, res, next)
 );
@@ -42,7 +48,15 @@ router.put(
 // PUT /usuarios/:id/desactivar — solo admins pueden desactivar usuarios
 router.put(
     '/:id/desactivar',
+    authenticate, authorize(ROLES.ADMIN),
     (req, res, next) => controller.desactivar(req, res, next)
+);
+
+// PUT /usuarios/:id/reactivar — solo admins pueden reactivar usuarios
+router.put(
+    '/:id/reactivar',
+    authenticate, authorize(ROLES.ADMIN),
+    (req, res, next) => controller.reactivar(req, res, next)
 );
 
 export default router;

@@ -94,6 +94,7 @@ const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
 };
 
 const mockEmpleadoRepo: jest.Mocked<IEmpleadoRepository> = {
@@ -103,6 +104,7 @@ const mockEmpleadoRepo: jest.Mocked<IEmpleadoRepository> = {
     buscarPorIdUsuario: jest.fn(),
     promover: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
 };
 
 const mockServicioRepo: jest.Mocked<IServicioRepository> = {
@@ -113,6 +115,7 @@ const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
     buscarPrecioActual: jest.fn(),
 };
 

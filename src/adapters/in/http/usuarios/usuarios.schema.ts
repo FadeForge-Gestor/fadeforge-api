@@ -34,7 +34,6 @@ export const actualizarUsuarioSchema = z.object({
     aMaterno: z.string().max(100).optional(),
     telefono: z.string().min(7).max(20).optional(),
     idRol: z.number().int().positive().optional(),
-    activo: z.boolean().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,
     { message: 'Debes enviar al menos un campo para actualizar' }

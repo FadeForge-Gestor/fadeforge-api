@@ -44,6 +44,14 @@ export class CategoriasServiciosUseCase implements ICategoriaServicioUseCase {
         return this.categoriaServicioRepository.actualizar(id, input);
     }
 
+    // Método para reactivar una categoría de servicio
+    async reactivar(id: number): Promise<void> {
+        const existe = await this.categoriaServicioRepository.buscarPorId(id);
+        if (!existe) throw new NotFoundError(`Categoria del servicio con id ${id} no encontrado`);
+        if (existe.activo) throw new ConflictError(`La categoria del servicio con el id ${id} ya está activo`);
+        return this.categoriaServicioRepository.reactivar(id);
+    }
+
     // Método para desactivar una categoria de servicio
     async desactivar(id: number): Promise<void> {
         const existe = await this.categoriaServicioRepository.buscarPorId(id);

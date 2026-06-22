@@ -15,7 +15,6 @@ export const CrearCategoriaServicioSchema = z.object({
 export const ActualizarCategoriaServicioSchema = z.object({
     nombre: z.string().min(2).max(100).optional(),
     descripcion: z.string().min(2).max(100).optional(),
-    activo: z.boolean().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,
     { message: 'Debes enviar al menos un campo para actualizar' }

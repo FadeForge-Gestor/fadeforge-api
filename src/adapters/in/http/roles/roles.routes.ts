@@ -4,6 +4,8 @@ import { RolesUseCase } from '@core/usecases/roles/roles.usecase';
 import { RolesPrismaRepository } from '@adapters/out/db/roles/roles.prisma.repository';
 import { validate, validateParams } from '@middlewares/validate.middleware';
 import { crearRolSchema, actualizarRolSchema, idParamSchema } from './roles.schema';
+import { authenticate, authorize } from '@middlewares/auth.middleware';
+import { ROLES } from '@shared/constants/roles';
 
 // Inyección de dependencias
 const router = Router();
@@ -14,18 +16,21 @@ const controller = new RolesController(casoDeUso);
 // GET /roles — solo admins
 router.get(
     '/',
+    authenticate, authorize(ROLES.ADMIN),
     (req, res, next) => controller.listar(req, res, next)
 );
 
 // GET / rolesActivos - solo admins
 router.get(
     '/activos',
+    authenticate, authorize(ROLES.ADMIN),
     (req, res, next) => controller.listarActivos(req, res, next)
 )
 
 // GET /roles/:id — solo admins
 router.get(
     '/:id',
+    authenticate, authorize(ROLES.ADMIN),
     validateParams(idParamSchema),
     (req, res, next) => controller.obtenerPorId(req, res, next)
 );
@@ -33,6 +38,7 @@ router.get(
 // POST /roles — solo admins pueden crear roles
 router.post(
     '/',
+    authenticate, authorize(ROLES.ADMIN),
     validate(crearRolSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
@@ -40,6 +46,7 @@ router.post(
 // PUT /roles/:id/reactivar — solo admins pueden reactivar roles
 router.put(
     '/:id/reactivar',
+    authenticate, authorize(ROLES.ADMIN),
     validateParams(idParamSchema),
     (req, res, next) => controller.reactivar(req, res, next)
 );
@@ -47,6 +54,7 @@ router.put(
 // PUT /roles/:id/desactivar — solo admins pueden desactivar roles
 router.put(
     '/:id/desactivar',
+    authenticate, authorize(ROLES.ADMIN),
     validateParams(idParamSchema),
     (req, res, next) => controller.desactivar(req, res, next)
 );
@@ -54,6 +62,7 @@ router.put(
 // PUT /roles/:id — solo admins pueden actualizar roles
 router.put(
     '/:id',
+    authenticate, authorize(ROLES.ADMIN),
     validateParams(idParamSchema),
     validate(actualizarRolSchema),
     (req, res, next) => controller.actualizar(req, res, next)

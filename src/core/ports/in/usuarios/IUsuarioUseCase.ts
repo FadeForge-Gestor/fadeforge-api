@@ -8,4 +8,5 @@ export interface IUsuarioUseCase {
     crear(input: CrearUsuarioInput): Promise<Usuario>;
     actualizar(id: number, input: ActualizarUsuarioInput, actorId: number): Promise<Usuario>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }

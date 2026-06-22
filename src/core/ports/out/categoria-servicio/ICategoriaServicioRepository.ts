@@ -10,4 +10,5 @@ export interface ICategoriaServicioRepository {
     crear(input: CrearCategoriaServicioInput): Promise<CategoriaServicio>;
     actualizar(id: number, input: ActualizarCategoriaServicioInput): Promise<CategoriaServicio>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }

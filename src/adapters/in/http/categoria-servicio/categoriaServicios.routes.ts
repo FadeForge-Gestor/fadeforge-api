@@ -57,5 +57,13 @@ router.put(
     (req, res, next) => controller.desactivar(req, res, next)
 );
 
+// PUT /categoriaServicios/:id/reactivar — solo admins pueden reactivar categorías
+router.put(
+    '/:id/reactivar',
+    authenticate,
+    authorize(ROLES.ADMIN),
+    (req, res, next) => controller.reactivar(req, res, next)
+);
+
 export default router;
 

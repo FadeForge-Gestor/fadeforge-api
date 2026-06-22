@@ -48,6 +48,7 @@ const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
+    reactivar: jest.fn(),
 };
 
 describe('EmpleadosUseCase', () => {

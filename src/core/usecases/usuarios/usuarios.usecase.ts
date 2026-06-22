@@ -58,6 +58,14 @@ export class UsuariosUseCase implements IUsuarioUseCase {
             return this.usuarioRepository.actualizar(id, input);
         }
 
+        // Método para reactivar un usuario
+        async reactivar(id: number): Promise<void> {
+            const existe = await this.usuarioRepository.buscarPorId(id);
+            if (!existe) throw new NotFoundError(`Usuario con id ${id} no encontrado`);
+            if (existe.activo) throw new ConflictError(`El usuario con id ${id} ya está activo`);
+            return this.usuarioRepository.reactivar(id);
+        }
+
         // Método para desactivar una cuenta
         async desactivar(id: number): Promise<void> {
             const existe = await this.usuarioRepository.buscarPorId(id);

@@ -15,5 +15,4 @@ export interface CrearCategoriaServicioInput {
 export interface ActualizarCategoriaServicioInput {
     nombre?: string;
     descripcion?: string;
-    activo?: boolean;
 }
