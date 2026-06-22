@@ -74,15 +74,16 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
     // Método para buscar un empleado por su id de usuario
     async buscarPorIdUsuario(idUsuario: number): Promise<Empleado | null> {
         const empleado = await prisma.empleados.findUnique({
-            where: { id_usuario: idUsuario },
-            include: {
-                usuarios: {
-                    include: { credenciales_usuarios: true }
-                }
-            }
+            where: { id_usuario: idUsuario }
         });
         if (!empleado) return null;
-        return this.mapear(empleado);
+        return {
+            id: empleado.id,
+            idUsuario: empleado.id_usuario,
+            activo: empleado.activo,
+            fechaCreacion: empleado.fecha_creacion,
+            fechaModificacion: empleado.fecha_modificacion,
+        };
     }
 
     // Método para agregarle el puesto a un empleado
@@ -104,6 +105,14 @@ export class EmpleadosPrismaRepository implements IEmpleadoRepository {
             where: { id },
             data: { activo: false, fecha_modificacion: new Date() },
         })
+    }
+
+    // Método para reactivar un empleado estableciendo su campo "activo" a true
+    async reactivar(id: number): Promise<void> {
+        await prisma.empleados.update({
+            where: { id },
+            data: { activo: true, fecha_modificacion: new Date() },
+        });
     }
 
 }

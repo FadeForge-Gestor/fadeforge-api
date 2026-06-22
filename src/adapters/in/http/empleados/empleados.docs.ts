@@ -180,4 +180,29 @@
  *         description: Empleado no encontrado
  *       409:
  *         description: El empleado ya está desactivado
+ *
+ * /admin/empleados/{id}/reactivar:
+ *   put:
+ *     summary: Reactivar un empleado previamente desactivado
+ *     tags: [Empleados]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *         example: 1
+ *     responses:
+ *       204:
+ *         description: Empleado reactivado exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Empleado no encontrado
+ *       409:
+ *         description: El empleado ya está activo
  */

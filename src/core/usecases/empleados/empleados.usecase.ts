@@ -37,8 +37,17 @@ export class EmpleadosUseCase implements IEmpleadoUseCase {
 
         // Nos aseguramos de encontrar el empleado y asegurarno que no sea ya empleado
         const existe = await this.empleadoRepository.buscarPorIdUsuario(input.idUsuario);
-        if (existe) throw new ConflictError(`El usuario con id ${input.idUsuario} ya es empleado`);
+        if (existe && existe.activo === true) throw new ConflictError(`El usuario con id ${input.idUsuario} ya es empleado activo`);
+        if (existe && existe.activo === false) throw new ConflictError(`El usuario con id ${input.idUsuario} ya fue empleado. Para recontratarlo, usá reactivar`);
         return this.empleadoRepository.promover(input);
+    }
+
+    // Método para reactivar un empleado
+    async reactivar(id: number): Promise<void> {
+        const empleado = await this.empleadoRepository.buscarPorId(id);
+        if (!empleado) throw new NotFoundError(`Empleado con id ${id} no encontrado`);
+        if (empleado.activo === true) throw new ConflictError(`El Empleado con id ${id} ya está activo`);
+        return this.empleadoRepository.reactivar(id);
     }
 
     // Método para desactivar un empleado

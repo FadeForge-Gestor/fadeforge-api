@@ -11,4 +11,5 @@ export interface IEmpleadoRepository {
     buscarPorIdUsuario(idUsuario: number): Promise<Empleado | null>;
     promover(input: PromoverEmpleadoInput): Promise<EmpleadoDetalle>;
     desactivar(id: number): Promise<void>;
+    reactivar(id: number): Promise<void>;
 }
