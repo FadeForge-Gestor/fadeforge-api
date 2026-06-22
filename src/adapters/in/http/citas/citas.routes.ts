@@ -5,9 +5,9 @@ import { CitasPrismaRepository } from '@adapters/out/db/citas/citas.prisma.repos
 import { UsuariosPrismaRepository } from '@adapters/out/db/usuarios/usuarios.prisma.repository';
 import { EmpleadosPrismaRepository } from '@adapters/out/db/empleados/empleados.prisma.repository';
 import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.prisma.repository';
-import { validate } from '@middlewares/validate.middleware';
+import { validate, validateQuery } from '@middlewares/validate.middleware';
 import { authenticate, authorize } from '@middlewares/auth.middleware';
-import { CrearCitaSchema, ActualizarCitaSchema, CambiarEstadoCitaSchema } from './citas.schema';
+import { CrearCitaSchema, ActualizarCitaSchema, CambiarEstadoCitaSchema, RangoFechaSchema } from './citas.schema';
 import { ROLES } from '@shared/constants/roles';
 
 const router = Router();
@@ -23,6 +23,7 @@ router.get(
     '/',
     authenticate,
     authorize(ROLES.ADMIN, ROLES.EMPLEADO),
+    validateQuery(RangoFechaSchema),
     (req, res, next) => controller.listarPorRangoFecha(req, res, next)
 );
 

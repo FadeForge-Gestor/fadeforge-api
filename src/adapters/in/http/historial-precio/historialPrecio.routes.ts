@@ -13,16 +13,16 @@ const repositorio = new HistorialPrecioPrismaRepository();
 const casoDeUso = new HistorialPrecioUseCase(repositorio);
 const controller = new HistorialPrecioController(casoDeUso);
 
-// GET /historial-precios/:idServicio — lista todo el historial de precios del servicio
-router.get(
-    '/:idServicio',
-    (req, res, next) => controller.listarPorServicio(req, res, next)
-);
-
 // GET /historial-precios/:idServicio/actual — obtiene el precio vigente del servicio
 router.get(
     '/:idServicio/actual',
     (req, res, next) => controller.obtenerPrecioActual(req, res, next)
+);
+
+// GET /historial-precios/:idServicio — lista todo el historial de precios del servicio
+router.get(
+    '/:idServicio',
+    (req, res, next) => controller.listarPorServicio(req, res, next)
 );
 
 // POST /historial-precios — registra un nuevo precio para un servicio (solo admins)
