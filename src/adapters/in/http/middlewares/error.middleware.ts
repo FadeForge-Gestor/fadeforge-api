@@ -17,6 +17,15 @@ export const errorMiddleware = (
         return;
     }
 
+    if (error instanceof SyntaxError && 'body' in error) {
+        res.status(400).json({
+            ok: false,
+            name: 'BadRequest',
+            message: 'El cuerpo de la petición no es JSON válido',
+        });
+        return;
+    }
+
     // Error inesperado - solo muestra el detalle en desarrollo
     if (env.NODE_ENV === 'development') {
         console.error(error);
