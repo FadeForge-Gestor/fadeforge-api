@@ -143,6 +143,14 @@ describe('ServiciosUseCase', () => {
             await expect(useCase.actualizar(99, { nombre: 'Nuevo' })).rejects.toThrow(NotFoundError);
         });
 
+        it('debe lanzar ConflictError si el servicio está desactivado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
+
+            await expect(useCase.actualizar(1, { nombre: 'Nuevo' })).rejects.toThrow(ConflictError);
+            expect(mockCategoriaRepo.buscarPorId).not.toHaveBeenCalled();
+            expect(mockServicioRepo.buscarPorNombre).not.toHaveBeenCalled();
+        });
+
         it('debe lanzar NotFoundError si la categoría nueva no existe', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockCategoriaRepo.buscarPorId.mockResolvedValue(null);
