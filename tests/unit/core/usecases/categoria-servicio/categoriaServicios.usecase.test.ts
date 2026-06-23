@@ -82,6 +82,14 @@ describe('CategoriasServiciosUseCase', () => {
             await expect(useCase.actualizar(1, { nombre: 'Nuevo' })).rejects.toThrow(ConflictError);
         });
 
+        it('debe lanzar ConflictError de estado desactivado antes que el de nombre duplicado', async () => {
+            mockRepo.buscarPorId.mockResolvedValue({ ...categoriaFake, activo: false });
+            mockRepo.buscarPorNombre.mockResolvedValue({ ...categoriaFake, id: 2 });
+
+            await expect(useCase.actualizar(1, { nombre: 'Cortes' })).rejects.toThrow(ConflictError);
+            expect(mockRepo.buscarPorNombre).not.toHaveBeenCalled();
+        });
+
         it('debe lanzar ConflictError si el nombre ya lo usa otra categoría', async () => {
             mockRepo.buscarPorId.mockResolvedValue(categoriaFake);
             mockRepo.buscarPorNombre.mockResolvedValue({ ...categoriaFake, id: 2 });

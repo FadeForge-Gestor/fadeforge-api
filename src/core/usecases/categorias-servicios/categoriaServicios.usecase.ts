@@ -36,11 +36,11 @@ export class CategoriasServiciosUseCase implements ICategoriaServicioUseCase {
     async actualizar(id: number, input: ActualizarCategoriaServicioInput): Promise<CategoriaServicio> {
         const existe = await this.categoriaServicioRepository.buscarPorId(id);
         if (!existe) throw new NotFoundError(`Categoria del servicio con id ${id} no encontrado`);
+        if (!existe.activo) throw new ConflictError(`La categoría con id ${id} está desactivada`);
         if (input.nombre) {
             const nombreExiste = await this.categoriaServicioRepository.buscarPorNombre(input.nombre);
             if (nombreExiste && nombreExiste.id !== id) throw new ConflictError(`La categoría ${input.nombre} ya existe`);
         }
-        if (!existe.activo) throw new ConflictError(`La categoría con id ${id} está desactivada`);
         return this.categoriaServicioRepository.actualizar(id, input);
     }
 
