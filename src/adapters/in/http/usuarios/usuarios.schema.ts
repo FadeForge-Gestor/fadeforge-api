@@ -20,11 +20,7 @@ export const crearUsuarioSchema = z.object({
     correo: z.string()
         .email({ message: 'El correo no tiene un formato válido' })
         .max(100, 'El correo no puede superar 100 caracteres'),
-    contrasena: z.string()
-        .min(8, 'La contraseña debe tener al menos 8 caracteres')
-        .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_])/, 
-        'La contraseña debe tener mayúsculas, minúsculas, números y símbolos')
-        .refine((value) => !/\s/.test(value), 'La contraseña no puede contener espacios'),
+    contrasena: z.string().min(1, 'La contraseña es requerida'),
 });
 
 // Esquema para actualizar un usuarios existente

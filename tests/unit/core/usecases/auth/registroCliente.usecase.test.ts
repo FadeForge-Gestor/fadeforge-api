@@ -5,7 +5,7 @@ import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository'
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { Rol } from '@core/domain/rol/rol.entity';
-import { ConflictError, NotFoundError } from '@shared/errors/HttpError';
+import { BadRequestError, ConflictError, NotFoundError } from '@shared/errors/HttpError';
 import { ROLES } from '@shared/constants/roles';
 
 jest.mock('bcrypt');
@@ -41,7 +41,7 @@ const inputRegistro = {
     aPaterno: 'Pérez',
     telefono: '5512345678',
     correo: 'juan@test.com',
-    contrasena: 'secreto123',
+    contrasena: 'Secreto123!',
 };
 
 const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
@@ -73,6 +73,11 @@ describe('RegistroClienteUseCase', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         useCase = new RegistroClienteUseCase(mockUsuarioRepo, mockRolRepo);
+    });
+
+    it('debe lanzar BadRequestError si la contraseña no cumple los requisitos', async () => {
+        await expect(useCase.registrar({ ...inputRegistro, contrasena: 'debil' }))
+            .rejects.toThrow(BadRequestError);
     });
 
     it('debe lanzar ConflictError si el correo ya está registrado', async () => {

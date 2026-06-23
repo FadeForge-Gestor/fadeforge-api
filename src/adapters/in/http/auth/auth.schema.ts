@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Esquema de validación para el login
 export const loginSchema = z.object({
     correo: z.string().email('Correo electrónico no válido'),
-    contrasena: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    contrasena: z.string().min(1, 'La contraseña es requerida'),
 });
 
 export type LoginDto = z.infer<typeof loginSchema>;
@@ -15,7 +15,7 @@ export const registroClienteSchema = z.object({
     aMaterno: z.string().optional(),
     telefono: z.string().min(10, 'El teléfono debe tener al menos 10 caracteres'),
     correo: z.string().email('Correo electrónico no válido'),
-    contrasena: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+    contrasena: z.string().min(1, 'La contraseña es requerida'),
 });
 
 export type RegistroClienteDto = z.infer<typeof registroClienteSchema>;

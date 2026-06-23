@@ -50,9 +50,9 @@ describe('validate middleware', () => {
         expect(next).toHaveBeenCalledWith(expect.any(BadRequestError));
     });
 
-    it('debe llamar next(BadRequestError) cuando la contraseña es muy corta', () => {
+    it('debe llamar next(BadRequestError) cuando la contraseña está vacía', () => {
         const req = {
-            body: { correo: 'test@test.com', contrasena: '123' }
+            body: { correo: 'test@test.com', contrasena: '' }
         } as Request;
         const res = {} as Response;
 
