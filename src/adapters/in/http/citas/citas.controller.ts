@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { ICitasUseCase } from "@core/ports/in/citas/ICitasUseCase";
 import { ok } from "@shared/utils/response";
-import { ROLES } from "@shared/constants/roles";
-import { BadRequestError } from "@shared/errors/HttpError";
 
 export class CitasController {
 
@@ -55,10 +53,7 @@ export class CitasController {
     // Método para crear una nueva cita
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { id: userId, rol } = req.user!;
-            const idCliente = rol === ROLES.CLIENTE ? userId : req.body.idCliente;
-            if (!idCliente) return next(new BadRequestError('El campo idCliente es requerido'));
-            const cita = await this.citasUseCase.crear({ ...req.body, idCliente });
+            const cita = await this.citasUseCase.crear(req.body, req.user!);
             res.status(201).json(ok(cita));
         } catch (error) {
             next(error);
