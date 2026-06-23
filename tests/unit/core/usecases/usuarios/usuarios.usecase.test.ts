@@ -98,12 +98,28 @@ describe('UsuariosUseCase', () => {
             await expect(useCase.crear(inputCrear)).rejects.toThrow(ConflictError);
         });
 
-        it('debe crear el usuario si el correo no existe', async () => {
+        it('debe lanzar BadRequestError si el rol no existe', async () => {
             mockRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorId.mockResolvedValue(null);
+
+            await expect(useCase.crear(inputCrear)).rejects.toThrow(BadRequestError);
+        });
+
+        it('debe lanzar BadRequestError si el rol existe pero está inactivo', async () => {
+            mockRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorId.mockResolvedValue({ ...rolFake, activo: false });
+
+            await expect(useCase.crear(inputCrear)).rejects.toThrow(BadRequestError);
+        });
+
+        it('debe crear el usuario si el correo no existe y el rol es válido', async () => {
+            mockRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorId.mockResolvedValue(rolFake);
             mockRepo.crear.mockResolvedValue(usuarioFake);
 
             const result = await useCase.crear(inputCrear);
 
+            expect(mockRolRepo.buscarPorId).toHaveBeenCalledWith(inputCrear.idRol);
             expect(mockRepo.crear).toHaveBeenCalledWith(
                 expect.objectContaining({ hashContrasena: expect.any(String) })
             );

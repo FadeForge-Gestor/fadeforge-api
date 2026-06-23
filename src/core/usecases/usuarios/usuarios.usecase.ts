@@ -29,6 +29,10 @@ export class UsuariosUseCase implements IUsuarioUseCase {
             const correoExiste = await this.usuarioRepository.buscarPorCorreo(input.correo);
             if (correoExiste) throw new ConflictError(`El correo ${input.correo} ya está registrado`);
 
+            const rol = await this.rolRepository.buscarPorId(input.idRol);
+            if (!rol) throw new BadRequestError(`El rol con id ${input.idRol} no existe`);
+            if (!rol.activo) throw new BadRequestError(`El rol con id ${input.idRol} está inactivo`);
+
             const hashContrasena = await bcrypt.hash(input.contrasena, 10);
             return this.usuarioRepository.crear({
                 nombre: input.nombre,
