@@ -124,4 +124,28 @@ describe('CategoriasServiciosUseCase', () => {
             expect(mockRepo.desactivar).toHaveBeenCalledWith(1);
         });
     });
+
+    describe('listar', () => {
+
+        it('debe retornar todas las categorías', async () => {
+            mockRepo.listarTodos.mockResolvedValue([categoriaFake]);
+
+            const result = await useCase.listar();
+
+            expect(mockRepo.listarTodos).toHaveBeenCalled();
+            expect(result).toEqual([categoriaFake]);
+        });
+    });
+
+    describe('listarActivos', () => {
+
+        it('debe retornar las categorías activas', async () => {
+            mockRepo.listarActivos.mockResolvedValue([categoriaFake]);
+
+            const result = await useCase.listarActivos();
+
+            expect(mockRepo.listarActivos).toHaveBeenCalled();
+            expect(result).toEqual([categoriaFake]);
+        });
+    });
 });
