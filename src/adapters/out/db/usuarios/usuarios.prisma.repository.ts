@@ -2,6 +2,7 @@ import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository"
 import { Usuario, CrearUsuarioRepositoryInput, ActualizarUsuarioInput } from "@core/domain/usuario/usuario.entity";
 import { prisma } from "../prisma.client";
 import { NotFoundError, ConflictError, BadRequestError } from "@shared/errors/HttpError";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
 export class UsuariosPrismaRepository implements IUsuarioRepository {
 
@@ -80,8 +81,8 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
             });
 
             return this.mapear(usuario);
-        } catch (error: any) {
-            if (error?.code === 'P2002') throw new ConflictError('El correo ya está registrado');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('El correo ya está registrado');
             throw error;
         }
     }
@@ -102,9 +103,9 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
                 },
             });
             return this.mapear(usuario);
-        } catch (error: any) {
-            if (error?.code === 'P2025') throw new NotFoundError(`Usuario con id ${id} no encontrado`);
-            if (error?.code === 'P2003') throw new BadRequestError('El rol especificado no existe');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') throw new NotFoundError(`Usuario con id ${id} no encontrado`);
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2003') throw new BadRequestError('El rol especificado no existe');
             throw error;
         }
     }  

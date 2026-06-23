@@ -2,6 +2,7 @@ import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { Rol, CrearRolInput, ActualizarRolInput } from '@core/domain/rol/rol.entity';
 import { prisma } from '../prisma.client';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 export class RolesPrismaRepository implements IRolRepository {
 
@@ -76,8 +77,8 @@ export class RolesPrismaRepository implements IRolRepository {
                 },
             });
             return this.mapear(rol);
-        } catch (error: any) {
-            if (error?.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
             throw error;
         }
     }
@@ -95,9 +96,9 @@ export class RolesPrismaRepository implements IRolRepository {
                 },
             });
             return this.mapear(rol);
-        } catch (error: any) {
-            if (error?.code === 'P2025') throw new NotFoundError(`Rol con id ${id} no encontrado`);
-            if (error?.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') throw new NotFoundError(`Rol con id ${id} no encontrado`);
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
             throw error;
         }
     }
