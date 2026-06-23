@@ -46,6 +46,7 @@ export class ServiciosUseCase implements IServicioUseCase {
     async actualizar(id: number, input: ActualizarServicioInput): Promise<Servicio> {
         const servicio = await this.servicioRepository.buscarPorId(id);
         if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (!servicio.activo) throw new ConflictError(`El servicio con id ${id} está desactivado`);
 
         if (input.idCategoria) {
             const categoria = await this.categoriaRepository.buscarPorId(input.idCategoria);
