@@ -2,6 +2,7 @@ import { IServicioRepository } from "@core/ports/out/servicios/IServicioReposito
 import { Servicio, CrearServicioInput, ActualizarServicioInput } from "@core/domain/servicio/servicio.entity";
 import { prisma } from "../prisma.client";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
 export class ServiciosPrismaRepository implements IServicioRepository {
 
@@ -79,8 +80,8 @@ export class ServiciosPrismaRepository implements IServicioRepository {
                 }
             });
             return this.mapear(servicio);
-        } catch (error: any) {
-            if (error?.code === 'P2002') throw new ConflictError('Ya existe un servicio con este nombre');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe un servicio con este nombre');
             throw error;
         }
     }
@@ -102,9 +103,9 @@ export class ServiciosPrismaRepository implements IServicioRepository {
                 }
             });
             return this.mapear(servicio);
-        } catch (error: any) {
-            if (error?.code === 'P2025') throw new NotFoundError(`Servicio con id ${id} no encontrado`);
-            if (error?.code === 'P2002') throw new ConflictError('Ya existe un servicio con ese nombre');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe un servicio con ese nombre');
             throw error;
         }
     }

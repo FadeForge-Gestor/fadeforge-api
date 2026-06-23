@@ -2,6 +2,7 @@ import { ICategoriaServicioRepository } from "@core/ports/out/categoria-servicio
 import { CategoriaServicio, CrearCategoriaServicioInput, ActualizarCategoriaServicioInput } from "@core/domain/categoria-servicio/categoriaServicio.entity";
 import { prisma } from "../prisma.client";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
 export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepository {
 
@@ -64,8 +65,8 @@ export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepo
                 }
             });
             return this.mapear(categoriaServicio);
-        } catch (error: any) {
-            if (error?.code === 'P2002') throw new ConflictError('Ya existe una categoria de un servicio con este nombre');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe una categoria de un servicio con este nombre');
             throw error;
         }
     }
@@ -82,9 +83,9 @@ export class CategoriaServicioPrismaRepository implements ICategoriaServicioRepo
                 }
             });
             return this.mapear(categoriaServicio);
-        } catch (error: any) {
-            if (error?.code === 'P2025') throw new NotFoundError(`Categoría de Servicio con id ${id} no encontrado`);
-            if (error?.code === 'P2002') throw new ConflictError('Ya existe una categoría con ese nombre');
+        } catch (error: unknown) {
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') throw new NotFoundError(`Categoría de Servicio con id ${id} no encontrado`);
+            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe una categoría con ese nombre');
             throw error;
         }
     }
