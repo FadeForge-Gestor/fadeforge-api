@@ -43,7 +43,7 @@ adminRouter.use('/empleados', empleadosRoutes);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/credenciales', credencialesRoutes);
-app.use('/api/v1/categoriaServicios', categoriaServiciosRoutes);
+app.use('/api/v1/categorias-servicios', categoriaServiciosRoutes);
 app.use('/api/v1/servicios', serviciosRoutes);
 app.use('/api/v1/citas', citasRoutes);
 app.use('/api/v1/detalle-cita', detalleCitaRoutes);
