@@ -2,6 +2,7 @@ import { Router } from "express";
 import { HistorialPrecioController } from "./historialPrecio.controller";
 import { HistorialPrecioUseCase } from "@core/usecases/historial-precio/historialPrecio.usecase";
 import { HistorialPrecioPrismaRepository } from "@adapters/out/db/historial-precio/historialPrecio.prisma.repository";
+import { ServiciosPrismaRepository } from "@adapters/out/db/servicios/servicios.prisma.repository";
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
 import { RegistrarPrecioSchema } from "./historialPrecio.schema";
@@ -10,7 +11,8 @@ import { ROLES } from "@shared/constants/roles";
 // Inyección de dependencias 
 const router = Router();
 const repositorio = new HistorialPrecioPrismaRepository();
-const casoDeUso = new HistorialPrecioUseCase(repositorio);
+const servicioRepositorio = new ServiciosPrismaRepository();
+const casoDeUso = new HistorialPrecioUseCase(repositorio, servicioRepositorio);
 const controller = new HistorialPrecioController(casoDeUso);
 
 // GET /historial-precios/:idServicio/actual — obtiene el precio vigente del servicio

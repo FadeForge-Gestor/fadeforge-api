@@ -1,6 +1,8 @@
 import { HistorialPrecioUseCase } from '@core/usecases/historial-precio/historialPrecio.usecase';
 import { IHistorialPrecioRepository } from '@core/ports/out/historial-precio/IHistorialPrecioRepository';
+import { IServicioRepository } from '@core/ports/out/servicios/IServicioRepository';
 import { HistorialPrecio } from '@core/domain/historial-precio/historialPrecio.entity';
+import { Servicio } from '@core/domain/servicio/servicio.entity';
 import { BadRequestError } from '@shared/errors/HttpError';
 
 const historialFake: HistorialPrecio = {
@@ -11,11 +13,37 @@ const historialFake: HistorialPrecio = {
     fechaFin: null,
 };
 
+const servicioFake: Servicio = {
+    id: 3,
+    nombre: 'Corte de cabello',
+    descripcion: null,
+    duracionMinutos: 30,
+    idCategoria: 1,
+    imagenUrl: null,
+    idImagen: null,
+    nombreImagen: null,
+    activo: true,
+    fechaCreacion: new Date(),
+    fechaModificacion: new Date(),
+};
+
 const mockRepo: jest.Mocked<IHistorialPrecioRepository> = {
     listarPorServicio: jest.fn(),
     buscarPrecioActual: jest.fn(),
     cerrarPrecioActual: jest.fn(),
     crear: jest.fn(),
+};
+
+const mockServicioRepo: jest.Mocked<IServicioRepository> = {
+    listarTodos: jest.fn(),
+    listarActivos: jest.fn(),
+    buscarPorId: jest.fn(),
+    buscarPorNombre: jest.fn(),
+    crear: jest.fn(),
+    actualizar: jest.fn(),
+    desactivar: jest.fn(),
+    reactivar: jest.fn(),
+    buscarPrecioActual: jest.fn(),
 };
 
 describe('HistorialPrecioUseCase', () => {
@@ -24,7 +52,7 @@ describe('HistorialPrecioUseCase', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        useCase = new HistorialPrecioUseCase(mockRepo);
+        useCase = new HistorialPrecioUseCase(mockRepo, mockServicioRepo);
     });
 
     describe('listarPorServicio', () => {
@@ -79,7 +107,18 @@ describe('HistorialPrecioUseCase', () => {
                 .rejects.toThrow(BadRequestError);
         });
 
+        it('debe lanzar BadRequestError si el servicio no existe', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(null);
+
+            await expect(useCase.registrarPrecio({ idServicio: 99, precio: 1500 }))
+                .rejects.toThrow(BadRequestError);
+
+            expect(mockRepo.cerrarPrecioActual).not.toHaveBeenCalled();
+            expect(mockRepo.crear).not.toHaveBeenCalled();
+        });
+
         it('debe cerrar el precio anterior antes de crear el nuevo', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockRepo.cerrarPrecioActual.mockResolvedValue(undefined);
             mockRepo.crear.mockResolvedValue(historialFake);
 
@@ -91,15 +130,18 @@ describe('HistorialPrecioUseCase', () => {
         });
 
         it('debe llamar cerrarPrecioActual con el idServicio correcto', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockRepo.cerrarPrecioActual.mockResolvedValue(undefined);
             mockRepo.crear.mockResolvedValue(historialFake);
 
             await useCase.registrarPrecio({ idServicio: 3, precio: 1500 });
 
+            expect(mockServicioRepo.buscarPorId).toHaveBeenCalledWith(3);
             expect(mockRepo.cerrarPrecioActual).toHaveBeenCalledWith(3);
         });
 
         it('debe retornar el nuevo historial creado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockRepo.cerrarPrecioActual.mockResolvedValue(undefined);
             mockRepo.crear.mockResolvedValue(historialFake);
 
