@@ -4,7 +4,8 @@ import { IRegistroClienteUseCase, RegistroClienteInput, RegistroClienteOutput } 
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { env } from '@config/env';
-import { ConflictError, NotFoundError } from '@shared/errors/HttpError';
+import { BadRequestError, ConflictError, NotFoundError } from '@shared/errors/HttpError';
+import { validarContrasena } from '@core/domain/usuario/contrasena';
 import { ROLES } from '@shared/constants/roles';
 
 export class RegistroClienteUseCase implements IRegistroClienteUseCase {
@@ -15,6 +16,9 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
     ) {}
 
     async registrar(input: RegistroClienteInput): Promise<RegistroClienteOutput> {
+        const errorContrasena = validarContrasena(input.contrasena);
+        if (errorContrasena) throw new BadRequestError(errorContrasena);
+
         const correoExiste = await this.usuarioRepository.buscarPorCorreo(input.correo);
         if (correoExiste) throw new ConflictError(`El correo ${input.correo} ya está registrado`);
 

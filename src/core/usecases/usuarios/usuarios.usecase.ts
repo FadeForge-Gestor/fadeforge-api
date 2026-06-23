@@ -3,6 +3,7 @@ import { IRolRepository } from "@core/ports/out/roles/IRolRepository";
 import { IUsuarioUseCase } from "@core/ports/in/usuarios/IUsuarioUseCase";
 import { Usuario, CrearUsuarioInput, ActualizarUsuarioInput } from "@core/domain/usuario/usuario.entity";
 import { NotFoundError, ConflictError, ForbiddenError, BadRequestError } from "@shared/errors/HttpError";
+import { validarContrasena } from "@core/domain/usuario/contrasena";
 import bcrypt from "bcrypt";
 
 export class UsuariosUseCase implements IUsuarioUseCase {
@@ -26,6 +27,9 @@ export class UsuariosUseCase implements IUsuarioUseCase {
 
         // Método para crear un usuario
         async crear(input: CrearUsuarioInput): Promise<Usuario> {
+            const errorContrasena = validarContrasena(input.contrasena);
+            if (errorContrasena) throw new BadRequestError(errorContrasena);
+
             const correoExiste = await this.usuarioRepository.buscarPorCorreo(input.correo);
             if (correoExiste) throw new ConflictError(`El correo ${input.correo} ya está registrado`);
 

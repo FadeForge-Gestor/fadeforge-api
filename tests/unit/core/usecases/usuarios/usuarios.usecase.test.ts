@@ -37,7 +37,7 @@ const inputCrear: CrearUsuarioInput = {
     telefono: '1234567890',
     idRol: 2,
     correo: 'juan@test.com',
-    contrasena: 'secreto123',
+    contrasena: 'Secreto123!',
 };
 
 const mockRepo: jest.Mocked<IUsuarioRepository> = {
@@ -91,6 +91,11 @@ describe('UsuariosUseCase', () => {
     });
 
     describe('crear', () => {
+
+        it('debe lanzar BadRequestError si la contraseña no cumple los requisitos', async () => {
+            await expect(useCase.crear({ ...inputCrear, contrasena: 'debil' }))
+                .rejects.toThrow(BadRequestError);
+        });
 
         it('debe lanzar ConflictError si el correo ya está registrado', async () => {
             mockRepo.buscarPorCorreo.mockResolvedValue(usuarioFake);
