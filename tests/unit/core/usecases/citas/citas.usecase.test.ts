@@ -234,29 +234,62 @@ describe('CitasUseCase', () => {
 
         const fechaFutura = new Date(Date.now() + 3600000);
 
+        it('debe lanzar ConflictError si el actor es admin y no se proporciona idCliente', async () => {
+            await expect(useCase.crear({ idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] } as any, actorAdmin))
+                .rejects.toThrow(ConflictError);
+
+            expect(mockUsuarioRepo.buscarPorId).not.toHaveBeenCalled();
+        });
+
+        it('debe usar el id del actor si el actor es cliente (ignora idCliente del input)', async () => {
+            mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
+            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
+            mockCitaRepo.crear.mockResolvedValue(citaFake);
+
+            await useCase.crear({ idCliente: 99, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorCliente);
+
+            expect(mockCitaRepo.crear).toHaveBeenCalledWith(expect.objectContaining({ idCliente: actorCliente.id }));
+        });
+
+        it('debe usar el idCliente del input si el actor es admin', async () => {
+            mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
+            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
+            mockCitaRepo.crear.mockResolvedValue(citaFake);
+
+            await useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin);
+
+            expect(mockCitaRepo.crear).toHaveBeenCalledWith(expect.objectContaining({ idCliente: 5 }));
+        });
+
         it('debe lanzar ConflictError si no se envían servicios', async () => {
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
         });
 
         it('debe lanzar ConflictError si la fecha de inicio es en el pasado', async () => {
             const fechaPasada = new Date(Date.now() - 3600000);
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaPasada, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaPasada, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
         });
 
         it('debe lanzar NotFoundError si el cliente no existe', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.crear({ idCliente: 99, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 99, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(NotFoundError);
         });
 
         it('debe lanzar ConflictError si el cliente está desactivado', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue({ ...usuarioFake, activo: false });
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
         });
 
@@ -264,7 +297,7 @@ describe('CitasUseCase', () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 99, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 99, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(NotFoundError);
         });
 
@@ -272,7 +305,7 @@ describe('CitasUseCase', () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue({ ...empleadoFake, activo: false });
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
         });
 
@@ -281,7 +314,7 @@ describe('CitasUseCase', () => {
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
             mockServicioRepo.buscarPorId.mockResolvedValue(null);
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 99 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 99 }] }, actorAdmin))
                 .rejects.toThrow(NotFoundError);
         });
 
@@ -290,7 +323,7 @@ describe('CitasUseCase', () => {
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
             mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
         });
 
@@ -300,7 +333,7 @@ describe('CitasUseCase', () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockServicioRepo.buscarPrecioActual.mockResolvedValue(null);
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
         });
 
@@ -312,7 +345,7 @@ describe('CitasUseCase', () => {
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
-            const result = await useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] });
+            const result = await useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin);
 
             expect(mockCitaRepo.crear).toHaveBeenCalledWith(expect.objectContaining({
                 idCliente: 5,
@@ -333,7 +366,7 @@ describe('CitasUseCase', () => {
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
             const fechaInicio = new Date(Date.now() + 3600000);
-            await useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio, servicios: [{ idServicio: 1 }] });
+            await useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio, servicios: [{ idServicio: 1 }] }, actorAdmin);
 
             const fechaFinEsperada = new Date(fechaInicio.getTime() + 30 * 60 * 1000);
             expect(mockCitaRepo.crear).toHaveBeenCalledWith(expect.objectContaining({
@@ -348,7 +381,7 @@ describe('CitasUseCase', () => {
             mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
 
-            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }))
+            await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
 
             expect(mockCitaRepo.crear).not.toHaveBeenCalled();

@@ -43,7 +43,11 @@ export class CitasUseCase implements ICitasUseCase {
         return this.citasRepository.buscarPorCliente(idCliente);
     }
 
-    async crear(input: CrearCitaInput): Promise<Cita> {
+    async crear(input: CrearCitaInput, actor: Actor): Promise<Cita> {
+        const idCliente = actor.rol === ROLES.CLIENTE ? actor.id : input.idCliente;
+        if (!idCliente) throw new ConflictError('El campo idCliente es requerido');
+        input = { ...input, idCliente };
+
         if (!input.servicios || input.servicios.length === 0)
             throw new ConflictError('La cita debe incluir al menos un servicio');
 
