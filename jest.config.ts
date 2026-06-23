@@ -23,7 +23,6 @@ const config: Config = {
         '!src/config/swagger.ts',
     ],
     coverageDirectory: 'coverage',
-    globalTeardown: '<rootDir>/tests/teardown.ts',
     forceExit: true,
 };
 
