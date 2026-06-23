@@ -160,4 +160,28 @@ describe('EmpleadosUseCase', () => {
             expect(mockEmpleadoRepo.reactivar).toHaveBeenCalledWith(1);
         });
     });
+
+    describe('listar', () => {
+
+        it('debe retornar todos los empleados', async () => {
+            mockEmpleadoRepo.listarTodos.mockResolvedValue([empleadoFake]);
+
+            const result = await useCase.listar();
+
+            expect(mockEmpleadoRepo.listarTodos).toHaveBeenCalled();
+            expect(result).toEqual([empleadoFake]);
+        });
+    });
+
+    describe('listarActivos', () => {
+
+        it('debe retornar los empleados activos', async () => {
+            mockEmpleadoRepo.listarActivos.mockResolvedValue([empleadoFake]);
+
+            const result = await useCase.listarActivos();
+
+            expect(mockEmpleadoRepo.listarActivos).toHaveBeenCalled();
+            expect(result).toEqual([empleadoFake]);
+        });
+    });
 });

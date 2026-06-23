@@ -167,4 +167,28 @@ describe('RolesUseCase', () => {
             expect(mockRepo.reactivar).toHaveBeenCalledWith(1);
         });
     });
+
+    describe('listar', () => {
+
+        it('debe retornar todos los roles', async () => {
+            mockRepo.listarTodos.mockResolvedValue([rolFake]);
+
+            const result = await useCase.listar();
+
+            expect(mockRepo.listarTodos).toHaveBeenCalled();
+            expect(result).toEqual([rolFake]);
+        });
+    });
+
+    describe('listarActivos', () => {
+
+        it('debe retornar los roles activos', async () => {
+            mockRepo.listarActivos.mockResolvedValue([rolFake]);
+
+            const result = await useCase.listarActivos();
+
+            expect(mockRepo.listarActivos).toHaveBeenCalled();
+            expect(result).toEqual([rolFake]);
+        });
+    });
 });

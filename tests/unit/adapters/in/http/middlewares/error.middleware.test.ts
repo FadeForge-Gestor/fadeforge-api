@@ -2,9 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { errorMiddleware } from '@middlewares/error.middleware';
 import { BadRequestError, UnauthorizedError } from '@shared/errors/HttpError';
 
-// Mockeamos env para que el middleware no llame console.error en los tests
 jest.mock('@config/env', () => ({
-    env: { NODE_ENV: 'production' }
+    env: { NODE_ENV: 'production' },
 }));
 
 // Pruebas unitarias para el middleware global de manejo de errores
@@ -57,5 +56,23 @@ describe('errorMiddleware', () => {
             ok: false,
             name: 'InternalServerError',
         }));
+    });
+
+    describe('en modo development', () => {
+
+        it('debe llamar console.error con el error original', () => {
+            const envMock = jest.requireMock('@config/env');
+            envMock.env.NODE_ENV = 'development';
+
+            const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+            const error = new Error('debug info');
+
+            errorMiddleware(error, {} as Request, res as unknown as Response, jest.fn() as NextFunction);
+
+            expect(consoleSpy).toHaveBeenCalledWith(error);
+
+            envMock.env.NODE_ENV = 'production';
+            consoleSpy.mockRestore();
+        });
     });
 });
