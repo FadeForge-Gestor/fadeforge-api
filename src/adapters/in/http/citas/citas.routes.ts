@@ -7,6 +7,8 @@ import { EmpleadosPrismaRepository } from '@adapters/out/db/empleados/empleados.
 import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.prisma.repository';
 import { validate, validateQuery } from '@middlewares/validate.middleware';
 import { authenticate, authorize } from '@middlewares/auth.middleware';
+import { idempotency } from '@middlewares/idempotency.middleware';
+import { IdempotencyMemoryRepository } from '@adapters/out/memory/idempotency/idempotency.memory.repository';
 import { CrearCitaSchema, ActualizarCitaSchema, CambiarEstadoCitaSchema, RangoFechaSchema } from './citas.schema';
 import { ROLES } from '@shared/constants/roles';
 
@@ -15,6 +17,7 @@ const citasRepo = new CitasPrismaRepository();
 const usuariosRepo = new UsuariosPrismaRepository();
 const empleadosRepo = new EmpleadosPrismaRepository();
 const serviciosRepo = new ServiciosPrismaRepository();
+const idempotencyRepo = new IdempotencyMemoryRepository();
 const casoDeUso = new CitasUseCase(citasRepo, usuariosRepo, empleadosRepo, serviciosRepo);
 const controller = new CitasController(casoDeUso);
 
@@ -52,6 +55,7 @@ router.get(
 router.post(
     '/',
     authenticate,
+    idempotency(idempotencyRepo),
     validate(CrearCitaSchema),
     (req, res, next) => controller.crear(req, res, next)
 );

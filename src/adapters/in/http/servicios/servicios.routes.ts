@@ -5,6 +5,8 @@ import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.
 import { CategoriaServicioPrismaRepository } from '@adapters/out/db/categorias-servicios/categoriaServicios.prisma.repository';
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
+import { idempotency } from "@middlewares/idempotency.middleware";
+import { IdempotencyMemoryRepository } from "@adapters/out/memory/idempotency/idempotency.memory.repository";
 import { CrearServicioSchema, ActualizarServicioSchema } from "./servicios.schema";
 import { ROLES } from "@shared/constants/roles";
 
@@ -14,6 +16,7 @@ const repositorio = new ServiciosPrismaRepository();
 const categoriaRepositorio = new CategoriaServicioPrismaRepository();
 const casoDeUso = new ServiciosUseCase(repositorio, categoriaRepositorio);
 const controller = new ServiciosController(casoDeUso);
+const idempotencyRepo = new IdempotencyMemoryRepository();
 
 // GET /servicios
 router.get(
@@ -40,6 +43,7 @@ router.post(
     '/',
     authenticate,
     authorize(ROLES.ADMIN),
+    idempotency(idempotencyRepo),
     validate(CrearServicioSchema),
     (req, res, next) => controller.crear(req, res, next)
 );

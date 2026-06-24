@@ -6,6 +6,8 @@ import { RolesPrismaRepository } from "@adapters/out/db/roles/roles.prisma.repos
 import { validate } from "@middlewares/validate.middleware";
 import { crearUsuarioSchema, actualizarUsuarioSchema } from "./usuarios.schema";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
+import { idempotency } from "@middlewares/idempotency.middleware";
+import { IdempotencyMemoryRepository } from "@adapters/out/memory/idempotency/idempotency.memory.repository";
 import { ROLES } from "@shared/constants/roles";
 
 // Inyección de dependencias
@@ -14,6 +16,7 @@ const repositorio = new UsuariosPrismaRepository();
 const rolRepositorio = new RolesPrismaRepository();
 const casoDeUso = new UsuariosUseCase(repositorio, rolRepositorio);
 const controller = new UsuariosController(casoDeUso);
+const idempotencyRepo = new IdempotencyMemoryRepository();
 
 // GET /usuarios — solo admins
 router.get(
@@ -33,6 +36,7 @@ router.get(
 router.post(
     '/',
     authenticate, authorize(ROLES.ADMIN),
+    idempotency(idempotencyRepo),
     validate(crearUsuarioSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
