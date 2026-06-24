@@ -4,6 +4,8 @@ import { EmpleadosUseCase } from "@core/usecases/empleados/empleados.usecase";
 import { UsuariosPrismaRepository } from "@adapters/out/db/usuarios/usuarios.prisma.repository";
 import { EmpleadosPrismaRepository } from "@adapters/out/db/empleados/empleados.prisma.repository";
 import { validate } from "@middlewares/validate.middleware";
+import { idempotency } from "@middlewares/idempotency.middleware";
+import { IdempotencyMemoryRepository } from "@adapters/out/memory/idempotency/idempotency.memory.repository";
 import { promoverEmpleadoSchema } from "./empleados.schema";
 
 // Inyección de dependencias — el orden importa:
@@ -11,6 +13,7 @@ import { promoverEmpleadoSchema } from "./empleados.schema";
 const router = Router();
 const repositorio = new EmpleadosPrismaRepository();
 const usuarioRepositorio = new UsuariosPrismaRepository();
+const idempotencyRepo = new IdempotencyMemoryRepository();
 const casoDeUso = new EmpleadosUseCase(repositorio, usuarioRepositorio);
 const controller = new EmpleadosController(casoDeUso);
 
@@ -35,6 +38,7 @@ router.get(
 // POST /empleados — solo admins pueden promover empleados
 router.post(
     '/',
+    idempotency(idempotencyRepo),
     validate(promoverEmpleadoSchema),
     (req, res, next) => controller.promover(req, res, next)
 );
