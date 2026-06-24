@@ -12,4 +12,6 @@ export interface IServicioRepository {
     desactivar(id: number): Promise<void>;
     reactivar(id: number): Promise<void>;
     buscarPrecioActual(idServicio: number): Promise<number | null>;
+    buscarPorIds(ids: number[]): Promise<Servicio[]>;
+    buscarPreciosActuales(ids: number[]): Promise<Map<number, number>>;
 }

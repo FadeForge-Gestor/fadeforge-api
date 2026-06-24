@@ -111,12 +111,14 @@ const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     listarTodos: jest.fn(),
     listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
+    buscarPorIds: jest.fn(),
     buscarPorNombre: jest.fn(),
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
     reactivar: jest.fn(),
     buscarPrecioActual: jest.fn(),
+    buscarPreciosActuales: jest.fn(),
 };
 
 describe('CitasUseCase', () => {
@@ -244,8 +246,8 @@ describe('CitasUseCase', () => {
         it('debe usar el id del actor si el actor es cliente (ignora idCliente del input)', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([servicioFake]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map([[1, 250]]));
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
@@ -257,8 +259,8 @@ describe('CitasUseCase', () => {
         it('debe usar el idCliente del input si el actor es admin', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([servicioFake]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map([[1, 250]]));
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
@@ -312,7 +314,8 @@ describe('CitasUseCase', () => {
         it('debe lanzar NotFoundError si un servicio no existe', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(null);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map());
 
             await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 99 }] }, actorAdmin))
                 .rejects.toThrow(NotFoundError);
@@ -321,7 +324,8 @@ describe('CitasUseCase', () => {
         it('debe lanzar ConflictError si un servicio está desactivado', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
+            mockServicioRepo.buscarPorIds.mockResolvedValue([{ ...servicioFake, activo: false }]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map());
 
             await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
@@ -330,8 +334,8 @@ describe('CitasUseCase', () => {
         it('debe lanzar ConflictError si un servicio no tiene precio registrado', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockServicioRepo.buscarPrecioActual.mockResolvedValue(null);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([servicioFake]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map());
 
             await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
@@ -340,8 +344,8 @@ describe('CitasUseCase', () => {
         it('debe crear la cita con subtotal, iva y total calculados correctamente', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([servicioFake]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map([[1, 250]]));
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
@@ -360,8 +364,8 @@ describe('CitasUseCase', () => {
         it('debe calcular fechaFin sumando la duración de todos los servicios', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([servicioFake]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map([[1, 250]]));
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.crear.mockResolvedValue(citaFake);
 
@@ -377,8 +381,8 @@ describe('CitasUseCase', () => {
         it('debe lanzar ConflictError si el empleado ya tiene una cita en ese horario', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockEmpleadoRepo.buscarPorId.mockResolvedValue(empleadoFake);
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockServicioRepo.buscarPrecioActual.mockResolvedValue(250);
+            mockServicioRepo.buscarPorIds.mockResolvedValue([servicioFake]);
+            mockServicioRepo.buscarPreciosActuales.mockResolvedValue(new Map([[1, 250]]));
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
 
             await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] }, actorAdmin))

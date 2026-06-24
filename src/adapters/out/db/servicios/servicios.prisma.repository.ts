@@ -135,4 +135,25 @@ export class ServiciosPrismaRepository implements IServicioRepository {
         return historial.precio.toNumber();
     }
 
+    async buscarPorIds(ids: number[]): Promise<Servicio[]> {
+        const servicios = await prisma.servicios.findMany({
+            where: { id: { in: ids } },
+        });
+        return servicios.map(s => this.mapear(s));
+    }
+
+    async buscarPreciosActuales(ids: number[]): Promise<Map<number, number>> {
+        const historiales = await prisma.historial_precios.findMany({
+            where: { id_servicio: { in: ids }, fecha_fin: null },
+            orderBy: { fecha_inicio: 'desc' },
+        });
+        const map = new Map<number, number>();
+        for (const h of historiales) {
+            if (!map.has(h.id_servicio)) {
+                map.set(h.id_servicio, h.precio.toNumber());
+            }
+        }
+        return map;
+    }
+
 }
