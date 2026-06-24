@@ -7,4 +7,5 @@ export interface IHistorialPrecioRepository {
     buscarPrecioActual(idServicio: number): Promise<number | null>;
     cerrarPrecioActual(idServicio: number): Promise<void>;
     crear(input: CrearHistorialPrecioInput): Promise<HistorialPrecio>;
+    reemplazarPrecio(input: CrearHistorialPrecioInput): Promise<HistorialPrecio>;
 }
