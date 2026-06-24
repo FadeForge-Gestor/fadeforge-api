@@ -27,8 +27,7 @@ export class HistorialPrecioUseCase implements IHistorialPrecioUseCase {
         if (input.precio <= 0) throw new BadRequestError('El precio debe ser mayor a 0');
         const servicio = await this.servicioRepository.buscarPorId(input.idServicio);
         if (!servicio) throw new BadRequestError(`El servicio con id ${input.idServicio} no existe`);
-        await this.historialPrecioRepository.cerrarPrecioActual(input.idServicio);
-        return this.historialPrecioRepository.crear(input);
+        return this.historialPrecioRepository.reemplazarPrecio(input);
     }
 
 }

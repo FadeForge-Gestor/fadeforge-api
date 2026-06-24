@@ -32,18 +32,21 @@ const mockRepo: jest.Mocked<IHistorialPrecioRepository> = {
     buscarPrecioActual: jest.fn(),
     cerrarPrecioActual: jest.fn(),
     crear: jest.fn(),
+    reemplazarPrecio: jest.fn(),
 };
 
 const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     listarTodos: jest.fn(),
     listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
+    buscarPorIds: jest.fn(),
     buscarPorNombre: jest.fn(),
     crear: jest.fn(),
     actualizar: jest.fn(),
     desactivar: jest.fn(),
     reactivar: jest.fn(),
     buscarPrecioActual: jest.fn(),
+    buscarPreciosActuales: jest.fn(),
 };
 
 describe('HistorialPrecioUseCase', () => {
@@ -113,41 +116,35 @@ describe('HistorialPrecioUseCase', () => {
             await expect(useCase.registrarPrecio({ idServicio: 99, precio: 1500 }))
                 .rejects.toThrow(BadRequestError);
 
-            expect(mockRepo.cerrarPrecioActual).not.toHaveBeenCalled();
-            expect(mockRepo.crear).not.toHaveBeenCalled();
+            expect(mockRepo.reemplazarPrecio).not.toHaveBeenCalled();
         });
 
-        it('debe cerrar el precio anterior antes de crear el nuevo', async () => {
+        it('debe llamar reemplazarPrecio con el input correcto', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockRepo.cerrarPrecioActual.mockResolvedValue(undefined);
-            mockRepo.crear.mockResolvedValue(historialFake);
+            mockRepo.reemplazarPrecio.mockResolvedValue(historialFake);
 
             await useCase.registrarPrecio({ idServicio: 3, precio: 1500 });
 
-            const cerrarOrder = mockRepo.cerrarPrecioActual.mock.invocationCallOrder[0];
-            const crearOrder = mockRepo.crear.mock.invocationCallOrder[0];
-            expect(cerrarOrder).toBeLessThan(crearOrder);
+            expect(mockRepo.reemplazarPrecio).toHaveBeenCalledWith({ idServicio: 3, precio: 1500 });
         });
 
-        it('debe llamar cerrarPrecioActual con el idServicio correcto', async () => {
+        it('debe llamar reemplazarPrecio con el idServicio correcto', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockRepo.cerrarPrecioActual.mockResolvedValue(undefined);
-            mockRepo.crear.mockResolvedValue(historialFake);
+            mockRepo.reemplazarPrecio.mockResolvedValue(historialFake);
 
             await useCase.registrarPrecio({ idServicio: 3, precio: 1500 });
 
             expect(mockServicioRepo.buscarPorId).toHaveBeenCalledWith(3);
-            expect(mockRepo.cerrarPrecioActual).toHaveBeenCalledWith(3);
+            expect(mockRepo.reemplazarPrecio).toHaveBeenCalledWith({ idServicio: 3, precio: 1500 });
         });
 
         it('debe retornar el nuevo historial creado', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
-            mockRepo.cerrarPrecioActual.mockResolvedValue(undefined);
-            mockRepo.crear.mockResolvedValue(historialFake);
+            mockRepo.reemplazarPrecio.mockResolvedValue(historialFake);
 
             const result = await useCase.registrarPrecio({ idServicio: 3, precio: 1500 });
 
-            expect(mockRepo.crear).toHaveBeenCalledWith({ idServicio: 3, precio: 1500 });
+            expect(mockRepo.reemplazarPrecio).toHaveBeenCalledWith({ idServicio: 3, precio: 1500 });
             expect(result).toEqual(historialFake);
         });
     });

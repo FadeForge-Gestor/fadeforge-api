@@ -58,4 +58,20 @@ export class HistorialPrecioPrismaRepository implements IHistorialPrecioReposito
         return this.mapear(historial);
     }
 
+    async reemplazarPrecio(input: CrearHistorialPrecioInput): Promise<HistorialPrecio> {
+        const historial = await prisma.$transaction(async (tx) => {
+            await tx.historial_precios.updateMany({
+                where: { id_servicio: input.idServicio, fecha_fin: null },
+                data: { fecha_fin: new Date() },
+            });
+            return tx.historial_precios.create({
+                data: {
+                    id_servicio: input.idServicio,
+                    precio: input.precio,
+                },
+            });
+        });
+        return this.mapear(historial);
+    }
+
 }
