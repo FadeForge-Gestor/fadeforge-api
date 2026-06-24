@@ -62,17 +62,24 @@ export class CitasUseCase implements ICitasUseCase {
         if (!empleado) throw new NotFoundError(`Empleado con id ${input.idEmpleado} no encontrado`);
         if (!empleado.activo) throw new ConflictError(`El empleado con id ${input.idEmpleado} está desactivado`);
 
+        const ids = input.servicios.map(item => item.idServicio);
+        const [servicios, precios] = await Promise.all([
+            this.servicioRepository.buscarPorIds(ids),
+            this.servicioRepository.buscarPreciosActuales(ids),
+        ]);
+
+        const serviciosMap = new Map(servicios.map(s => [s.id, s]));
         const detalle: CrearDetalleCitaInput[] = [];
         let totalMinutos = 0;
         let subtotal = 0;
 
         for (const item of input.servicios) {
-            const servicio = await this.servicioRepository.buscarPorId(item.idServicio);
+            const servicio = serviciosMap.get(item.idServicio);
             if (!servicio) throw new NotFoundError(`Servicio con id ${item.idServicio} no encontrado`);
             if (!servicio.activo) throw new ConflictError(`El servicio con id ${item.idServicio} está desactivado`);
 
-            const precio = await this.servicioRepository.buscarPrecioActual(item.idServicio);
-            if (precio === null) throw new ConflictError(`El servicio con id ${item.idServicio} no tiene precio registrado`);
+            const precio = precios.get(item.idServicio);
+            if (precio === undefined) throw new ConflictError(`El servicio con id ${item.idServicio} no tiene precio registrado`);
 
             detalle.push({ idServicio: item.idServicio, precioAplicado: precio, duracionMinutos: servicio.duracionMinutos });
             totalMinutos += servicio.duracionMinutos;
