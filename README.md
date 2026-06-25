@@ -118,6 +118,29 @@ Documentación completa disponible en `/api/v1/docs` con Swagger UI.
 
 ---
 
+## Technical decisions
+
+### Idempotency on POST endpoints
+All POST endpoints (`/citas`, `/usuarios`, `/empleados`, `/servicios`, `/categorias-servicios`) support idempotent requests via an `Idempotency-Key` header. If the same key is sent twice, the second request returns the cached response without re-executing the operation. This prevents duplicate records caused by network retries or accidental double-submits.
+
+The implementation follows the hexagonal pattern: an `IIdempotencyRepository` port with an in-memory adapter using a `Map` with 24h TTL. Swapping to Redis requires only a new adapter.
+
+### ACID transactions
+Operations that involve multiple writes are wrapped in Prisma `$transaction` to guarantee atomicity:
+
+- **User creation**: `usuarios` + `credenciales_usuarios` are created together — if the credential insert fails, the user is rolled back.
+- **Price replacement**: closing the current price (`fecha_fin`) and inserting the new one happen in a single transaction. Before this fix, a failure on the second query would leave the service with no active price, blocking all future appointments that include it.
+
+### N+1 elimination in appointment creation
+The original `crear` method in `CitasUseCase` ran 2 queries per service inside a `for...of` loop — `buscarPorId` + `buscarPrecioActual` — resulting in `2×N` sequential queries.
+
+Replaced with two bulk queries in parallel via `Promise.all` (`buscarPorIds` + `buscarPreciosActuales`), followed by in-memory `Map` lookups. Result: always **2 flat queries** regardless of how many services an appointment includes.
+
+### Domain validation
+Password validation lives in the domain layer (`core/domain/usuario/contrasena.ts`), not in the HTTP adapter. Business rules belong to the domain — the controller is only responsible for receiving and responding to HTTP requests.
+
+---
+
 ## Testing
 
 Los tests unitarios cubren la capa de use cases con mocks de repositorios. Esto garantiza que la lógica de negocio se prueba en aislamiento total, sin base de datos ni HTTP.
