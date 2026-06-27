@@ -149,38 +149,15 @@ describe('ServiciosUseCase', () => {
                 .rejects.toThrow(ConflictError);
         });
 
-        it('debe crear el servicio sin imagen si no se provee archivo', async () => {
+        it('debe crear el servicio exitosamente', async () => {
             mockCategoriaRepo.buscarPorId.mockResolvedValue(categoriaFake);
             mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
             mockServicioRepo.crear.mockResolvedValue(servicioFake);
 
             const result = await useCase.crear({ nombre: 'Corte de cabello', duracionMinutos: 30, idCategoria: 1 });
 
-            expect(mockStoragePort.subir).not.toHaveBeenCalled();
             expect(mockServicioRepo.crear).toHaveBeenCalledTimes(1);
             expect(result).toEqual(servicioFake);
-        });
-
-        it('debe subir la imagen y asignarla al servicio si se provee archivo', async () => {
-            mockCategoriaRepo.buscarPorId.mockResolvedValue(categoriaFake);
-            mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
-            mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
-            mockServicioRepo.crear.mockResolvedValue(servicioConImagenFake);
-
-            const result = await useCase.crear(
-                { nombre: 'Corte de cabello', duracionMinutos: 30, idCategoria: 1 },
-                archivoFake
-            );
-
-            expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
-            expect(mockServicioRepo.crear).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    imagenUrl: imagenSubidaFake.url,
-                    idImagen: imagenSubidaFake.publicId,
-                    nombreImagen: imagenSubidaFake.nombre,
-                })
-            );
-            expect(result).toEqual(servicioConImagenFake);
         });
     });
 
@@ -221,41 +198,115 @@ describe('ServiciosUseCase', () => {
             await expect(useCase.actualizar(1, { nombre: 'Corte de cabello' })).rejects.toThrow(ConflictError);
         });
 
-        it('debe actualizar sin imagen si no se provee archivo', async () => {
+        it('debe actualizar el servicio exitosamente', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
             mockServicioRepo.actualizar.mockResolvedValue({ ...servicioFake, nombre: 'Corte clásico' });
 
             const result = await useCase.actualizar(1, { nombre: 'Corte clásico' });
 
-            expect(mockStoragePort.subir).not.toHaveBeenCalled();
-            expect(mockStoragePort.eliminar).not.toHaveBeenCalled();
             expect(mockServicioRepo.actualizar).toHaveBeenCalledWith(1, { nombre: 'Corte clásico' });
             expect(result.nombre).toBe('Corte clásico');
         });
+    });
 
-        it('debe subir imagen sin eliminar si el servicio no tenía imagen previa', async () => {
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // idImagen: null
-            mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
-            mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
-            mockServicioRepo.actualizar.mockResolvedValue(servicioConImagenFake);
+    describe('subirImagen', () => {
 
-            await useCase.actualizar(1, { nombre: 'Corte clásico' }, archivoFake);
+        it('debe lanzar NotFoundError si el servicio no existe', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(null);
 
-            expect(mockStoragePort.eliminar).not.toHaveBeenCalled();
-            expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
+            await expect(useCase.subirImagen(99, archivoFake)).rejects.toThrow(NotFoundError);
         });
 
-        it('debe eliminar la imagen anterior y subir la nueva si el servicio ya tenía imagen', async () => {
+        it('debe lanzar ConflictError si el servicio está desactivado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
+
+            await expect(useCase.subirImagen(1, archivoFake)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe lanzar ConflictError si el servicio ya tiene imagen', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioConImagenFake);
-            mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
+
+            await expect(useCase.subirImagen(1, archivoFake)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe subir imagen y retornar servicio actualizado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
             mockServicioRepo.actualizar.mockResolvedValue(servicioConImagenFake);
 
-            await useCase.actualizar(1, { nombre: 'Corte clásico' }, archivoFake);
+            const result = await useCase.subirImagen(1, archivoFake);
+
+            expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
+            expect(mockServicioRepo.actualizar).toHaveBeenCalledWith(1, {
+                imagenUrl: imagenSubidaFake.url,
+                idImagen: imagenSubidaFake.publicId,
+                nombreImagen: imagenSubidaFake.nombre,
+            });
+            expect(result).toEqual(servicioConImagenFake);
+        });
+    });
+
+    describe('actualizarImagen', () => {
+
+        it('debe lanzar NotFoundError si el servicio no existe', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(null);
+
+            await expect(useCase.actualizarImagen(99, archivoFake)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar ConflictError si el servicio está desactivado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
+
+            await expect(useCase.actualizarImagen(1, archivoFake)).rejects.toThrow(ConflictError);
+        });
+
+        it('debe lanzar NotFoundError si el servicio no tiene imagen', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // idImagen: null
+
+            await expect(useCase.actualizarImagen(1, archivoFake)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe eliminar imagen anterior y subir la nueva', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioConImagenFake);
+            mockStoragePort.eliminar.mockResolvedValue();
+            mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
+            mockServicioRepo.actualizar.mockResolvedValue(servicioConImagenFake);
+
+            await useCase.actualizarImagen(1, archivoFake);
 
             expect(mockStoragePort.eliminar).toHaveBeenCalledWith(servicioConImagenFake.idImagen);
             expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
+        });
+    });
+
+    describe('eliminarImagen', () => {
+
+        it('debe lanzar NotFoundError si el servicio no existe', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(null);
+
+            await expect(useCase.eliminarImagen(99)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe lanzar NotFoundError si el servicio no tiene imagen', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // idImagen: null
+
+            await expect(useCase.eliminarImagen(1)).rejects.toThrow(NotFoundError);
+        });
+
+        it('debe eliminar imagen de storage y limpiar campos en repositorio', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioConImagenFake);
+            mockStoragePort.eliminar.mockResolvedValue();
+            mockServicioRepo.actualizar.mockResolvedValue({ ...servicioFake, imagenUrl: null, idImagen: null, nombreImagen: null });
+
+            await useCase.eliminarImagen(1);
+
+            expect(mockStoragePort.eliminar).toHaveBeenCalledWith(servicioConImagenFake.idImagen);
+            expect(mockServicioRepo.actualizar).toHaveBeenCalledWith(1, {
+                imagenUrl: null,
+                idImagen: null,
+                nombreImagen: null,
+            });
         });
     });
 

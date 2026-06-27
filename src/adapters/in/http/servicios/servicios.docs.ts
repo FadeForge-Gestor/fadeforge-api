@@ -95,7 +95,7 @@
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             required: [nombre, duracionMinutos, idCategoria]
@@ -112,10 +112,6 @@
  *               idCategoria:
  *                 type: number
  *                 example: 1
- *               imagen:
- *                 type: string
- *                 format: binary
- *                 description: Imagen del servicio (JPEG, PNG o WebP, máx 5MB)
  *     responses:
  *       201:
  *         description: Servicio creado exitosamente
@@ -182,7 +178,7 @@
  *     requestBody:
  *       required: true
  *       content:
- *         multipart/form-data:
+ *         application/json:
  *           schema:
  *             type: object
  *             properties:
@@ -198,10 +194,6 @@
  *               idCategoria:
  *                 type: number
  *                 example: 1
- *               imagen:
- *                 type: string
- *                 format: binary
- *                 description: Nueva imagen del servicio (JPEG, PNG o WebP, máx 5MB)
  *     responses:
  *       200:
  *         description: Servicio actualizado exitosamente
@@ -275,4 +267,98 @@
  *         description: Servicio no encontrado
  *       409:
  *         description: El servicio ya está activo
+ *
+ * /servicios/{id}/imagen:
+ *   post:
+ *     summary: Subir imagen de un servicio
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [imagen]
+ *             properties:
+ *               imagen:
+ *                 type: string
+ *                 format: binary
+ *                 description: Imagen del servicio (JPEG, PNG o WebP, máx 5MB)
+ *     responses:
+ *       201:
+ *         description: Imagen subida exitosamente
+ *       400:
+ *         description: Formato de imagen no permitido
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Servicio no encontrado
+ *       409:
+ *         description: El servicio ya tiene una imagen
+ *
+ *   put:
+ *     summary: Reemplazar imagen de un servicio
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required: [imagen]
+ *             properties:
+ *               imagen:
+ *                 type: string
+ *                 format: binary
+ *                 description: Nueva imagen (JPEG, PNG o WebP, máx 5MB)
+ *     responses:
+ *       200:
+ *         description: Imagen actualizada exitosamente
+ *       400:
+ *         description: Formato de imagen no permitido
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Servicio o imagen no encontrada
+ *
+ *   delete:
+ *     summary: Eliminar imagen de un servicio
+ *     tags: [Servicios]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: number
+ *     responses:
+ *       204:
+ *         description: Imagen eliminada exitosamente
+ *       401:
+ *         description: Token no proporcionado o inválido
+ *       403:
+ *         description: Permisos insuficientes
+ *       404:
+ *         description: Servicio o imagen no encontrada
  */

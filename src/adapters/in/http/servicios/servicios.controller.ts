@@ -41,10 +41,7 @@ export class ServiciosController {
     // Método para crear un nuevo servicio
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const archivo = req.file
-                ? { buffer: req.file.buffer, nombreOriginal: req.file.originalname }
-                : undefined;
-            const servicio = await this.serviciosUseCase.crear(req.body, archivo);
+            const servicio = await this.serviciosUseCase.crear(req.body);
             res.status(201).json(ok(servicio));
         } catch (error) {
             next(error);
@@ -54,10 +51,7 @@ export class ServiciosController {
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            const archivo = req.file
-                ? { buffer: req.file.buffer, nombreOriginal: req.file.originalname }
-                : undefined;
-            const servicio = await this.serviciosUseCase.actualizar(id, req.body, archivo);
+            const servicio = await this.serviciosUseCase.actualizar(id, req.body);
             res.status(200).json(ok(servicio));
         } catch (error) {
             next(error);
@@ -80,6 +74,38 @@ export class ServiciosController {
         try {
             const id = Number(req.params.id);
             await this.serviciosUseCase.reactivar(id);
+            res.status(204).send();
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async subirImagen(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const archivo = { buffer: req.file!.buffer, nombreOriginal: req.file!.originalname };
+            const servicio = await this.serviciosUseCase.subirImagen(id, archivo);
+            res.status(201).json(ok(servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async actualizarImagen(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            const archivo = { buffer: req.file!.buffer, nombreOriginal: req.file!.originalname };
+            const servicio = await this.serviciosUseCase.actualizarImagen(id, archivo);
+            res.status(200).json(ok(servicio));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async eliminarImagen(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = Number(req.params.id);
+            await this.serviciosUseCase.eliminarImagen(id);
             res.status(204).send();
         } catch (error) {
             next(error);

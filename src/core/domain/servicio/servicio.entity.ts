@@ -27,7 +27,7 @@ export interface ActualizarServicioInput {
     descripcion?: string;
     duracionMinutos?: number;
     idCategoria?: number;
-    imagenUrl?: string;
-    idImagen?: string;
-    nombreImagen?: string;
+    imagenUrl?: string | null;
+    idImagen?: string | null;
+    nombreImagen?: string | null;
 }

@@ -10,7 +10,7 @@ export class ServiciosUseCase implements IServicioUseCase {
     constructor(
         private readonly servicioRepository: IServicioRepository,
         private readonly categoriaRepository: ICategoriaServicioRepository,
-        private readonly storagePort?: IStoragePort
+        private readonly storagePort: IStoragePort
     ) {}
 
     // Método para listar los servicios
@@ -31,7 +31,7 @@ export class ServiciosUseCase implements IServicioUseCase {
     }
 
     // Método para crear un nuevo servicio
-    async crear(input: CrearServicioInput, archivo?: ArchivoInput): Promise<Servicio> {
+    async crear(input: CrearServicioInput): Promise<Servicio> {
 
         const categoria = await this.categoriaRepository.buscarPorId(input.idCategoria);
         if (!categoria) throw new NotFoundError(`Categoría con id ${input.idCategoria} no encontrada`);
@@ -40,18 +40,11 @@ export class ServiciosUseCase implements IServicioUseCase {
         const nombreExiste = await this.servicioRepository.buscarPorNombre(input.nombre);
         if (nombreExiste) throw new ConflictError(`El servicio ${input.nombre} ya existe`);
 
-        if (archivo && this.storagePort) {
-            const imagen = await this.storagePort.subir(archivo);
-            input.imagenUrl = imagen.url;
-            input.idImagen = imagen.publicId;
-            input.nombreImagen = imagen.nombre;
-        }
-
         return this.servicioRepository.crear(input);
     }
 
     // Método para actualizar un servicio
-    async actualizar(id: number, input: ActualizarServicioInput, archivo?: ArchivoInput): Promise<Servicio> {
+    async actualizar(id: number, input: ActualizarServicioInput): Promise<Servicio> {
         const servicio = await this.servicioRepository.buscarPorId(id);
         if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
         if (!servicio.activo) throw new ConflictError(`El servicio con id ${id} está desactivado`);
@@ -67,15 +60,40 @@ export class ServiciosUseCase implements IServicioUseCase {
             if (nombreExiste && nombreExiste.id !== id) throw new ConflictError(`El servicio ${input.nombre} ya existe`);
         }
 
-        if (archivo && this.storagePort) {
-            if (servicio.idImagen) await this.storagePort.eliminar(servicio.idImagen);
-            const imagen = await this.storagePort.subir(archivo);
-            input.imagenUrl = imagen.url;
-            input.idImagen = imagen.publicId;
-            input.nombreImagen = imagen.nombre;
-        }
-
         return this.servicioRepository.actualizar(id, input);
+    }
+
+    // Método para subir la imagen de un servicio
+    async subirImagen(id: number, archivo: ArchivoInput): Promise<Servicio> {
+        const servicio = await this.servicioRepository.buscarPorId(id);
+        if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (!servicio.activo) throw new ConflictError(`El servicio con id ${id} está desactivado`);
+        if (servicio.idImagen !== null) throw new ConflictError('El servicio ya tiene una imagen, usá actualizar para reemplazarla');
+
+        const imagen = await this.storagePort.subir(archivo);
+        return this.servicioRepository.actualizar(id, { imagenUrl: imagen.url, idImagen: imagen.publicId, nombreImagen: imagen.nombre });
+    }
+
+    // Método para actualizar la imagen de un servicio
+    async actualizarImagen(id: number, archivo: ArchivoInput): Promise<Servicio> {
+        const servicio = await this.servicioRepository.buscarPorId(id);
+        if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (!servicio.activo) throw new ConflictError(`El servicio con id ${id} está desactivado`);
+        if (!servicio.idImagen) throw new NotFoundError('El servicio no tiene imagen');
+
+        await this.storagePort.eliminar(servicio.idImagen);
+        const imagen = await this.storagePort.subir(archivo);
+        return this.servicioRepository.actualizar(id, { imagenUrl: imagen.url, idImagen: imagen.publicId, nombreImagen: imagen.nombre });
+    }
+
+    // Método para eliminar la imagen de un servicio
+    async eliminarImagen(id: number): Promise<void> {
+        const servicio = await this.servicioRepository.buscarPorId(id);
+        if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (!servicio.idImagen) throw new NotFoundError('El servicio no tiene imagen');
+
+        await this.storagePort.eliminar(servicio.idImagen);
+        await this.servicioRepository.actualizar(id, { imagenUrl: null, idImagen: null, nombreImagen: null });
     }
 
 
