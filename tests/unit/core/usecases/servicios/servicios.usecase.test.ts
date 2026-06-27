@@ -1,6 +1,7 @@
 import { ServiciosUseCase } from '@core/usecases/servicios/servicios.usecase';
 import { IServicioRepository } from '@core/ports/out/servicios/IServicioRepository';
 import { ICategoriaServicioRepository } from '@core/ports/out/categoria-servicio/ICategoriaServicioRepository';
+import { IStoragePort, ArchivoInput, ImagenSubida } from '@core/ports/out/storage/IStoragePort';
 import { Servicio } from '@core/domain/servicio/servicio.entity';
 import { CategoriaServicio } from '@core/domain/categoria-servicio/categoriaServicio.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
@@ -28,6 +29,24 @@ const servicioFake: Servicio = {
     fechaModificacion: new Date(),
 };
 
+const servicioConImagenFake: Servicio = {
+    ...servicioFake,
+    imagenUrl: 'https://res.cloudinary.com/fadeforge/image/upload/v1/fadeforge/servicios/abc123',
+    idImagen: 'fadeforge/servicios/abc123',
+    nombreImagen: 'corte.jpg',
+};
+
+const archivoFake: ArchivoInput = {
+    buffer: Buffer.from('fake-image'),
+    nombreOriginal: 'corte.jpg',
+};
+
+const imagenSubidaFake: ImagenSubida = {
+    url: 'https://res.cloudinary.com/fadeforge/image/upload/v1/fadeforge/servicios/abc123',
+    publicId: 'fadeforge/servicios/abc123',
+    nombre: 'corte.jpg',
+};
+
 const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     listarTodos: jest.fn(),
     listarActivos: jest.fn(),
@@ -38,6 +57,8 @@ const mockServicioRepo: jest.Mocked<IServicioRepository> = {
     desactivar: jest.fn(),
     reactivar: jest.fn(),
     buscarPrecioActual: jest.fn(),
+    buscarPorIds: jest.fn(),
+    buscarPreciosActuales: jest.fn(),
 };
 
 const mockCategoriaRepo: jest.Mocked<ICategoriaServicioRepository> = {
@@ -51,13 +72,18 @@ const mockCategoriaRepo: jest.Mocked<ICategoriaServicioRepository> = {
     reactivar: jest.fn(),
 };
 
+const mockStoragePort: jest.Mocked<IStoragePort> = {
+    subir: jest.fn(),
+    eliminar: jest.fn(),
+};
+
 describe('ServiciosUseCase', () => {
 
     let useCase: ServiciosUseCase;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        useCase = new ServiciosUseCase(mockServicioRepo, mockCategoriaRepo);
+        useCase = new ServiciosUseCase(mockServicioRepo, mockCategoriaRepo, mockStoragePort);
     });
 
     describe('listar', () => {
@@ -123,15 +149,38 @@ describe('ServiciosUseCase', () => {
                 .rejects.toThrow(ConflictError);
         });
 
-        it('debe crear el servicio si todo es válido', async () => {
+        it('debe crear el servicio sin imagen si no se provee archivo', async () => {
             mockCategoriaRepo.buscarPorId.mockResolvedValue(categoriaFake);
             mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
             mockServicioRepo.crear.mockResolvedValue(servicioFake);
 
             const result = await useCase.crear({ nombre: 'Corte de cabello', duracionMinutos: 30, idCategoria: 1 });
 
+            expect(mockStoragePort.subir).not.toHaveBeenCalled();
             expect(mockServicioRepo.crear).toHaveBeenCalledTimes(1);
             expect(result).toEqual(servicioFake);
+        });
+
+        it('debe subir la imagen y asignarla al servicio si se provee archivo', async () => {
+            mockCategoriaRepo.buscarPorId.mockResolvedValue(categoriaFake);
+            mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
+            mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
+            mockServicioRepo.crear.mockResolvedValue(servicioConImagenFake);
+
+            const result = await useCase.crear(
+                { nombre: 'Corte de cabello', duracionMinutos: 30, idCategoria: 1 },
+                archivoFake
+            );
+
+            expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
+            expect(mockServicioRepo.crear).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    imagenUrl: imagenSubidaFake.url,
+                    idImagen: imagenSubidaFake.publicId,
+                    nombreImagen: imagenSubidaFake.nombre,
+                })
+            );
+            expect(result).toEqual(servicioConImagenFake);
         });
     });
 
@@ -172,15 +221,41 @@ describe('ServiciosUseCase', () => {
             await expect(useCase.actualizar(1, { nombre: 'Corte de cabello' })).rejects.toThrow(ConflictError);
         });
 
-        it('debe actualizar si todo es válido', async () => {
+        it('debe actualizar sin imagen si no se provee archivo', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
             mockServicioRepo.actualizar.mockResolvedValue({ ...servicioFake, nombre: 'Corte clásico' });
 
             const result = await useCase.actualizar(1, { nombre: 'Corte clásico' });
 
+            expect(mockStoragePort.subir).not.toHaveBeenCalled();
+            expect(mockStoragePort.eliminar).not.toHaveBeenCalled();
             expect(mockServicioRepo.actualizar).toHaveBeenCalledWith(1, { nombre: 'Corte clásico' });
             expect(result.nombre).toBe('Corte clásico');
+        });
+
+        it('debe subir imagen sin eliminar si el servicio no tenía imagen previa', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // idImagen: null
+            mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
+            mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
+            mockServicioRepo.actualizar.mockResolvedValue(servicioConImagenFake);
+
+            await useCase.actualizar(1, { nombre: 'Corte clásico' }, archivoFake);
+
+            expect(mockStoragePort.eliminar).not.toHaveBeenCalled();
+            expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
+        });
+
+        it('debe eliminar la imagen anterior y subir la nueva si el servicio ya tenía imagen', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioConImagenFake);
+            mockServicioRepo.buscarPorNombre.mockResolvedValue(null);
+            mockStoragePort.subir.mockResolvedValue(imagenSubidaFake);
+            mockServicioRepo.actualizar.mockResolvedValue(servicioConImagenFake);
+
+            await useCase.actualizar(1, { nombre: 'Corte clásico' }, archivoFake);
+
+            expect(mockStoragePort.eliminar).toHaveBeenCalledWith(servicioConImagenFake.idImagen);
+            expect(mockStoragePort.subir).toHaveBeenCalledWith(archivoFake);
         });
     });
 
@@ -216,7 +291,7 @@ describe('ServiciosUseCase', () => {
         });
 
         it('debe lanzar ConflictError si el servicio ya está activo', async () => {
-            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // activo: true
+            mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             await expect(useCase.reactivar(1)).rejects.toThrow(ConflictError);
         });
 

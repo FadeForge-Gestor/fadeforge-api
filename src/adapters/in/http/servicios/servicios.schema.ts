@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 // Esquema para crear un nuevo servicio
+// duracionMinutos e idCategoria usan coerce porque multipart/form-data envía todo como string
 export const CrearServicioSchema = z.object({
     nombre: z.string()
         .min(2, 'El nombre debe tener al menos 2 caracteres')
@@ -9,28 +10,20 @@ export const CrearServicioSchema = z.object({
         .min(2, 'La descripción debe tener al menos 2 caracteres')
         .max(500, 'La descripción no puede superar 500 caracteres')
         .optional(),
-    duracionMinutos: z.number()
+    duracionMinutos: z.coerce.number()
         .int('La duración debe ser un número entero')
         .positive('La duración debe ser mayor a 0'),
-    idCategoria: z.number()
+    idCategoria: z.coerce.number()
         .int()
         .positive('El id de categoría debe ser mayor a 0'),
-    imagenUrl: z.string()
-        .url('La URL de imagen no es válida')
-        .optional(),
-    idImagen: z.string().optional(),
-    nombreImagen: z.string().max(255).optional(),
 });
 
 // Esquema para actualizar un servicio existente
 export const ActualizarServicioSchema = z.object({
     nombre: z.string().min(2).max(150).optional(),
     descripcion: z.string().min(2).max(500).optional(),
-    duracionMinutos: z.number().int().positive().optional(),
-    idCategoria: z.number().int().positive().optional(),
-    imagenUrl: z.string().url('La URL de imagen no es válida').optional(),
-    idImagen: z.string().optional(),
-    nombreImagen: z.string().max(255).optional(),
+    duracionMinutos: z.coerce.number().int().positive().optional(),
+    idCategoria: z.coerce.number().int().positive().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,
     { message: 'Debes enviar al menos un campo para actualizar' }

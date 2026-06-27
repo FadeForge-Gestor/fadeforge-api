@@ -95,7 +95,7 @@
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required: [nombre, duracionMinutos, idCategoria]
@@ -112,15 +112,10 @@
  *               idCategoria:
  *                 type: number
  *                 example: 1
- *               imagenUrl:
+ *               imagen:
  *                 type: string
- *                 example: https://ejemplo.com/imagen.jpg
- *               idImagen:
- *                 type: string
- *                 example: abc123xyz
- *               nombreImagen:
- *                 type: string
- *                 example: corte-cabello.jpg
+ *                 format: binary
+ *                 description: Imagen del servicio (JPEG, PNG o WebP, máx 5MB)
  *     responses:
  *       201:
  *         description: Servicio creado exitosamente
@@ -187,7 +182,7 @@
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -203,18 +198,10 @@
  *               idCategoria:
  *                 type: number
  *                 example: 1
- *               imagenUrl:
+ *               imagen:
  *                 type: string
- *                 example: https://ejemplo.com/imagen.jpg
- *               idImagen:
- *                 type: string
- *                 example: abc123xyz
- *               nombreImagen:
- *                 type: string
- *                 example: corte-cabello.jpg
- *               activo:
- *                 type: boolean
- *                 example: true
+ *                 format: binary
+ *                 description: Nueva imagen del servicio (JPEG, PNG o WebP, máx 5MB)
  *     responses:
  *       200:
  *         description: Servicio actualizado exitosamente

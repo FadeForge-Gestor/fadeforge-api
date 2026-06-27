@@ -3,18 +3,21 @@ import { ServiciosController } from './servicios.controller';
 import { ServiciosUseCase } from '@core/usecases/servicios/servicios.usecase';
 import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.prisma.repository';
 import { CategoriaServicioPrismaRepository } from '@adapters/out/db/categorias-servicios/categoriaServicios.prisma.repository';
+import { CloudinaryStorageAdapter } from '@adapters/out/cloudinary/cloudinary.storage.adapter';
 import { validate } from "@middlewares/validate.middleware";
 import { authenticate, authorize } from "@middlewares/auth.middleware";
 import { idempotency } from "@middlewares/idempotency.middleware";
+import { upload } from "@middlewares/upload.middleware";
 import { IdempotencyMemoryRepository } from "@adapters/out/memory/idempotency/idempotency.memory.repository";
 import { CrearServicioSchema, ActualizarServicioSchema } from "./servicios.schema";
 import { ROLES } from "@shared/constants/roles";
 
-// Inyección de dependencias 
+// Inyección de dependencias
 const router = Router();
 const repositorio = new ServiciosPrismaRepository();
 const categoriaRepositorio = new CategoriaServicioPrismaRepository();
-const casoDeUso = new ServiciosUseCase(repositorio, categoriaRepositorio);
+const storageAdapter = new CloudinaryStorageAdapter();
+const casoDeUso = new ServiciosUseCase(repositorio, categoriaRepositorio, storageAdapter);
 const controller = new ServiciosController(casoDeUso);
 const idempotencyRepo = new IdempotencyMemoryRepository();
 
@@ -44,6 +47,7 @@ router.post(
     authenticate,
     authorize(ROLES.ADMIN),
     idempotency(idempotencyRepo),
+    upload.single('imagen'),
     validate(CrearServicioSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
@@ -53,6 +57,7 @@ router.put(
     '/:id',
     authenticate,
     authorize(ROLES.ADMIN),
+    upload.single('imagen'),
     validate(ActualizarServicioSchema),
     (req, res, next) => controller.actualizar(req, res, next)
 );
