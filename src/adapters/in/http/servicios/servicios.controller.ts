@@ -41,7 +41,10 @@ export class ServiciosController {
     // Método para crear un nuevo servicio
     async crear(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const servicio = await this.serviciosUseCase.crear(req.body);
+            const archivo = req.file
+                ? { buffer: req.file.buffer, nombreOriginal: req.file.originalname }
+                : undefined;
+            const servicio = await this.serviciosUseCase.crear(req.body, archivo);
             res.status(201).json(ok(servicio));
         } catch (error) {
             next(error);
@@ -51,7 +54,10 @@ export class ServiciosController {
     async actualizar(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const id = Number(req.params.id);
-            const servicio = await this.serviciosUseCase.actualizar(id, req.body);
+            const archivo = req.file
+                ? { buffer: req.file.buffer, nombreOriginal: req.file.originalname }
+                : undefined;
+            const servicio = await this.serviciosUseCase.actualizar(id, req.body, archivo);
             res.status(200).json(ok(servicio));
         } catch (error) {
             next(error);
