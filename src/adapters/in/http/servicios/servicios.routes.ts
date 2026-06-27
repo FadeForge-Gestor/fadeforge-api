@@ -47,7 +47,6 @@ router.post(
     authenticate,
     authorize(ROLES.ADMIN),
     idempotency(idempotencyRepo),
-    upload.single('imagen'),
     validate(CrearServicioSchema),
     (req, res, next) => controller.crear(req, res, next)
 );
@@ -57,7 +56,6 @@ router.put(
     '/:id',
     authenticate,
     authorize(ROLES.ADMIN),
-    upload.single('imagen'),
     validate(ActualizarServicioSchema),
     (req, res, next) => controller.actualizar(req, res, next)
 );
@@ -76,6 +74,32 @@ router.put(
     authenticate,
     authorize(ROLES.ADMIN),
     (req, res, next) => controller.reactivar(req, res, next)
+);
+
+// POST /servicios/:id/imagen
+router.post(
+    '/:id/imagen',
+    authenticate,
+    authorize(ROLES.ADMIN),
+    upload.single('imagen'),
+    (req, res, next) => controller.subirImagen(req, res, next)
+);
+
+// PUT /servicios/:id/imagen
+router.put(
+    '/:id/imagen',
+    authenticate,
+    authorize(ROLES.ADMIN),
+    upload.single('imagen'),
+    (req, res, next) => controller.actualizarImagen(req, res, next)
+);
+
+// DELETE /servicios/:id/imagen
+router.delete(
+    '/:id/imagen',
+    authenticate,
+    authorize(ROLES.ADMIN),
+    (req, res, next) => controller.eliminarImagen(req, res, next)
 );
 
 export default router;
