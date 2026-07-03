@@ -1,5 +1,7 @@
 // Entidad del dominio que representa un Rol en el sistema.
 // No depende de ningún framework ni librería externa.
+// Los roles son fijos (admin, empleado, cliente) y se siembran vía prisma/seed.ts,
+// por eso este módulo solo expone operaciones de lectura.
 export interface Rol {
     id: number;
     clave: string;
@@ -8,18 +10,4 @@ export interface Rol {
     activo: boolean;
     fechaCreacion: Date;
     fechaModificacion: Date;
-}
-
-// Datos necesarios para crear un rol (id y fechaCreacion los genera la BD)
-export interface CrearRolInput {
-    clave: string;
-    nombre: string;
-    descripcion?: string;
-}
-
-// Datos que se pueden actualizar (todos opcionales)
-export interface ActualizarRolInput {
-    clave?: string;
-    nombre?: string;
-    descripcion?: string;
 }

@@ -1,8 +1,6 @@
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
-import { Rol, CrearRolInput, ActualizarRolInput } from '@core/domain/rol/rol.entity';
+import { Rol } from '@core/domain/rol/rol.entity';
 import { prisma } from '../prisma.client';
-import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client';
 
 export class RolesPrismaRepository implements IRolRepository {
 
@@ -52,69 +50,10 @@ export class RolesPrismaRepository implements IRolRepository {
         return this.mapear(rol);
     }
 
-    // Método para buscar por nombre un rol
-    async buscarPorNombre(nombre: string): Promise<Rol | null> {
-        const rol = await prisma.roles.findFirst({ where: { nombre: { equals: nombre, mode: 'insensitive' } } });
-        if (!rol) return null;
-        return this.mapear(rol);
-    }
-
     // Método para buscar por clave un rol
     async buscarPorClave(clave: string): Promise<Rol | null> {
         const rol = await prisma.roles.findFirst({ where: { clave: { equals: clave, mode: 'insensitive' } } });
         if (!rol) return null;
         return this.mapear(rol);
-    }
-
-    // Método para crear un nuevo ROL
-    async crear(input: CrearRolInput): Promise<Rol> {
-        try {
-            const rol = await prisma.roles.create({
-                data: {
-                    clave: input.clave,
-                    nombre: input.nombre,
-                    descripcion: input.descripcion,
-                },
-            });
-            return this.mapear(rol);
-        } catch (error: unknown) {
-            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
-            throw error;
-        }
-    }
-
-    // Método para actualizar un ROL
-    async actualizar(id: number, input: ActualizarRolInput): Promise<Rol> {
-        try {
-            const rol = await prisma.roles.update({
-                where: { id },
-                data: {
-                    ...(input.clave && { clave: input.clave }),
-                    ...(input.nombre && { nombre: input.nombre }),
-                    ...(input.descripcion !== undefined && { descripcion: input.descripcion }),
-                    fecha_modificacion: new Date(),
-                },
-            });
-            return this.mapear(rol);
-        } catch (error: unknown) {
-            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2025') throw new NotFoundError(`Rol con id ${id} no encontrado`);
-            if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictError('Ya existe un rol con esa clave o nombre');
-            throw error;
-        }
-    }
-
-    async reactivar(id: number): Promise<void> {
-        await prisma.roles.update({
-            where: { id },
-            data: { activo: true, fecha_modificacion: new Date() },
-        });
-    }
-
-    // Soft delete: solo cambiamos activo = false, el registro permanece en la BD.
-    async desactivar(id: number): Promise<void> {
-        await prisma.roles.update({
-            where: { id },
-            data: { activo: false, fecha_modificacion: new Date() },
-        });
     }
 }

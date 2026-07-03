@@ -58,12 +58,7 @@ const mockRolRepo: jest.Mocked<IRolRepository> = {
     listarTodos: jest.fn(),
     listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
-    buscarPorNombre: jest.fn(),
     buscarPorClave: jest.fn(),
-    crear: jest.fn(),
-    actualizar: jest.fn(),
-    desactivar: jest.fn(),
-    reactivar: jest.fn(),
 };
 
 describe('RegistroClienteUseCase', () => {
