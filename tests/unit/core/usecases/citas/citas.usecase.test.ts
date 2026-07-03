@@ -3,12 +3,16 @@ import { ICitaRepository } from '@core/ports/out/citas/ICitaRepository';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
 import { IEmpleadoRepository } from '@core/ports/out/empleados/IEmpleadoRepository';
 import { IServicioRepository } from '@core/ports/out/servicios/IServicioRepository';
+import { IClockPort } from '@core/ports/out/clock/IClockPort';
 import { Cita } from '@core/domain/cita/cita.entity';
 import { DetalleCita } from '@core/domain/detalle-cita/detalleCita.entity';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { EmpleadoDetalle } from '@core/domain/empleado/empleado.entity';
 import { Servicio } from '@core/domain/servicio/servicio.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
+
+const AHORA = new Date('2026-07-02T12:00:00.000Z');
+const mockClock: IClockPort = { now: () => AHORA };
 
 const detalleFake: DetalleCita = {
     id: 1,
@@ -127,7 +131,7 @@ describe('CitasUseCase', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        useCase = new CitasUseCase(mockCitaRepo, mockUsuarioRepo, mockEmpleadoRepo, mockServicioRepo);
+        useCase = new CitasUseCase(mockCitaRepo, mockUsuarioRepo, mockEmpleadoRepo, mockServicioRepo, mockClock);
     });
 
     describe('listarPorRangoFecha', () => {
@@ -234,7 +238,7 @@ describe('CitasUseCase', () => {
 
     describe('crear', () => {
 
-        const fechaFutura = new Date(Date.now() + 3600000);
+        const fechaFutura = new Date(AHORA.getTime() + 3600000);
 
         it('debe lanzar ConflictError si el actor es admin y no se proporciona idCliente', async () => {
             await expect(useCase.crear({ idEmpleado: 2, fechaInicio: fechaFutura, servicios: [{ idServicio: 1 }] } as any, actorAdmin))
@@ -275,7 +279,7 @@ describe('CitasUseCase', () => {
         });
 
         it('debe lanzar ConflictError si la fecha de inicio es en el pasado', async () => {
-            const fechaPasada = new Date(Date.now() - 3600000);
+            const fechaPasada = new Date(AHORA.getTime() - 3600000);
 
             await expect(useCase.crear({ idCliente: 5, idEmpleado: 2, fechaInicio: fechaPasada, servicios: [{ idServicio: 1 }] }, actorAdmin))
                 .rejects.toThrow(ConflictError);
@@ -450,7 +454,7 @@ describe('CitasUseCase', () => {
         });
 
         it('debe lanzar ConflictError si hay solapamiento al cambiar fechaInicio', async () => {
-            const nuevaFecha = new Date(Date.now() + 7200000);
+            const nuevaFecha = new Date(AHORA.getTime() + 7200000);
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(true);
 
@@ -460,7 +464,7 @@ describe('CitasUseCase', () => {
         });
 
         it('debe verificar solapamiento usando los valores existentes para campos no provistos', async () => {
-            const nuevaFecha = new Date(Date.now() + 7200000);
+            const nuevaFecha = new Date(AHORA.getTime() + 7200000);
             mockCitaRepo.buscarPorId.mockResolvedValue(citaFake);
             mockCitaRepo.verificarSolapamientoEmpleado.mockResolvedValue(false);
             mockCitaRepo.actualizar.mockResolvedValue({ ...citaFake, fechaInicio: nuevaFecha });
@@ -557,7 +561,7 @@ describe('CitasUseCase', () => {
         });
 
         it('debe lanzar ConflictError si se intenta marcar no_asistio antes de 15 minutos', async () => {
-            const fechaReciente = new Date(Date.now() + 5 * 60 * 1000);
+            const fechaReciente = new Date(AHORA.getTime() + 5 * 60 * 1000);
             const citaPendiente = { ...citaFake, estado: 'pendiente' as const, fechaInicio: fechaReciente };
             mockCitaRepo.buscarPorId.mockResolvedValue(citaPendiente);
 
@@ -567,7 +571,7 @@ describe('CitasUseCase', () => {
         });
 
         it('debe permitir marcar no_asistio cuando ya pasaron 15 minutos desde el inicio', async () => {
-            const fechaAnterior = new Date(Date.now() - 20 * 60 * 1000);
+            const fechaAnterior = new Date(AHORA.getTime() - 20 * 60 * 1000);
             const citaPendiente = { ...citaFake, estado: 'pendiente' as const, fechaInicio: fechaAnterior };
             const citaActualizada = { ...citaFake, estado: 'no_asistio' as const };
             mockCitaRepo.buscarPorId.mockResolvedValue(citaPendiente);

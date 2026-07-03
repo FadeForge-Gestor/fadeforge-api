@@ -2,6 +2,7 @@ import { ICitaRepository } from "@core/ports/out/citas/ICitaRepository";
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { IServicioRepository } from "@core/ports/out/servicios/IServicioRepository";
+import { IClockPort } from "@core/ports/out/clock/IClockPort";
 import { ICitasUseCase } from "@core/ports/in/citas/ICitasUseCase";
 import { Cita, CrearCitaInput, ActualizarCitaInput, EstadoCita } from "@core/domain/cita/cita.entity";
 import { CrearDetalleCitaInput } from "@core/domain/detalle-cita/detalleCita.entity";
@@ -16,7 +17,8 @@ export class CitasUseCase implements ICitasUseCase {
         private readonly citasRepository: ICitaRepository,
         private readonly usuarioRepository: IUsuarioRepository,
         private readonly empleadoRepository: IEmpleadoRepository,
-        private readonly servicioRepository: IServicioRepository
+        private readonly servicioRepository: IServicioRepository,
+        private readonly clock: IClockPort
     ) {}
 
     async listarPorRangoFecha(desde: Date, hasta: Date): Promise<Cita[]> {
@@ -51,7 +53,7 @@ export class CitasUseCase implements ICitasUseCase {
         if (!input.servicios || input.servicios.length === 0)
             throw new ConflictError('La cita debe incluir al menos un servicio');
 
-        if (input.fechaInicio <= new Date())
+        if (input.fechaInicio <= this.clock.now())
             throw new ConflictError('La fecha de inicio debe ser en el futuro');
 
         const cliente = await this.usuarioRepository.buscarPorId(input.idCliente);
@@ -175,7 +177,7 @@ export class CitasUseCase implements ICitasUseCase {
 
         if (estado === 'no_asistio') {
             const limiteNoAsistio = new Date(cita.fechaInicio.getTime() + 15 * 60 * 1000);
-            if (new Date() < limiteNoAsistio)
+            if (this.clock.now() < limiteNoAsistio)
                 throw new ConflictError('No se puede marcar como no asistió hasta 15 minutos después de la hora de inicio');
         }
 

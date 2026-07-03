@@ -5,6 +5,7 @@ import { CitasPrismaRepository } from '@adapters/out/db/citas/citas.prisma.repos
 import { UsuariosPrismaRepository } from '@adapters/out/db/usuarios/usuarios.prisma.repository';
 import { EmpleadosPrismaRepository } from '@adapters/out/db/empleados/empleados.prisma.repository';
 import { ServiciosPrismaRepository } from '@adapters/out/db/servicios/servicios.prisma.repository';
+import { SystemClockAdapter } from '@adapters/out/clock/system.clock.adapter';
 import { validate, validateQuery } from '@middlewares/validate.middleware';
 import { authenticate, authorize } from '@middlewares/auth.middleware';
 import { idempotency } from '@middlewares/idempotency.middleware';
@@ -18,7 +19,8 @@ const usuariosRepo = new UsuariosPrismaRepository();
 const empleadosRepo = new EmpleadosPrismaRepository();
 const serviciosRepo = new ServiciosPrismaRepository();
 const idempotencyRepo = new IdempotencyMemoryRepository();
-const casoDeUso = new CitasUseCase(citasRepo, usuariosRepo, empleadosRepo, serviciosRepo);
+const clock = new SystemClockAdapter();
+const casoDeUso = new CitasUseCase(citasRepo, usuariosRepo, empleadosRepo, serviciosRepo, clock);
 const controller = new CitasController(casoDeUso);
 
 // GET /citas?desde=&hasta= — solo personal interno puede ver el listado global
