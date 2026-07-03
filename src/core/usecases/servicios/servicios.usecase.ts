@@ -90,6 +90,7 @@ export class ServiciosUseCase implements IServicioUseCase {
     async eliminarImagen(id: number): Promise<void> {
         const servicio = await this.servicioRepository.buscarPorId(id);
         if (!servicio) throw new NotFoundError(`Servicio con id ${id} no encontrado`);
+        if (!servicio.activo) throw new ConflictError(`El servicio con id ${id} está desactivado`);
         if (!servicio.idImagen) throw new NotFoundError('El servicio no tiene imagen');
 
         await this.storagePort.eliminar(servicio.idImagen);

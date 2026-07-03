@@ -119,6 +119,15 @@ describe('HistorialPrecioUseCase', () => {
             expect(mockRepo.reemplazarPrecio).not.toHaveBeenCalled();
         });
 
+        it('debe lanzar BadRequestError si el servicio está desactivado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioFake, activo: false });
+
+            await expect(useCase.registrarPrecio({ idServicio: 3, precio: 1500 }))
+                .rejects.toThrow(BadRequestError);
+
+            expect(mockRepo.reemplazarPrecio).not.toHaveBeenCalled();
+        });
+
         it('debe llamar reemplazarPrecio con el input correcto', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake);
             mockRepo.reemplazarPrecio.mockResolvedValue(historialFake);

@@ -11,7 +11,8 @@ export const CrearServicioSchema = z.object({
         .optional(),
     duracionMinutos: z.number()
         .int('La duración debe ser un número entero')
-        .positive('La duración debe ser mayor a 0'),
+        .positive('La duración debe ser mayor a 0')
+        .max(180, 'La duración no puede superar 180 minutos'),
     idCategoria: z.number()
         .int()
         .positive('El id de categoría debe ser mayor a 0'),
@@ -21,7 +22,7 @@ export const CrearServicioSchema = z.object({
 export const ActualizarServicioSchema = z.object({
     nombre: z.string().min(2).max(150).optional(),
     descripcion: z.string().min(2).max(500).optional(),
-    duracionMinutos: z.number().int().positive().optional(),
+    duracionMinutos: z.number().int().positive().max(180, 'La duración no puede superar 180 minutos').optional(),
     idCategoria: z.number().int().positive().optional(),
 }).refine(
     (data) => Object.keys(data).length > 0,
