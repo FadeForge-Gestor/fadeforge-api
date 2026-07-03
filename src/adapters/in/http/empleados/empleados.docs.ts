@@ -95,7 +95,7 @@
  *       404:
  *         description: Usuario no encontrado
  *       409:
- *         description: El usuario ya es empleado o está desactivado
+ *         description: El usuario ya es empleado, está desactivado, o es administrador
  *
  * /admin/empleados/activos:
  *   get:

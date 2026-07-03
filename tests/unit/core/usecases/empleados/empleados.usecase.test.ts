@@ -1,8 +1,10 @@
 import { EmpleadosUseCase } from '@core/usecases/empleados/empleados.usecase';
 import { IEmpleadoRepository } from '@core/ports/out/empleados/IEmpleadoRepository';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
+import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { Empleado, EmpleadoDetalle, PromoverEmpleadoInput } from '@core/domain/empleado/empleado.entity';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
+import { Rol } from '@core/domain/rol/rol.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
 
 const empleadoFake: EmpleadoDetalle = {
@@ -51,13 +53,45 @@ const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
     reactivar: jest.fn(),
 };
 
+const mockRolRepo: jest.Mocked<IRolRepository> = {
+    listarTodos: jest.fn(),
+    listarActivos: jest.fn(),
+    buscarPorId: jest.fn(),
+    buscarPorNombre: jest.fn(),
+    buscarPorClave: jest.fn(),
+    crear: jest.fn(),
+    actualizar: jest.fn(),
+    desactivar: jest.fn(),
+    reactivar: jest.fn(),
+};
+
+const rolClienteFake: Rol = {
+    id: 2,
+    clave: 'cliente',
+    nombre: 'Cliente',
+    descripcion: null,
+    activo: true,
+    fechaCreacion: new Date(),
+    fechaModificacion: new Date(),
+};
+
+const rolAdminFake: Rol = {
+    id: 1,
+    clave: 'admin',
+    nombre: 'Administrador',
+    descripcion: null,
+    activo: true,
+    fechaCreacion: new Date(),
+    fechaModificacion: new Date(),
+};
+
 describe('EmpleadosUseCase', () => {
 
     let useCase: EmpleadosUseCase;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        useCase = new EmpleadosUseCase(mockEmpleadoRepo, mockUsuarioRepo);
+        useCase = new EmpleadosUseCase(mockEmpleadoRepo, mockUsuarioRepo, mockRolRepo);
     });
 
     describe('obtenerPorId', () => {
@@ -91,15 +125,25 @@ describe('EmpleadosUseCase', () => {
             await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
         });
 
+        it('debe lanzar ConflictError si el usuario es administrador', async () => {
+            mockUsuarioRepo.buscarPorId.mockResolvedValue({ ...usuarioFake, idRol: 1 });
+            mockRolRepo.buscarPorId.mockResolvedValue(rolAdminFake);
+
+            await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
+            expect(mockEmpleadoRepo.buscarPorIdUsuario).not.toHaveBeenCalled();
+        });
+
         it('debe lanzar ConflictError si el usuario ya es empleado activo', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
-            mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue(empleadoFake); // activo: true
+            mockRolRepo.buscarPorId.mockResolvedValue(rolClienteFake);
+            mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue(empleadoFake);
 
             await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
         });
 
         it('debe lanzar ConflictError si el usuario ya fue empleado pero está inactivo', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockRolRepo.buscarPorId.mockResolvedValue(rolClienteFake);
             mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue({ ...empleadoFake, activo: false });
 
             await expect(useCase.promover(inputPromover)).rejects.toThrow(ConflictError);
@@ -107,6 +151,7 @@ describe('EmpleadosUseCase', () => {
 
         it('debe promover el usuario si todas las validaciones pasan', async () => {
             mockUsuarioRepo.buscarPorId.mockResolvedValue(usuarioFake);
+            mockRolRepo.buscarPorId.mockResolvedValue(rolClienteFake);
             mockEmpleadoRepo.buscarPorIdUsuario.mockResolvedValue(null);
             mockEmpleadoRepo.promover.mockResolvedValue(empleadoFake);
 

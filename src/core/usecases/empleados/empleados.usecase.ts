@@ -3,12 +3,15 @@ import { IEmpleadoUseCase } from "@core/ports/in/empleados/IEmpleadoUseCase";
 import { EmpleadoDetalle, PromoverEmpleadoInput } from "@core/domain/empleado/empleado.entity";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
+import { IRolRepository } from "@core/ports/out/roles/IRolRepository";
+import { ROLES } from "@shared/constants/roles";
 
 export class EmpleadosUseCase implements IEmpleadoUseCase {
 
     constructor(
         private readonly empleadoRepository: IEmpleadoRepository,
-        private readonly usuarioRepository: IUsuarioRepository
+        private readonly usuarioRepository: IUsuarioRepository,
+        private readonly rolRepository: IRolRepository
     ) {}
 
     // Método para listar los empleados
@@ -34,6 +37,9 @@ export class EmpleadosUseCase implements IEmpleadoUseCase {
         const usuario = await this.usuarioRepository.buscarPorId(input.idUsuario);
         if (!usuario) throw new NotFoundError(`Usuario con id ${input.idUsuario} no encontrado`);
         if (!usuario.activo) throw new ConflictError(`El usuario con id ${input.idUsuario} está desactivado`);
+
+        const rol = await this.rolRepository.buscarPorId(usuario.idRol);
+        if (rol?.clave === ROLES.ADMIN) throw new ConflictError(`Un administrador no puede ser promovido a empleado`);
 
         // Nos aseguramos de encontrar el empleado y asegurarno que no sea ya empleado
         const existe = await this.empleadoRepository.buscarPorIdUsuario(input.idUsuario);
