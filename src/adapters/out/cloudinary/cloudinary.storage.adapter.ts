@@ -13,7 +13,7 @@ export class CloudinaryStorageAdapter implements IStoragePort {
     async subir(archivo: ArchivoInput): Promise<ImagenSubida> {
         return new Promise((resolve, reject) => {
             const stream = cloudinary.uploader.upload_stream(
-                { folder: 'fadeforge/servicios', resource_type: 'image' },
+                { folder: `fadeforge/${env.NODE_ENV === 'production' ? 'prod' : 'dev'}/servicios`, resource_type: 'image' },
                 (error, result) => {
                     if (error || !result) return reject(error ?? new Error('Upload fallido'));
                     resolve({
