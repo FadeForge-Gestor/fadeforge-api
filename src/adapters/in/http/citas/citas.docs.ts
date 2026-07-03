@@ -352,6 +352,16 @@
  *               canceladoPor:
  *                 type: number
  *                 example: 1
+ *     description: |
+ *       Transiciones de estado válidas:
+ *       - `nueva` → `pendiente`, `cancelada`
+ *       - `pendiente` → `en_proceso`, `cancelada`, `reprogramada`, `no_asistio`
+ *       - `en_proceso` → `finalizada`, `cancelada`
+ *       - `reprogramada` → `pendiente`
+ *       - `no_asistio` → `cancelada`
+ *
+ *       Para marcar como `no_asistio` deben haber pasado al menos 15 minutos desde `fechaInicio`.
+ *       Para marcar como `cancelada` el campo `motivoCancelado` es obligatorio.
  *     responses:
  *       200:
  *         description: Estado actualizado exitosamente
@@ -374,5 +384,5 @@
  *       404:
  *         description: Cita no encontrada
  *       409:
- *         description: Transición de estado inválida o motivo de cancelación faltante
+ *         description: Transición de estado inválida, motivo de cancelación faltante, o los 15 minutos para no_asistio aún no han transcurrido
  */

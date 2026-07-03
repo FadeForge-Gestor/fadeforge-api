@@ -2,6 +2,7 @@ import { ICitaRepository } from "@core/ports/out/citas/ICitaRepository";
 import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
 import { IEmpleadoRepository } from "@core/ports/out/empleados/IEmpleadoRepository";
 import { IServicioRepository } from "@core/ports/out/servicios/IServicioRepository";
+import { IClockPort } from "@core/ports/out/clock/IClockPort";
 import { ICitasUseCase } from "@core/ports/in/citas/ICitasUseCase";
 import { Cita, CrearCitaInput, ActualizarCitaInput, EstadoCita } from "@core/domain/cita/cita.entity";
 import { CrearDetalleCitaInput } from "@core/domain/detalle-cita/detalleCita.entity";
@@ -16,7 +17,8 @@ export class CitasUseCase implements ICitasUseCase {
         private readonly citasRepository: ICitaRepository,
         private readonly usuarioRepository: IUsuarioRepository,
         private readonly empleadoRepository: IEmpleadoRepository,
-        private readonly servicioRepository: IServicioRepository
+        private readonly servicioRepository: IServicioRepository,
+        private readonly clock: IClockPort
     ) {}
 
     async listarPorRangoFecha(desde: Date, hasta: Date): Promise<Cita[]> {
@@ -51,7 +53,7 @@ export class CitasUseCase implements ICitasUseCase {
         if (!input.servicios || input.servicios.length === 0)
             throw new ConflictError('La cita debe incluir al menos un servicio');
 
-        if (input.fechaInicio <= new Date())
+        if (input.fechaInicio <= this.clock.now())
             throw new ConflictError('La fecha de inicio debe ser en el futuro');
 
         const cliente = await this.usuarioRepository.buscarPorId(input.idCliente);
@@ -159,9 +161,11 @@ export class CitasUseCase implements ICitasUseCase {
         if (!cita) throw new NotFoundError(`Cita con id ${id} no encontrada`);
 
         const transicionesValidas: Partial<Record<EstadoCita, EstadoCita[]>> = {
-            'nueva':      ['pendiente', 'cancelada'],
-            'pendiente':   ['en_proceso', 'cancelada', 'reprogramada'],
-            'en_proceso':  ['finalizada', 'cancelada'],
+            'nueva':        ['pendiente', 'cancelada'],
+            'pendiente':    ['en_proceso', 'cancelada', 'reprogramada', 'no_asistio'],
+            'en_proceso':   ['finalizada', 'cancelada'],
+            'reprogramada': ['pendiente'],
+            'no_asistio':   ['cancelada'],
         };
 
         const permitidos = transicionesValidas[cita.estado];
@@ -170,6 +174,12 @@ export class CitasUseCase implements ICitasUseCase {
 
         if (!permitidos.includes(estado))
             throw new ConflictError(`Transición de estado inválida: no se puede pasar de '${cita.estado}' a '${estado}'`);
+
+        if (estado === 'no_asistio') {
+            const limiteNoAsistio = new Date(cita.fechaInicio.getTime() + 15 * 60 * 1000);
+            if (this.clock.now() < limiteNoAsistio)
+                throw new ConflictError('No se puede marcar como no asistió hasta 15 minutos después de la hora de inicio');
+        }
 
         if (estado === 'cancelada' && !motivoCancelado)
             throw new ConflictError('El motivo de cancelación es requerido para cancelar una cita');
