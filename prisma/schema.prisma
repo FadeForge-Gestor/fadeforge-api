@@ -74,7 +74,6 @@ model roles {
   clave              String     @unique @db.VarChar(50)
   nombre             String     @unique(map: "uq_roles_nombre") @db.VarChar(50)
   descripcion        String?
-  activo             Boolean    @default(true)
   fecha_creacion     DateTime   @default(now()) @db.Timestamptz(6)
   fecha_modificacion DateTime   @default(now()) @db.Timestamptz(6)
   usuarios           usuarios[]

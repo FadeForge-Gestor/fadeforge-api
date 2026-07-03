@@ -55,14 +55,8 @@ const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
 
 const mockRolRepo: jest.Mocked<IRolRepository> = {
     listarTodos: jest.fn(),
-    listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
-    buscarPorNombre: jest.fn(),
     buscarPorClave: jest.fn(),
-    crear: jest.fn(),
-    actualizar: jest.fn(),
-    desactivar: jest.fn(),
-    reactivar: jest.fn(),
 };
 
 const rolClienteFake: Rol = {
@@ -70,7 +64,6 @@ const rolClienteFake: Rol = {
     clave: 'cliente',
     nombre: 'Cliente',
     descripcion: null,
-    activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),
 };
@@ -80,7 +73,6 @@ const rolAdminFake: Rol = {
     clave: 'admin',
     nombre: 'Administrador',
     descripcion: null,
-    activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),
 };

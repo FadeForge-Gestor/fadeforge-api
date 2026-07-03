@@ -26,7 +26,6 @@ const rolFake: Rol = {
     clave: 'CLIENTE',
     nombre: 'Cliente',
     descripcion: null,
-    activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),
 };
@@ -52,14 +51,8 @@ const mockRepo: jest.Mocked<IUsuarioRepository> = {
 
 const mockRolRepo: jest.Mocked<IRolRepository> = {
     listarTodos: jest.fn(),
-    listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
-    buscarPorNombre: jest.fn(),
     buscarPorClave: jest.fn(),
-    crear: jest.fn(),
-    actualizar: jest.fn(),
-    desactivar: jest.fn(),
-    reactivar: jest.fn(),
 };
 
 const ACTOR_ID = 99;
@@ -106,13 +99,6 @@ describe('UsuariosUseCase', () => {
         it('debe lanzar BadRequestError si el rol no existe', async () => {
             mockRepo.buscarPorCorreo.mockResolvedValue(null);
             mockRolRepo.buscarPorId.mockResolvedValue(null);
-
-            await expect(useCase.crear(inputCrear)).rejects.toThrow(BadRequestError);
-        });
-
-        it('debe lanzar BadRequestError si el rol existe pero está inactivo', async () => {
-            mockRepo.buscarPorCorreo.mockResolvedValue(null);
-            mockRolRepo.buscarPorId.mockResolvedValue({ ...rolFake, activo: false });
 
             await expect(useCase.crear(inputCrear)).rejects.toThrow(BadRequestError);
         });
@@ -174,14 +160,7 @@ describe('UsuariosUseCase', () => {
             await expect(useCase.actualizar(1, { idRol: 999 }, ACTOR_ID)).rejects.toThrow(BadRequestError);
         });
 
-        it('debe lanzar BadRequestError si el rol existe pero está inactivo', async () => {
-            mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
-            mockRolRepo.buscarPorId.mockResolvedValue({ ...rolFake, activo: false });
-
-            await expect(useCase.actualizar(1, { idRol: 2 }, ACTOR_ID)).rejects.toThrow(BadRequestError);
-        });
-
-        it('debe actualizar cuando el rol existe y está activo', async () => {
+        it('debe actualizar cuando el rol existe', async () => {
             mockRepo.buscarPorId.mockResolvedValue(usuarioFake);
             mockRolRepo.buscarPorId.mockResolvedValue(rolFake);
             mockRepo.actualizar.mockResolvedValue({ ...usuarioFake, idRol: 2 });

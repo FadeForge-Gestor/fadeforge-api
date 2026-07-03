@@ -35,7 +35,6 @@ export class UsuariosUseCase implements IUsuarioUseCase {
 
             const rol = await this.rolRepository.buscarPorId(input.idRol);
             if (!rol) throw new BadRequestError(`El rol con id ${input.idRol} no existe`);
-            if (!rol.activo) throw new BadRequestError(`El rol con id ${input.idRol} está inactivo`);
 
             const hashContrasena = await bcrypt.hash(input.contrasena, 10);
             return this.usuarioRepository.crear({
@@ -60,7 +59,6 @@ export class UsuariosUseCase implements IUsuarioUseCase {
 
                 const rol = await this.rolRepository.buscarPorId(input.idRol);
                 if (!rol) throw new BadRequestError(`El rol con id ${input.idRol} no existe`);
-                if (!rol.activo) throw new BadRequestError(`El rol con id ${input.idRol} está inactivo`);
             }
 
             return this.usuarioRepository.actualizar(id, input);
