@@ -23,13 +23,6 @@ router.get(
     (req, res, next) => controller.listar(req, res, next)
 );
 
-// GET / rolesActivos - solo admins
-router.get(
-    '/activos',
-    authenticate, authorize(ROLES.ADMIN),
-    (req, res, next) => controller.listarActivos(req, res, next)
-)
-
 // GET /roles/:id — solo admins
 router.get(
     '/:id',

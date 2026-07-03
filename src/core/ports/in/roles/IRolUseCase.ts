@@ -5,6 +5,5 @@ import { Rol } from '@core/domain/rol/rol.entity';
 // Roles fijos y sembrados por prisma/seed.ts: solo lectura, sin crear/actualizar/desactivar.
 export interface IRolUseCase {
     listar(): Promise<Rol[]>;
-    listarActivos(): Promise<Rol[]>;
     obtenerPorId(id: number): Promise<Rol>;
 }

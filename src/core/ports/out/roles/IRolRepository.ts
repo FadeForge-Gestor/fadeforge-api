@@ -5,7 +5,6 @@ import { Rol } from '@core/domain/rol/rol.entity';
 // buscarPorClave se mantiene: lo usa registroCliente.usecase para resolver el rol "cliente".
 export interface IRolRepository {
     listarTodos(): Promise<Rol[]>;
-    listarActivos(): Promise<Rol[]>;
     buscarPorId(id: number): Promise<Rol | null>;
     buscarPorClave(clave: string): Promise<Rol | null>;
 }

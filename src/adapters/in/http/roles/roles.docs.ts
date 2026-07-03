@@ -32,32 +32,6 @@
  *           type: string
  *           format: date-time
  *
- * /admin/roles/activos:
- *   get:
- *     summary: Listar roles activos
- *     tags: [Roles]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Lista de roles activos
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 ok:
- *                   type: boolean
- *                   example: true
- *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Rol'
- *       401:
- *         description: Token no proporcionado o inválido
- *       403:
- *         description: Permisos insuficientes
- *
  * /admin/roles:
  *   get:
  *     summary: Listar todos los roles

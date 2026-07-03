@@ -15,7 +15,6 @@ const rolFake: Rol = {
 
 const mockRepo: jest.Mocked<IRolRepository> = {
     listarTodos: jest.fn(),
-    listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
     buscarPorClave: jest.fn(),
 };
@@ -58,15 +57,4 @@ describe('RolesUseCase', () => {
         });
     });
 
-    describe('listarActivos', () => {
-
-        it('debe retornar los roles activos', async () => {
-            mockRepo.listarActivos.mockResolvedValue([rolFake]);
-
-            const result = await useCase.listarActivos();
-
-            expect(mockRepo.listarActivos).toHaveBeenCalled();
-            expect(result).toEqual([rolFake]);
-        });
-    });
 });

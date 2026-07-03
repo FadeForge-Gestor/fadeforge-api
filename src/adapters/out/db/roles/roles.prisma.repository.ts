@@ -34,15 +34,6 @@ export class RolesPrismaRepository implements IRolRepository {
         return roles.map(r => this.mapear(r));
     }
 
-    // Método para listar todos los roles que esten activos
-    async listarActivos(): Promise<Rol[]> {
-        const roles = await prisma.roles.findMany({
-            orderBy: { id: 'asc' },
-            where: { activo: true },
-        });
-        return roles.map(r => this.mapear(r));
-    }
-
     // Método para buscar por id un ROL
     async buscarPorId(id: number): Promise<Rol | null> {
         const rol = await prisma.roles.findUnique({ where: { id } });

@@ -16,15 +16,6 @@ export class RolesController {
         }
     }
 
-    async listarActivos(_req: Request, res: Response, next: NextFunction) {
-        try {
-            const roles = await this.rolUseCase.listarActivos();
-            res.status(200).json(ok(roles));
-        } catch (error) {
-            next(error);
-        }
-    }
-
     async obtenerPorId(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { id } = req.validatedParams as IdParamDto;

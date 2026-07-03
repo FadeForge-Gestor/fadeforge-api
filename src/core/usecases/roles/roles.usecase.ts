@@ -12,11 +12,6 @@ export class RolesUseCase implements IRolUseCase {
         return this.rolRepository.listarTodos();
     }
 
-    // Método para listar los roles activos
-    async listarActivos(): Promise<Rol[]> {
-        return this.rolRepository.listarActivos();
-    }
-
     // Método para obtener un rol por ID
     async obtenerPorId(id: number): Promise<Rol> {
         const rol = await this.rolRepository.buscarPorId(id);

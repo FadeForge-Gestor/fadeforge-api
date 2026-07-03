@@ -56,7 +56,6 @@ const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {
 
 const mockRolRepo: jest.Mocked<IRolRepository> = {
     listarTodos: jest.fn(),
-    listarActivos: jest.fn(),
     buscarPorId: jest.fn(),
     buscarPorClave: jest.fn(),
 };
