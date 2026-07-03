@@ -288,6 +288,13 @@ describe('ServiciosUseCase', () => {
             await expect(useCase.eliminarImagen(99)).rejects.toThrow(NotFoundError);
         });
 
+        it('debe lanzar ConflictError si el servicio está desactivado', async () => {
+            mockServicioRepo.buscarPorId.mockResolvedValue({ ...servicioConImagenFake, activo: false });
+
+            await expect(useCase.eliminarImagen(1)).rejects.toThrow(ConflictError);
+            expect(mockStoragePort.eliminar).not.toHaveBeenCalled();
+        });
+
         it('debe lanzar NotFoundError si el servicio no tiene imagen', async () => {
             mockServicioRepo.buscarPorId.mockResolvedValue(servicioFake); // idImagen: null
 
