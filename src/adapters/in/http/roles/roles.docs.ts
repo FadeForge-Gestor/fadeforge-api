@@ -22,9 +22,6 @@
  *           type: string
  *           nullable: true
  *           example: Acceso total al sistema
- *         activo:
- *           type: boolean
- *           example: true
  *         fechaCreacion:
  *           type: string
  *           format: date-time

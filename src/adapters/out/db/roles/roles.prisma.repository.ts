@@ -11,7 +11,6 @@ export class RolesPrismaRepository implements IRolRepository {
         clave: string;
         nombre: string;
         descripcion: string | null;
-        activo: boolean;
         fecha_creacion: Date;
         fecha_modificacion: Date;
     }): Rol {
@@ -20,7 +19,6 @@ export class RolesPrismaRepository implements IRolRepository {
             clave: rol.clave,
             nombre: rol.nombre,
             descripcion: rol.descripcion,
-            activo: rol.activo,
             fechaCreacion: rol.fecha_creacion,
             fechaModificacion: rol.fecha_modificacion,
         };

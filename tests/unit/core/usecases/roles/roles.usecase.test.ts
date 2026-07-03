@@ -8,7 +8,6 @@ const rolFake: Rol = {
     clave: 'admin',
     nombre: 'Administrador',
     descripcion: null,
-    activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),
 };

@@ -31,7 +31,6 @@ const rolClienteFake: Rol = {
     clave: ROLES.CLIENTE,
     nombre: 'Cliente',
     descripcion: null,
-    activo: true,
     fechaCreacion: new Date(),
     fechaModificacion: new Date(),
 };

@@ -7,7 +7,6 @@ export interface Rol {
     clave: string;
     nombre: string;
     descripcion: string | null;
-    activo: boolean;
     fechaCreacion: Date;
     fechaModificacion: Date;
 }
