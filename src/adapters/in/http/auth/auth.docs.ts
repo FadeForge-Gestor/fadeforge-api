@@ -21,7 +21,7 @@
  *                 example: usuario@gmail.com
  *               contrasena:
  *                 type: string
- *                 example: "123456"
+ *                 example: "Abc123!@#"
  *     responses:
  *       200:
  *         description: Login exitoso
@@ -51,6 +51,8 @@
  *         description: Datos inválidos
  *       401:
  *         description: Credenciales inválidas
+ *       429:
+ *         description: Demasiados intentos. Intentá de nuevo en 15 minutos.
  *
  * /auth/registro:
  *   post:
@@ -81,7 +83,8 @@
  *                 example: juan@gmail.com
  *               contrasena:
  *                 type: string
- *                 example: "123456"
+ *                 description: "Mínimo 8 caracteres, mayúsculas, minúsculas, números y símbolos"
+ *                 example: "Abc123!@#"
  *     responses:
  *       201:
  *         description: Registro exitoso
