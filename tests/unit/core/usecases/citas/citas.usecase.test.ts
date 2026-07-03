@@ -544,5 +544,56 @@ describe('CitasUseCase', () => {
             });
             expect(result.estado).toBe('cancelada');
         });
+
+        it('debe permitir pasar de reprogramada a pendiente', async () => {
+            const citaReprogramada = { ...citaFake, estado: 'reprogramada' as const };
+            const citaActualizada = { ...citaFake, estado: 'pendiente' as const };
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaReprogramada);
+            mockCitaRepo.cambiarEstado.mockResolvedValue(citaActualizada);
+
+            const result = await useCase.cambiarEstado(1, 'pendiente');
+
+            expect(result.estado).toBe('pendiente');
+        });
+
+        it('debe lanzar ConflictError si se intenta marcar no_asistio antes de 15 minutos', async () => {
+            const fechaReciente = new Date(Date.now() + 5 * 60 * 1000);
+            const citaPendiente = { ...citaFake, estado: 'pendiente' as const, fechaInicio: fechaReciente };
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaPendiente);
+
+            await expect(useCase.cambiarEstado(1, 'no_asistio')).rejects.toThrow(ConflictError);
+
+            expect(mockCitaRepo.cambiarEstado).not.toHaveBeenCalled();
+        });
+
+        it('debe permitir marcar no_asistio cuando ya pasaron 15 minutos desde el inicio', async () => {
+            const fechaAnterior = new Date(Date.now() - 20 * 60 * 1000);
+            const citaPendiente = { ...citaFake, estado: 'pendiente' as const, fechaInicio: fechaAnterior };
+            const citaActualizada = { ...citaFake, estado: 'no_asistio' as const };
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaPendiente);
+            mockCitaRepo.cambiarEstado.mockResolvedValue(citaActualizada);
+
+            const result = await useCase.cambiarEstado(1, 'no_asistio');
+
+            expect(result.estado).toBe('no_asistio');
+        });
+
+        it('debe permitir pasar de no_asistio a cancelada con motivo', async () => {
+            const citaNoAsistio = { ...citaFake, estado: 'no_asistio' as const };
+            const citaActualizada = { ...citaFake, estado: 'cancelada' as const, motivoCancelado: 'Cliente no se presentó' };
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaNoAsistio);
+            mockCitaRepo.cambiarEstado.mockResolvedValue(citaActualizada);
+
+            const result = await useCase.cambiarEstado(1, 'cancelada', 'Cliente no se presentó', 1);
+
+            expect(result.estado).toBe('cancelada');
+        });
+
+        it('debe lanzar ConflictError si no_asistio intenta ir a un estado no permitido', async () => {
+            const citaNoAsistio = { ...citaFake, estado: 'no_asistio' as const };
+            mockCitaRepo.buscarPorId.mockResolvedValue(citaNoAsistio);
+
+            await expect(useCase.cambiarEstado(1, 'pendiente')).rejects.toThrow(ConflictError);
+        });
     });
 });

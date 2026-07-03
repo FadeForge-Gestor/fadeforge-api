@@ -159,9 +159,11 @@ export class CitasUseCase implements ICitasUseCase {
         if (!cita) throw new NotFoundError(`Cita con id ${id} no encontrada`);
 
         const transicionesValidas: Partial<Record<EstadoCita, EstadoCita[]>> = {
-            'nueva':      ['pendiente', 'cancelada'],
-            'pendiente':   ['en_proceso', 'cancelada', 'reprogramada'],
-            'en_proceso':  ['finalizada', 'cancelada'],
+            'nueva':        ['pendiente', 'cancelada'],
+            'pendiente':    ['en_proceso', 'cancelada', 'reprogramada', 'no_asistio'],
+            'en_proceso':   ['finalizada', 'cancelada'],
+            'reprogramada': ['pendiente'],
+            'no_asistio':   ['cancelada'],
         };
 
         const permitidos = transicionesValidas[cita.estado];
@@ -170,6 +172,12 @@ export class CitasUseCase implements ICitasUseCase {
 
         if (!permitidos.includes(estado))
             throw new ConflictError(`Transición de estado inválida: no se puede pasar de '${cita.estado}' a '${estado}'`);
+
+        if (estado === 'no_asistio') {
+            const limiteNoAsistio = new Date(cita.fechaInicio.getTime() + 15 * 60 * 1000);
+            if (new Date() < limiteNoAsistio)
+                throw new ConflictError('No se puede marcar como no asistió hasta 15 minutos después de la hora de inicio');
+        }
 
         if (estado === 'cancelada' && !motivoCancelado)
             throw new ConflictError('El motivo de cancelación es requerido para cancelar una cita');
