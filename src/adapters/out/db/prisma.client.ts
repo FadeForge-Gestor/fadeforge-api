@@ -1,4 +1,4 @@
-import { PrismaClient } from "src/generated/prisma/client";
+import { PrismaClient } from "../../../generated/prisma/client";
 import { PrismaPg } from '@prisma/adapter-pg';
 
 // Crea el adpter que sabe cómo conectarse a la BD
