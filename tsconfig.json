@@ -13,14 +13,12 @@
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,
-        "ignoreDeprecations": "5.0",
-        "baseUrl": ".",
         "paths": {
-            "@core/*": ["src/core/*"],
-            "@adapters/*": ["src/adapters/*"],
-            "@shared/*": ["src/shared/*"],
-            "@config/*": ["src/config/*"],
-            "@middlewares/*": ["src/adapters/in/http/middlewares/*"]
+            "@core/*": ["./src/core/*"],
+            "@adapters/*": ["./src/adapters/*"],
+            "@shared/*": ["./src/shared/*"],
+            "@config/*": ["./src/config/*"],
+            "@middlewares/*": ["./src/adapters/in/http/middlewares/*"]
         }
     },
     "files": ["src/shared/types/express.d.ts"],
