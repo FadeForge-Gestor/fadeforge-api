@@ -97,4 +97,6 @@
  *         description: Permisos insuficientes
  *       404:
  *         description: Usuario no encontrado
+ *       409:
+ *         description: No se puede resetear la contraseña de un administrador
  */
