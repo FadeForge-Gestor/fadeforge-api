@@ -3,12 +3,19 @@ import { ICredencialRepository } from "@core/ports/out/credenciales/ICredencialR
 import { ICredencialUseCase } from "@core/ports/in/credenciales/ICredencialUseCase";
 import { CambiarContrasenaInput, CambiarCorreoInput, ResetContrasenaInput } from "@core/domain/credencial/credencial.entity";
 import { ConflictError, NotFoundError, UnauthorizedError } from "@shared/errors/HttpError";
+import { IUsuarioRepository } from "@core/ports/out/usuarios/IUsuarioRepository";
+import { IRolRepository } from "@core/ports/out/roles/IRolRepository";
+import { ROLES } from "@shared/constants/roles";
 
 // Implementación del caso de uso de credenciales
 export class CredencialUseCase implements ICredencialUseCase {
 
     // Inyección de dependencias del repositorio de credenciales
-    constructor(private readonly credencialRepository: ICredencialRepository) {}
+    constructor(
+        private readonly credencialRepository: ICredencialRepository,
+        private readonly usuarioRepository: IUsuarioRepository,
+        private readonly rolRepository: IRolRepository
+    ) {}
 
     // Lógica del caso de uso para cambiar la contraseña
     async cambiarContrasena(idUsuario: number, input: CambiarContrasenaInput): Promise<void> {
@@ -40,6 +47,12 @@ export class CredencialUseCase implements ICredencialUseCase {
    async resetearContrasena(idUsuario: number, input: ResetContrasenaInput): Promise<void> {
        const credencial = await this.credencialRepository.buscarPorIdUsuario(idUsuario);
        if (!credencial) throw new NotFoundError(`Credencial para usuario con id ${idUsuario} no encontrada`);
+
+       const usuario = await this.usuarioRepository.buscarPorId(idUsuario);
+       if (!usuario) throw new NotFoundError(`Usuario con id ${idUsuario} no encontrado`);
+
+       const rol = await this.rolRepository.buscarPorId(usuario.idRol);
+       if (rol?.clave === ROLES.ADMIN) throw new ConflictError('No se puede resetear la contraseña de un administrador');
 
        const nuevoHash = await bcrypt.hash(input.nuevaContrasena, 10);
        await this.credencialRepository.actualizarContrasena(idUsuario, nuevoHash);
