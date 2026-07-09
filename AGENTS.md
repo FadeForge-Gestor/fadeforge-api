@@ -41,7 +41,7 @@ tests/unit/            ← Espeja la estructura de src/ (core, adapters, shared)
 prisma/                ← schema.prisma y migraciones
 ```
 
-## Dominio
+## Arquitectura
 
 **Seguridad:** usuarios, roles, credenciales_usuarios, empleados
 **Servicios:** categorias_servicios, servicios, historial_precios
@@ -101,6 +101,8 @@ Reglas de negocio clave:
 - No reintroduzcas mutación (`create`/`update`/`activo`) en el módulo de roles: es de solo lectura a propósito desde el refactor `refactor/roles-solo-lectura`.
 
 ## Flujo de trabajo
+
+- Trabajamos con **Spec Driven Development**: La spect va antes que el código.
 
 Orden de implementación (inside-out) para todo caso de uso nuevo:
 
