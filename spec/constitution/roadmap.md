@@ -1,6 +1,6 @@
 # Roadmap
 
-_Orden y estado de las features. Es la vista de "qué hay hecho, qué toca ahora y qué viene". Cada entrada apunta a su carpeta en `features/`._
+Este roadmap ordena el desarrollo de FadeForge API: qué está construido, qué se está por abordar y qué ideas hay en el radar. Cada feature nueva se planifica acá antes de tocar código, siguiendo el flujo definido en `constitution/`.
 
 ## Hecho ✅
 
@@ -15,13 +15,13 @@ _Construidas antes de adoptar este flujo SDD, por eso no tienen carpeta en `feat
 
 ## Siguiente 🔜
 
-_Lo próximo a abordar. Idealmente una sola feature "en curso" a la vez._
+Todavía no se definió cuál es la próxima feature a implementar.
 
 - **<Nombre>** — <una línea de qué resuelve>.
 
 ## Backlog / ideas 💡
 
-_Sin comprometer ni ordenar del todo. Ideas que respetan la constitución._
+Todavía no hay ideas registradas en el backlog.
 
 - **<Nombre>** — <qué aportaría>.
 - **<Nombre>** — <qué aportaría>.
