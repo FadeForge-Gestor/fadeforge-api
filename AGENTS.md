@@ -102,7 +102,8 @@ Reglas de negocio clave:
 
 ## Flujo de trabajo
 
-- Trabajamos con **Spec Driven Development**: La spect va antes que el código.
+- Trabajamos con **Spec Driven Development**: la spec va antes que el código. Ver `spec/README.md` para la estructura completa (`constitution/` + `features/NNN-nombre-feature/`).
+- Una feature real (con decisiones de diseño y criterios de aceptación) se documenta primero en `spec/features/NNN-nombre-feature/` (`spec.md` → `plan.md` → `tasks.md`). Un bugfix o hotfix chico NO necesita spec: alcanza con rama `fix/`, commit convencional y test.
 
 Orden de implementación (inside-out) para todo caso de uso nuevo:
 
@@ -120,7 +121,18 @@ Antes de una tarea no trivial, proponé un plan y esperá el OK. Una tarea a la 
 
 Toda implementación se avisa antes de comitear: mostrá qué cambió y esperá aprobación explícita. Recién con el OK del usuario hacé `commit` y `push` de forma automática (sin volver a preguntar).
 
+### Comandos (`.claude/commands/` y `.opencode/commands/`)
+
+- **`/nueva-feature <nombre>`** — scaffold de un caso de uso nuevo siguiendo estrictamente el orden inside-out de arriba, paso a paso, con el OK antes de tocar código. No commitea al terminar.
+- **`/cerrar-tarea`** — cierra la tarea actual: corre `npm test`, muestra el diff, redacta el commit convencional, verifica que no sea directo en `main`, espera el OK explícito y recién ahí hace `commit` + `push` (y ofrece abrir el PR).
+
+### MCP disponibles (`.mcp.json`)
+
+- **`context7`** — docs actualizadas de librerías (Express, Prisma, Zod, etc.). Usarlo antes de asumir sintaxis o comportamiento de una dependencia, en vez de confiar en memoria.
+- **`engram`** — memoria persistente entre sesiones. Guardar acá decisiones de arquitectura, bugs resueltos (con causa raíz) y convenciones nuevas apenas se establecen, sin esperar a que se pida explícitamente.
+
 ## Documentación
 
 - `README.md` en la raíz — visión general del proyecto.
+- `spec/` — documentación de Spec Driven Development (misión, stack, roadmap, features).
 - Swagger embebido por dominio en `adapters/in/http/<dominio>/`.
