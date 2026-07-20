@@ -22,7 +22,19 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - run: npm ci
+
+      - name: Cache Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
 
       - run: npx prisma generate
 
@@ -39,7 +51,19 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - run: npm ci
+
+      - name: Cache Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
 
       - run: npx prisma generate
 
@@ -63,7 +87,19 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
       - run: npm ci
+
+      - name: Cache Prisma client
+        uses: actions/cache@v4
+        with:
+          path: node_modules/.prisma
+          key: prisma-${{ runner.os }}-${{ hashFiles('prisma/schema.prisma') }}
 
       - run: npx prisma generate
 
