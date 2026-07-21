@@ -22,4 +22,12 @@ _Construidas antes de adoptar este flujo SDD, por eso no tienen carpeta en `feat
 
 - **CD (Continuous Deployment)** — deploy automático al mergear a `main`. Pendiente definir plataforma de deploy (Railway, Render, Fly.io, VPS, etc.).
 
+### Seguridad CI/CD 🔒
+
+- **npm audit** — detectar dependencias con vulnerabilidades conocidas (CVEs). Paso rápido, bajo esfuerzo, alto impacto.
+- **Dependabot** — actualización automática de PRs cuando hay nuevas versiones de dependencias con fixes de seguridad.
+- **CodeQL / Semgrep** — análisis estático de código para detectar patrones inseguros (inyección, XSS, etc.).
+- **Socket.dev** — detección de paquetes npm maliciosos (supply chain attacks).
+- **Prevención de inyección en workflows** — nunca usar `${{ github.event.* }}` directo en `run:`, siempre passarlo como env var.
+
 > Cada feature nueva se crea como `features/NNN-nombre-feature/` con `spec.md`, `plan.md` y `tasks.md` antes de tocar código.
