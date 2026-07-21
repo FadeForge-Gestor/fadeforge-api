@@ -12,18 +12,22 @@ _Construidas antes de adoptar este flujo SDD, por eso no tienen carpeta en `feat
 4. **Gestión de citas** — creación con validación de disponibilidad, cálculo de subtotal/IVA/total, máquina de estados (`nueva → pendiente → en_proceso → finalizada / cancelada / reprogramada`), anti-solapamiento por empleado.
 5. **Idempotencia en endpoints POST** — evita duplicados en `/citas`, `/usuarios`, `/empleados`, `/servicios`, `/categorias-servicios` ante reintentos de red.
 6. **Documentación interactiva** — Swagger UI por dominio.
+7. **CI pipeline** — workflow de GitHub Actions con typecheck, test (coverage) y build, cache de 3 capas (npm, node_modules, Prisma client).
 
 ## Siguiente 🔜
 
-Todavía no se definió cuál es la próxima feature a implementar.
-
-- **<Nombre>** — <una línea de qué resuelve>.
+- **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡
 
-Todavía no hay ideas registradas en el backlog.
+- **CD (Continuous Deployment)** — deploy automático al mergear a `main`. Pendiente definir plataforma de deploy (Railway, Render, Fly.io, VPS, etc.).
 
-- **<Nombre>** — <qué aportaría>.
-- **<Nombre>** — <qué aportaría>.
+### Seguridad CI/CD 🔒
+
+- **npm audit** — detectar dependencias con vulnerabilidades conocidas (CVEs). Paso rápido, bajo esfuerzo, alto impacto.
+- **Dependabot** — actualización automática de PRs cuando hay nuevas versiones de dependencias con fixes de seguridad.
+- **CodeQL / Semgrep** — análisis estático de código para detectar patrones inseguros (inyección, XSS, etc.).
+- **Socket.dev** — detección de paquetes npm maliciosos (supply chain attacks).
+- **Prevención de inyección en workflows** — nunca usar `${{ github.event.* }}` directo en `run:`, siempre passarlo como env var.
 
 > Cada feature nueva se crea como `features/NNN-nombre-feature/` con `spec.md`, `plan.md` y `tasks.md` antes de tocar código.
