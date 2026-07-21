@@ -6,6 +6,7 @@ const config: Config = {
         '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     },
     testEnvironment: 'node',
+    setupFiles: ['<rootDir>/tests/setup.ts'],
     roots: ['<rootDir>/tests'],
     testMatch: ['**/*.test.ts'],
     moduleNameMapper: {

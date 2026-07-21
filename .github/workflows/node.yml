@@ -46,6 +46,13 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/fadeforge_test
+      JWT_SECRET: test-secret-falso-solo-para-tests
+      JWT_EXPIRES_IN: 1d
+      CLOUDINARY_CLOUD_NAME: test_cloud
+      CLOUDINARY_API_KEY: test_api_key
+      CLOUDINARY_API_SECRET: test_api_secret
     steps:
       - uses: actions/checkout@v4
 
