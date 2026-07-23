@@ -2,34 +2,48 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { IAuthUseCase, LoginInput, LoginOutput } from '@core/ports/in/auth/IAuthUseCase';
 import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
+import { ILoginSecurityRepository } from '@core/ports/out/login-security/ILoginSecurityRepository';
 import { env } from '@config/env';
 
-import { UnauthorizedError } from '@shared/errors/HttpError';
+import { UnauthorizedError, TooManyRequestsError } from '@shared/errors/HttpError';
 
-// Implemenatación del caso de uso del login
 export class LoginUseCase implements IAuthUseCase {
 
-    // Inyección de dependencias del repositorio de autenticación
-    constructor(private readonly authRepository: IAuthRepository) {}
+    constructor(
+        private readonly authRepository: IAuthRepository,
+        private readonly loginSecurityRepository: ILoginSecurityRepository,
+    ) {}
 
-    // Lógica del cado de uso del login
     async login(input: LoginInput): Promise<LoginOutput> {
-        const credenciales = await this.authRepository.buscarPorCorreo(input.correo);
+        const correo = input.correo.toLowerCase();
 
-        // Si no se encuentran credenciales para el correo proporcionado, se lanza un error de autenticación
+        const estaBloqueado = await this.loginSecurityRepository.estaBloqueado(correo);
+        if (estaBloqueado) {
+            // Se hace una segunda query para obtener el tiempo restante del bloqueo
+            const estado = await this.loginSecurityRepository.obtenerEstado(correo);
+            const tiempoRestante = estado?.tiempoRestanteMs ?? 0;
+            const minutos = Math.ceil(tiempoRestante / 60000);
+            throw new TooManyRequestsError(
+                `Cuenta bloqueada temporalmente. Intentá de nuevo en ${minutos} minuto(s).`
+            );
+        }
+
+        const credenciales = await this.authRepository.buscarPorCorreo(correo);
+
         if (!credenciales) {
+            await this.loginSecurityRepository.registrarIntentoFallido(correo);
             throw new UnauthorizedError();
         }
 
-        // Se compara la contraseña proporcionada con el hash almacenado en la base de datos
         const contrasenaValida = await bcrypt.compare(input.contrasena, credenciales.hashContrasena);
 
-        // Si la contraseña no es válida, se lanza un error de autenticación
         if (!contrasenaValida) {
+            await this.loginSecurityRepository.registrarIntentoFallido(correo);
             throw new UnauthorizedError();
         }
 
-        // Si las credenciales son válidad, se genera un token JWT con la información del usuario
+        await this.loginSecurityRepository.resetIntentos(correo);
+
         const token = jwt.sign(
             {
                 id: credenciales.idUsuario,
@@ -40,7 +54,6 @@ export class LoginUseCase implements IAuthUseCase {
             { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions
         );
 
-        // Se retorna el token y la información del usuario
         return {
             token,
             usuario: {

@@ -2,7 +2,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { LoginUseCase } from '@core/usecases/auth/login.usecase';
 import { IAuthRepository, CredencialesAuth } from '@core/ports/out/auth/IAuthRepository';
-import { UnauthorizedError } from '@shared/errors/HttpError';
+import { ILoginSecurityRepository } from '@core/ports/out/login-security/ILoginSecurityRepository';
+import { UnauthorizedError, TooManyRequestsError } from '@shared/errors/HttpError';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
@@ -10,7 +11,6 @@ jest.mock('jsonwebtoken');
 const mockedBcrypt = jest.mocked(bcrypt);
 const mockedJwt = jest.mocked(jwt);
 
-// Datos reutilizables que simulan lo que devolvería la base de datos
 const credencialesFake: CredencialesAuth = {
     correo: 'test@test.com',
     hashContrasena: '$2b$10$hasheado',
@@ -18,10 +18,15 @@ const credencialesFake: CredencialesAuth = {
     claveRol: 'cliente',
 };
 
-// El repositorio no es un módulo externo sino una clase inyectada —
-// se mockea creando un objeto que implementa la interfaz con funciones falsas
-const mockRepo: jest.Mocked<IAuthRepository> = {
+const mockAuthRepo: jest.Mocked<IAuthRepository> = {
     buscarPorCorreo: jest.fn(),
+};
+
+const mockSecurityRepo: jest.Mocked<ILoginSecurityRepository> = {
+    registrarIntentoFallido: jest.fn(),
+    resetIntentos: jest.fn(),
+    estaBloqueado: jest.fn(),
+    obtenerEstado: jest.fn(),
 };
 
 describe('LoginUseCase', () => {
@@ -30,33 +35,81 @@ describe('LoginUseCase', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
-        // Se inyecta el repositorio falso igual que en producción
-        useCase = new LoginUseCase(mockRepo);
+        useCase = new LoginUseCase(mockAuthRepo, mockSecurityRepo);
     });
 
     it('debe lanzar UnauthorizedError si el correo no existe', async () => {
-        // El repositorio retorna null — usuario no encontrado
-        mockRepo.buscarPorCorreo.mockResolvedValue(null);
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(null);
+        mockSecurityRepo.registrarIntentoFallido.mockResolvedValue({
+            correo: 'noexiste@test.com',
+            intentosFallidos: 1,
+            bloqueadoHasta: null,
+            tiempoRestanteMs: null,
+        });
 
         await expect(
             useCase.login({ correo: 'noexiste@test.com', contrasena: '123456' })
         ).rejects.toThrow(UnauthorizedError);
     });
 
+    it('debe registrar intento fallido cuando el correo no existe', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(null);
+        mockSecurityRepo.registrarIntentoFallido.mockResolvedValue({
+            correo: 'noexiste@test.com',
+            intentosFallidos: 1,
+            bloqueadoHasta: null,
+            tiempoRestanteMs: null,
+        });
+
+        await expect(
+            useCase.login({ correo: 'noexiste@test.com', contrasena: '123456' })
+        ).rejects.toThrow();
+
+        expect(mockSecurityRepo.registrarIntentoFallido).toHaveBeenCalledWith('noexiste@test.com');
+    });
+
     it('debe lanzar UnauthorizedError si la contraseña es incorrecta', async () => {
-        mockRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
-        // bcrypt.compare retorna false — contraseña no coincide con el hash
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
         mockedBcrypt.compare = jest.fn().mockResolvedValue(false as never);
+        mockSecurityRepo.registrarIntentoFallido.mockResolvedValue({
+            correo: 'test@test.com',
+            intentosFallidos: 1,
+            bloqueadoHasta: null,
+            tiempoRestanteMs: null,
+        });
 
         await expect(
             useCase.login({ correo: 'test@test.com', contrasena: 'incorrecta' })
         ).rejects.toThrow(UnauthorizedError);
     });
 
+    it('debe registrar intento fallido cuando la contraseña es incorrecta', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
+        mockedBcrypt.compare = jest.fn().mockResolvedValue(false as never);
+        mockSecurityRepo.registrarIntentoFallido.mockResolvedValue({
+            correo: 'test@test.com',
+            intentosFallidos: 1,
+            bloqueadoHasta: null,
+            tiempoRestanteMs: null,
+        });
+
+        await expect(
+            useCase.login({ correo: 'test@test.com', contrasena: 'incorrecta' })
+        ).rejects.toThrow();
+
+        expect(mockSecurityRepo.registrarIntentoFallido).toHaveBeenCalledWith('test@test.com');
+    });
+
     it('debe retornar token y usuario cuando las credenciales son válidas', async () => {
-        mockRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
         mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
         mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
 
         const result = await useCase.login({ correo: 'test@test.com', contrasena: '123456' });
 
@@ -64,9 +117,11 @@ describe('LoginUseCase', () => {
     });
 
     it('debe retornar los datos del usuario correctamente', async () => {
-        mockRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
         mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
         mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
 
         const result = await useCase.login({ correo: 'test@test.com', contrasena: '123456' });
 
@@ -75,5 +130,78 @@ describe('LoginUseCase', () => {
             correo: credencialesFake.correo,
             rol: credencialesFake.claveRol,
         });
+    });
+
+    it('debe resetear intentos cuando el login es exitoso', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
+        mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
+        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
+
+        await useCase.login({ correo: 'test@test.com', contrasena: '123456' });
+
+        expect(mockSecurityRepo.resetIntentos).toHaveBeenCalledWith('test@test.com');
+    });
+
+    it('debe lanzar TooManyRequestsError si la cuenta está bloqueada', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(true);
+        mockSecurityRepo.obtenerEstado.mockResolvedValue({
+            correo: 'test@test.com',
+            intentosFallidos: 5,
+            bloqueadoHasta: new Date(Date.now() + 10 * 60 * 1000),
+            tiempoRestanteMs: 10 * 60 * 1000,
+        });
+
+        await expect(
+            useCase.login({ correo: 'test@test.com', contrasena: '123456' })
+        ).rejects.toThrow(TooManyRequestsError);
+    });
+
+    it('debe incluir tiempo restante en el mensaje de cuenta bloqueada', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(true);
+        mockSecurityRepo.obtenerEstado.mockResolvedValue({
+            correo: 'test@test.com',
+            intentosFallidos: 5,
+            bloqueadoHasta: new Date(Date.now() + 10 * 60 * 1000),
+            tiempoRestanteMs: 10 * 60 * 1000,
+        });
+
+        try {
+            await useCase.login({ correo: 'test@test.com', contrasena: '123456' });
+        } catch (error) {
+            expect(error).toBeInstanceOf(TooManyRequestsError);
+            expect((error as TooManyRequestsError).message).toContain('10 minuto(s)');
+        }
+    });
+
+    it('debe normalizar el correo a lowercase', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
+        mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
+        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
+
+        await useCase.login({ correo: 'Test@TEST.COM', contrasena: '123456' });
+
+        expect(mockSecurityRepo.estaBloqueado).toHaveBeenCalledWith('test@test.com');
+        expect(mockAuthRepo.buscarPorCorreo).toHaveBeenCalledWith('test@test.com');
+    });
+
+    it('debe registrar intento fallido con correo normalizado', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(null);
+        mockSecurityRepo.registrarIntentoFallido.mockResolvedValue({
+            correo: 'test@test.com',
+            intentosFallidos: 1,
+            bloqueadoHasta: null,
+            tiempoRestanteMs: null,
+        });
+
+        await expect(
+            useCase.login({ correo: 'TEST@Test.COM', contrasena: '123456' })
+        ).rejects.toThrow();
+
+        expect(mockSecurityRepo.registrarIntentoFallido).toHaveBeenCalledWith('test@test.com');
     });
 });
