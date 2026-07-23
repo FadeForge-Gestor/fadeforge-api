@@ -45,9 +45,16 @@ export class ConflictError extends HttpError {
     }
 }
 
+// Demasiadas solicitudes (rate limit / cuenta bloqueada)
+export class TooManyRequestsError extends HttpError {
+    constructor(message = 'Cuenta bloqueada temporalmente') {
+        super(429, message);
+    }
+}
+
 // Error interno del servidor
 export class InternalServerError extends HttpError {
     constructor(message = 'Error interno del servidor') {
         super(500, message);
     }
-}
+} 

@@ -81,6 +81,17 @@ model roles {
   @@schema("seguridad")
 }
 
+model intentos_login {
+  id                 Int       @id @default(autoincrement())
+  correo             String    @unique @db.VarChar(100)
+  intentos_fallidos  Int       @default(0)
+  bloqueado_hasta    DateTime? @db.Timestamptz(6)
+  fecha_creacion     DateTime  @default(now()) @db.Timestamp(6)
+  fecha_modificacion DateTime  @default(now()) @db.Timestamptz(6)
+
+  @@schema("seguridad")
+}
+
 model usuarios {
   id                                  Int                    @id @default(autoincrement())
   nombre                              String                 @db.VarChar(100)
