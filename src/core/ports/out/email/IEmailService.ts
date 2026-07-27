@@ -1,0 +1,3 @@
+export interface IEmailService {
+    enviarVerificacion(correo: string, token: string): Promise<void>;
+}

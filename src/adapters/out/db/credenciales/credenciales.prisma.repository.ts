@@ -8,11 +8,13 @@ export class CredencialesPrismaRepository implements ICredencialRepository {
         id_usuario: number;
         correo: string;
         hash_contrasena: string;
+        email_verificado: boolean;
     }): CredencialRaw {
         return {
             idUsuario: credencial.id_usuario,
             correo: credencial.correo,
             hashContrasena: credencial.hash_contrasena,
+            emailVerificado: credencial.email_verificado,
         };
     }
 
@@ -47,6 +49,17 @@ export class CredencialesPrismaRepository implements ICredencialRepository {
             where: { id_usuario: idUsuario },
             data: {
                 correo: nuevoCorreo,
+                fecha_modificacion: new Date(),
+            }
+        });
+    }
+
+    // Método para actualizar el estado de verificación de email de un usuario
+    async actualizarEmailVerificado(idUsuario: number, verificado: boolean): Promise<void> {
+        await prisma.credenciales_usuarios.update({
+            where: { id_usuario: idUsuario },
+            data: {
+                email_verificado: verificado,
                 fecha_modificacion: new Date(),
             }
         });

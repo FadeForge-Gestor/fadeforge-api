@@ -23,3 +23,10 @@ export const registroClienteSchema = z.object({
 });
 
 export type RegistroClienteDto = z.infer<typeof registroClienteSchema>;
+
+// Esquema de validación para reenvío de verificación
+export const reenviarVerificacionSchema = z.object({
+    correo: z.string().email('Correo electrónico no válido'),
+});
+
+export type ReenviarVerificacionDto = z.infer<typeof reenviarVerificacionSchema>;
