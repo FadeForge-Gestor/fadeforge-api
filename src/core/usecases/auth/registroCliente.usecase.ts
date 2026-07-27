@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { IRegistroClienteUseCase, RegistroClienteInput, RegistroClienteOutput } from '@core/ports/in/auth/IRegistroClienteUseCase';
+import { IRegistroClienteUseCase } from '@core/ports/in/auth/IRegistroClienteUseCase';
+import { RegistroClienteInput, RegistroClienteOutput } from '@core/domain/auth/auth.entity';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
 import { IEmailService } from '@core/ports/out/email/IEmailService';

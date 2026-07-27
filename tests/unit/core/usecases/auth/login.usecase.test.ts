@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { LoginUseCase } from '@core/usecases/auth/login.usecase';
-import { IAuthRepository, CredencialesAuth } from '@core/ports/out/auth/IAuthRepository';
+import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
+import { CredencialesAuth } from '@core/domain/auth/auth.entity';
 import { ILoginSecurityRepository } from '@core/ports/out/login-security/ILoginSecurityRepository';
 import { UnauthorizedError, TooManyRequestsError } from '@shared/errors/HttpError';
 

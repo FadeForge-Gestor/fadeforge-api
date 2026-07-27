@@ -1,4 +1,5 @@
-import { IAuthRepository, CredencialesAuth } from '@core/ports/out/auth/IAuthRepository';
+import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
+import { CredencialesAuth } from '@core/domain/auth/auth.entity';
 import { prisma } from '../prisma.client';
 
 // Implementación del repositorio de autenticación utilizando Prisma

@@ -17,9 +17,11 @@ _Construidas antes de adoptar este flujo SDD, por eso no tienen carpeta en `feat
 _Con features documentadas con spec:_
 
 8. **Control de intentos fallidos de login** — lockout después de 5 intentos fallidos (15 min), rate limit por usuario con `express-rate-limit`, persistencia en PostgreSQL. [Spec](features/001-control-intentos-login/spec.md)
+9. **Verificación de correo electrónico** — email de confirmación con Resend al registrarse, tokens bcrypt, rate limit de reenvío, feature toggle. [Spec](features/002-verificacion-email/spec.md)
 
 ## Siguiente 🔜
 
+- **Refactor: mover tipos de puertos a domain** — corrección de arquitectura hexagonal para que los puertos solo importen tipos desde `core/domain/`. [Spec](refactors/001-hexagonal-tipos-en-dominio/spec.md)
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡

@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { IAuthUseCase, LoginInput, LoginOutput } from '@core/ports/in/auth/IAuthUseCase';
+import { IAuthUseCase } from '@core/ports/in/auth/IAuthUseCase';
+import { LoginInput, LoginOutput } from '@core/domain/auth/auth.entity';
 import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
 import { ILoginSecurityRepository } from '@core/ports/out/login-security/ILoginSecurityRepository';
 import { env } from '@config/env';

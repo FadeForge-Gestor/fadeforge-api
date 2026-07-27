@@ -1,5 +1,10 @@
 import { randomUUID } from 'crypto';
 
+export interface VerificationTokenData {
+    idUsuario: number;
+    expiraEn: Date;
+}
+
 export function generarToken(): string {
     return randomUUID();
 }

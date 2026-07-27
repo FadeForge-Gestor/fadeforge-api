@@ -1,4 +1,5 @@
-import { ICredencialRepository, CredencialRaw } from "@core/ports/out/credenciales/ICredencialRepository";
+import { ICredencialRepository } from "@core/ports/out/credenciales/ICredencialRepository";
+import { CredencialRaw } from "@core/domain/credencial/credencial.entity";
 import { prisma } from "../prisma.client";
 
 // Clase de repositorio para manejar las credenciales de los usuarios utilizando Prisma ORM

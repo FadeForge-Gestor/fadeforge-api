@@ -1,13 +1,4 @@
-export interface ArchivoInput {
-    buffer: Buffer;
-    nombreOriginal: string;
-}
-
-export interface ImagenSubida {
-    url: string;
-    publicId: string;
-    nombre: string;
-}
+import { ArchivoInput, ImagenSubida } from '@core/domain/storage/storage.entity';
 
 export interface IStoragePort {
     subir(archivo: ArchivoInput): Promise<ImagenSubida>;

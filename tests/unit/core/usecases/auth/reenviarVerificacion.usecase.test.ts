@@ -5,7 +5,7 @@ import { IEmailService } from '@core/ports/out/email/IEmailService';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
 import { ICredencialRepository } from '@core/ports/out/credenciales/ICredencialRepository';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
-import { CredencialRaw } from '@core/ports/out/credenciales/ICredencialRepository';
+import { CredencialRaw } from '@core/domain/credencial/credencial.entity';
 import { NotFoundError, BadRequestError, TooManyRequestsError } from '@shared/errors/HttpError';
 
 jest.mock('bcrypt');

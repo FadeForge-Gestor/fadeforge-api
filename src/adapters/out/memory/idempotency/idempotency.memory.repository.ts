@@ -1,4 +1,5 @@
-import { IIdempotencyRepository, StoredResponse } from '@core/ports/out/idempotency/IIdempotencyRepository';
+import { IIdempotencyRepository } from '@core/ports/out/idempotency/IIdempotencyRepository';
+import { StoredResponse } from '@core/domain/idempotency/idempotency.entity';
 
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
 

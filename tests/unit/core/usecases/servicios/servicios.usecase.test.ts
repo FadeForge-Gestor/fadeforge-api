@@ -1,7 +1,8 @@
 import { ServiciosUseCase } from '@core/usecases/servicios/servicios.usecase';
 import { IServicioRepository } from '@core/ports/out/servicios/IServicioRepository';
 import { ICategoriaServicioRepository } from '@core/ports/out/categoria-servicio/ICategoriaServicioRepository';
-import { IStoragePort, ArchivoInput, ImagenSubida } from '@core/ports/out/storage/IStoragePort';
+import { IStoragePort } from '@core/ports/out/storage/IStoragePort';
+import { ArchivoInput, ImagenSubida } from '@core/domain/storage/storage.entity';
 import { Servicio } from '@core/domain/servicio/servicio.entity';
 import { CategoriaServicio } from '@core/domain/categoria-servicio/categoriaServicio.entity';
 import { NotFoundError, ConflictError } from '@shared/errors/HttpError';
