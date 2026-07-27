@@ -3,16 +3,22 @@ import jwt from 'jsonwebtoken';
 import { IRegistroClienteUseCase, RegistroClienteInput, RegistroClienteOutput } from '@core/ports/in/auth/IRegistroClienteUseCase';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
+import { IEmailService } from '@core/ports/out/email/IEmailService';
+import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
+import { ICredencialRepository } from '@core/ports/out/credenciales/ICredencialRepository';
 import { env } from '@config/env';
 import { BadRequestError, ConflictError, NotFoundError } from '@shared/errors/HttpError';
 import { validarContrasena } from '@core/domain/usuario/contrasena';
 import { ROLES } from '@shared/constants/roles';
+import { generarToken, calcularExpiracion } from '@core/domain/email/verificationToken';
 
 export class RegistroClienteUseCase implements IRegistroClienteUseCase {
 
     constructor(
         private readonly usuarioRepository: IUsuarioRepository,
         private readonly rolRepository: IRolRepository,
+        private readonly emailService?: IEmailService,
+        private readonly tokenVerificacionRepository?: ITokenVerificacionRepository,
     ) {}
 
     async registrar(input: RegistroClienteInput): Promise<RegistroClienteOutput> {
@@ -37,23 +43,37 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
             hashContrasena,
         });
 
-        const token = jwt.sign(
-            {
-                id: usuario.id,
-                rol: ROLES.CLIENTE,
-                correo: input.correo,
-            },
-            env.JWT_SECRET,
-            { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions
-        );
+        const usuarioData = {
+            id: usuario.id,
+            correo: input.correo,
+            rol: ROLES.CLIENTE,
+        };
+
+        if (!env.EMAIL_VERIFICATION_ENABLED || !this.emailService || !this.tokenVerificacionRepository) {
+            const token = jwt.sign(
+                { id: usuario.id, rol: ROLES.CLIENTE, correo: input.correo },
+                env.JWT_SECRET,
+                { expiresIn: env.JWT_EXPIRES_IN } as jwt.SignOptions
+            );
+            return { token, usuario: usuarioData };
+        }
+
+        const token = generarToken();
+        const tokenHash = await bcrypt.hash(token, 10);
+        const expiraEn = calcularExpiracion(env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS);
+
+        await this.tokenVerificacionRepository.crear(usuario.id, tokenHash, expiraEn);
+
+        try {
+            await this.emailService.enviarVerificacion(input.correo, token);
+        } catch {
+            // Si el envío falla, el usuario queda registrado pero sin JWT.
+            // Puede reenviar la verificación después.
+        }
 
         return {
-            token,
-            usuario: {
-                id: usuario.id,
-                correo: input.correo,
-                rol: ROLES.CLIENTE,
-            },
+            mensaje: 'Te enviamos un correo de verificación. Revisa tu bandeja de entrada.',
+            usuario: usuarioData,
         };
     }
 }

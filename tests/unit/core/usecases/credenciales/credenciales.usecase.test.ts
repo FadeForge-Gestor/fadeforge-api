@@ -14,6 +14,7 @@ const credencialFake: CredencialRaw = {
     idUsuario: 1,
     correo: 'juan@test.com',
     hashContrasena: 'hash_secreto',
+    emailVerificado: false,
 };
 
 const usuarioFake: Usuario = {
@@ -51,6 +52,7 @@ const mockRepo: jest.Mocked<ICredencialRepository> = {
     buscarPorCorreo: jest.fn(),
     actualizarContrasena: jest.fn(),
     actualizarCorreo: jest.fn(),
+    actualizarEmailVerificado: jest.fn(),
 };
 
 const mockUsuarioRepo: jest.Mocked<IUsuarioRepository> = {

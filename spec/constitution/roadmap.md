@@ -14,6 +14,10 @@ _Construidas antes de adoptar este flujo SDD, por eso no tienen carpeta en `feat
 6. **Documentación interactiva** — Swagger UI por dominio.
 7. **CI pipeline** — workflow de GitHub Actions con typecheck, test (coverage) y build, cache de 3 capas (npm, node_modules, Prisma client).
 
+_Con features documentadas con spec:_
+
+8. **Control de intentos fallidos de login** — lockout después de 5 intentos fallidos (15 min), rate limit por usuario con `express-rate-limit`, persistencia en PostgreSQL. [Spec](features/001-control-intentos-login/spec.md)
+
 ## Siguiente 🔜
 
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.

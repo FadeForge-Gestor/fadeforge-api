@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import { RegistroClienteUseCase } from '@core/usecases/auth/registroCliente.usecase';
 import { IUsuarioRepository } from '@core/ports/out/usuarios/IUsuarioRepository';
 import { IRolRepository } from '@core/ports/out/roles/IRolRepository';
+import { IEmailService } from '@core/ports/out/email/IEmailService';
+import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
 import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { Rol } from '@core/domain/rol/rol.entity';
 import { BadRequestError, ConflictError, NotFoundError } from '@shared/errors/HttpError';
@@ -10,6 +12,15 @@ import { ROLES } from '@shared/constants/roles';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
+jest.mock('@config/env', () => ({
+    env: {
+        JWT_SECRET: 'test-secret',
+        JWT_EXPIRES_IN: '1d',
+        EMAIL_VERIFICATION_ENABLED: true,
+        EMAIL_VERIFICATION_EXPIRES_IN_HOURS: 24,
+        FRONTEND_URL: 'http://localhost:3000',
+    },
+}));
 
 const mockedBcrypt = jest.mocked(bcrypt);
 const mockedJwt = jest.mocked(jwt);
@@ -59,13 +70,31 @@ const mockRolRepo: jest.Mocked<IRolRepository> = {
     buscarPorClave: jest.fn(),
 };
 
+const mockEmailService: jest.Mocked<IEmailService> = {
+    enviarVerificacion: jest.fn(),
+};
+
+const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
+    crear: jest.fn(),
+    buscarPorTokenHash: jest.fn(),
+    eliminarPorIdUsuario: jest.fn(),
+    contarEnviosHoy: jest.fn(),
+};
+
 describe('RegistroClienteUseCase', () => {
 
     let useCase: RegistroClienteUseCase;
+    let useCaseConVerificacion: RegistroClienteUseCase;
 
     beforeEach(() => {
         jest.clearAllMocks();
         useCase = new RegistroClienteUseCase(mockUsuarioRepo, mockRolRepo);
+        useCaseConVerificacion = new RegistroClienteUseCase(
+            mockUsuarioRepo,
+            mockRolRepo,
+            mockEmailService,
+            mockTokenVerificacionRepo,
+        );
     });
 
     it('debe lanzar BadRequestError si la contraseña no cumple los requisitos', async () => {
@@ -132,6 +161,52 @@ describe('RegistroClienteUseCase', () => {
             id: usuarioFake.id,
             correo: inputRegistro.correo,
             rol: ROLES.CLIENTE,
+        });
+    });
+
+    describe('con verificación de email habilitada', () => {
+        it('debe generar token, hashear y enviar email en vez de retornar JWT', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
+            mockedBcrypt.hash = jest.fn()
+                .mockResolvedValueOnce('hash_password' as never)
+                .mockResolvedValueOnce('hash_token' as never);
+            mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
+
+            const result = await useCaseConVerificacion.registrar(inputRegistro);
+
+            expect(result.token).toBeUndefined();
+            expect(result.mensaje).toBe('Te enviamos un correo de verificación. Revisa tu bandeja de entrada.');
+            expect(result.usuario).toEqual({
+                id: usuarioFake.id,
+                correo: inputRegistro.correo,
+                rol: ROLES.CLIENTE,
+            });
+            expect(mockTokenVerificacionRepo.crear).toHaveBeenCalledWith(
+                usuarioFake.id,
+                'hash_token',
+                expect.any(Date)
+            );
+            expect(mockEmailService.enviarVerificacion).toHaveBeenCalledWith(
+                inputRegistro.correo,
+                expect.any(String)
+            );
+        });
+
+        it('debe registrar el usuario aunque falle el envío de email', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
+            mockedBcrypt.hash = jest.fn()
+                .mockResolvedValueOnce('hash_password' as never)
+                .mockResolvedValueOnce('hash_token' as never);
+            mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
+            mockEmailService.enviarVerificacion.mockRejectedValue(new Error('Resend caído'));
+
+            const result = await useCaseConVerificacion.registrar(inputRegistro);
+
+            expect(result.usuario).toBeDefined();
+            expect(result.token).toBeUndefined();
+            expect(mockUsuarioRepo.crear).toHaveBeenCalled();
         });
     });
 });

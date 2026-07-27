@@ -8,7 +8,8 @@ export interface RegistroClienteInput {
 }
 
 export interface RegistroClienteOutput {
-    token: string;
+    token?: string;
+    mensaje?: string;
     usuario: {
         id: number;
         correo: string;

@@ -161,4 +161,57 @@
  *         description: Datos inválidos
  *       409:
  *         description: El correo ya está registrado
+ *
+ * /auth/confirmar:
+ *   get:
+ *     summary: Confirmar correo electrónico
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Token de verificación recibido por correo
+ *     responses:
+ *       302:
+ *         description: Redirige al frontend tras confirmar
+ *       400:
+ *         description: Token inválido o expirado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ * /auth/reenviar-verificacion:
+ *   post:
+ *     summary: Reenviar correo de verificación
+ *     tags: [Auth]
+ *     parameters:
+ *       - in: header
+ *         name: Idempotency-Key
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Clave de idempotencia para prevenir emails duplicados
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [correo]
+ *             properties:
+ *               correo:
+ *                 type: string
+ *                 example: usuario@gmail.com
+ *     responses:
+ *       200:
+ *         description: Correo de verificación reenviado
+ *       400:
+ *         description: El correo ya está verificado
+ *       404:
+ *         description: No se encontró una cuenta con ese correo
+ *       429:
+ *         description: Límite de reenvíos por día alcanzado
  */
