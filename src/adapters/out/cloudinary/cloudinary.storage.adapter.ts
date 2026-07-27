@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { env } from '@config/env';
-import { IStoragePort, ArchivoInput, ImagenSubida } from '@core/ports/out/storage/IStoragePort';
+import { IStoragePort } from '@core/ports/out/storage/IStoragePort';
+import { ArchivoInput, ImagenSubida } from '@core/domain/storage/storage.entity';
 
 cloudinary.config({
     cloud_name: env.CLOUDINARY_CLOUD_NAME,

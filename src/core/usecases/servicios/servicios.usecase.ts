@@ -1,6 +1,7 @@
 import { IServicioRepository } from "@core/ports/out/servicios/IServicioRepository";
 import { ICategoriaServicioRepository } from "@core/ports/out/categoria-servicio/ICategoriaServicioRepository";
-import { IStoragePort, ArchivoInput } from "@core/ports/out/storage/IStoragePort";
+import { IStoragePort } from "@core/ports/out/storage/IStoragePort";
+import { ArchivoInput } from "@core/domain/storage/storage.entity";
 import { IServicioUseCase } from "@core/ports/in/servicios/IServicioUseCase";
 import { ConflictError, NotFoundError } from "@shared/errors/HttpError";
 import { Servicio, CrearServicioInput, ActualizarServicioInput } from "@core/domain/servicio/servicio.entity";

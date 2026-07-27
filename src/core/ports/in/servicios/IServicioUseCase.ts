@@ -1,8 +1,6 @@
-import { Servicio, CrearServicioInput, ActualizarServicioInput } from "@core/domain/servicio/servicio.entity";
-import { ArchivoInput } from "@core/ports/out/storage/IStoragePort";
+import { ArchivoInput } from '@core/domain/storage/storage.entity';
+import { Servicio, CrearServicioInput, ActualizarServicioInput } from '@core/domain/servicio/servicio.entity';
 
-// Contrato que define las operaciones disponibles sobre los Servicios.
-// El controller solo conoce esta interfaz, nunca la implementación concreta.
 export interface IServicioUseCase {
     listar(): Promise<Servicio[]>;
     listarActivos(): Promise<Servicio[]>;

@@ -1,14 +1,5 @@
-// Este archivo define la interfaz del repositorio de credenciales, que es una abstracción sobre la capa de persistencia (en este caso, PRISMA).
-export interface CredencialRaw {
-    idUsuario: number;
-    correo: string;
-    hashContrasena: string;
-    emailVerificado: boolean;
-}
+import { CredencialRaw } from '@core/domain/credencial/credencial.entity';
 
-
-// Contrato que define las operaciones disponibles sobre credenciales.
-// El caso de uso solo conoce esta interfaz, nunca PRISMA directamente.
 export interface ICredencialRepository {
     buscarPorIdUsuario(idUsuario: number): Promise<CredencialRaw | null>;
     buscarPorCorreo(correo: string): Promise<CredencialRaw | null>;

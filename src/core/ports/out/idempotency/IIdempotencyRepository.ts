@@ -1,9 +1,6 @@
-export interface StoredResponse {
-  status: number;
-  body: unknown;
-}
+import { StoredResponse } from '@core/domain/idempotency/idempotency.entity';
 
 export interface IIdempotencyRepository {
-  get(key: string): Promise<StoredResponse | null>;
-  save(key: string, response: StoredResponse, ttlMs?: number): Promise<void>;
+    get(key: string): Promise<StoredResponse | null>;
+    save(key: string, response: StoredResponse, ttlMs?: number): Promise<void>;
 }

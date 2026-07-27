@@ -1,5 +1,5 @@
 import { IdempotencyMemoryRepository } from '@adapters/out/memory/idempotency/idempotency.memory.repository';
-import { StoredResponse } from '@core/ports/out/idempotency/IIdempotencyRepository';
+import { StoredResponse } from '@core/domain/idempotency/idempotency.entity';
 
 describe('IdempotencyMemoryRepository', () => {
     let repo: IdempotencyMemoryRepository;

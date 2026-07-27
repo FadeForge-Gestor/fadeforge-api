@@ -5,6 +5,13 @@ export interface Credencial {
     fechaModificacion: Date;
 }
 
+export interface CredencialRaw {
+    idUsuario: number;
+    correo: string;
+    hashContrasena: string;
+    emailVerificado: boolean;
+}
+
 export interface CambiarContrasenaInput {
     contrasenaActual: string;
     nuevaContrasena: string;
