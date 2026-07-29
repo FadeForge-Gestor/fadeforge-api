@@ -18,8 +18,8 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
     constructor(
         private readonly usuarioRepository: IUsuarioRepository,
         private readonly rolRepository: IRolRepository,
-        private readonly emailService?: IEmailService,
-        private readonly tokenVerificacionRepository?: ITokenVerificacionRepository,
+        private readonly emailService: IEmailService,
+        private readonly tokenVerificacionRepository: ITokenVerificacionRepository,
     ) {}
 
     async registrar(input: RegistroClienteInput): Promise<RegistroClienteOutput> {
@@ -50,7 +50,7 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
             rol: ROLES.CLIENTE,
         };
 
-        if (!env.EMAIL_VERIFICATION_ENABLED || !this.emailService || !this.tokenVerificacionRepository) {
+        if (!env.EMAIL_VERIFICATION_ENABLED) {
             const token = jwt.sign(
                 { id: usuario.id, rol: ROLES.CLIENTE, correo: input.correo },
                 env.JWT_SECRET,
