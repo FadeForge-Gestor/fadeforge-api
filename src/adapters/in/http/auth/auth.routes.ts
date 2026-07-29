@@ -10,6 +10,7 @@ import { UsuariosPrismaRepository } from '@adapters/out/db/usuarios/usuarios.pri
 import { RolesPrismaRepository } from '@adapters/out/db/roles/roles.prisma.repository';
 import { CredencialesPrismaRepository } from '@adapters/out/db/credenciales/credenciales.prisma.repository';
 import { ResendEmailService } from '@adapters/out/email/resendEmail.service';
+import { NullEmailService } from '@adapters/out/email/nullEmail.service';
 import { TokenVerificacionPrismaRepository } from '@adapters/out/email/tokenVerificacion.prisma.repository';
 import { IdempotencyMemoryRepository } from '@adapters/out/memory/idempotency/idempotency.memory.repository';
 import { idempotency } from '@middlewares/idempotency.middleware';
@@ -26,15 +27,17 @@ const usuariosRepo = new UsuariosPrismaRepository();
 const rolesRepo = new RolesPrismaRepository();
 const credencialesRepo = new CredencialesPrismaRepository();
 const tokenVerificacionRepo = new TokenVerificacionPrismaRepository();
-const emailService = new ResendEmailService();
+const emailService = env.EMAIL_VERIFICATION_ENABLED
+    ? new ResendEmailService()
+    : new NullEmailService();
 const idempotencyRepo = new IdempotencyMemoryRepository();
 
 const loginUseCase = new LoginUseCase(authRepo, loginSecurityRepo);
 const registroUseCase = new RegistroClienteUseCase(
     usuariosRepo,
     rolesRepo,
-    env.EMAIL_VERIFICATION_ENABLED ? emailService : undefined,
-    env.EMAIL_VERIFICATION_ENABLED ? tokenVerificacionRepo : undefined,
+    emailService,
+    tokenVerificacionRepo,
 );
 const confirmarEmailUseCase = new ConfirmarEmailUseCase(tokenVerificacionRepo, credencialesRepo);
 const reenviarVerificacionUseCase = new ReenviarVerificacionUseCase(
@@ -47,16 +50,14 @@ const reenviarVerificacionUseCase = new ReenviarVerificacionUseCase(
 const controller = new AuthController(
     loginUseCase,
     registroUseCase,
-    env.EMAIL_VERIFICATION_ENABLED ? confirmarEmailUseCase : undefined,
-    env.EMAIL_VERIFICATION_ENABLED ? reenviarVerificacionUseCase : undefined,
+    confirmarEmailUseCase,
+    reenviarVerificacionUseCase,
 );
 
 router.post('/login', authRateLimit, userLoginRateLimit, validate(loginSchema), (req, res, next) => controller.login(req, res, next));
 router.post('/registro', validate(registroClienteSchema), (req, res, next) => controller.registroCliente(req, res, next));
 
-if (env.EMAIL_VERIFICATION_ENABLED) {
-    router.get('/confirmar', (req, res, next) => controller.confirmarEmail(req, res, next));
-    router.post('/reenviar-verificacion', idempotency(idempotencyRepo), validate(reenviarVerificacionSchema), (req, res, next) => controller.reenviarVerificacion(req, res, next));
-}
+router.get('/confirmar', (req, res, next) => controller.confirmarEmail(req, res, next));
+router.post('/reenviar-verificacion', idempotency(idempotencyRepo), validate(reenviarVerificacionSchema), (req, res, next) => controller.reenviarVerificacion(req, res, next));
 
 export default router;

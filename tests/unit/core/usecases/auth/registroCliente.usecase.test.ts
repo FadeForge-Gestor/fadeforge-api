@@ -9,6 +9,7 @@ import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { Rol } from '@core/domain/rol/rol.entity';
 import { BadRequestError, ConflictError, NotFoundError } from '@shared/errors/HttpError';
 import { ROLES } from '@shared/constants/roles';
+import { env } from '@config/env';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
@@ -83,12 +84,16 @@ const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
 
 describe('RegistroClienteUseCase', () => {
 
-    let useCase: RegistroClienteUseCase;
+    let useCaseSinVerificacion: RegistroClienteUseCase;
     let useCaseConVerificacion: RegistroClienteUseCase;
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        useCase = new RegistroClienteUseCase(mockUsuarioRepo, mockRolRepo);
+    beforeAll(() => {
+        useCaseSinVerificacion = new RegistroClienteUseCase(
+            mockUsuarioRepo,
+            mockRolRepo,
+            mockEmailService,
+            mockTokenVerificacionRepo,
+        );
         useCaseConVerificacion = new RegistroClienteUseCase(
             mockUsuarioRepo,
             mockRolRepo,
@@ -97,74 +102,88 @@ describe('RegistroClienteUseCase', () => {
         );
     });
 
-    it('debe lanzar BadRequestError si la contraseña no cumple los requisitos', async () => {
-        await expect(useCase.registrar({ ...inputRegistro, contrasena: 'debil' }))
-            .rejects.toThrow(BadRequestError);
-    });
+    describe('sin verificación de email', () => {
 
-    it('debe lanzar ConflictError si el correo ya está registrado', async () => {
-        mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(usuarioFake);
+        beforeEach(() => {
+            jest.clearAllMocks();
+            env.EMAIL_VERIFICATION_ENABLED = false;
+        });
 
-        await expect(useCase.registrar(inputRegistro)).rejects.toThrow(ConflictError);
-    });
+        it('debe lanzar BadRequestError si la contraseña no cumple los requisitos', async () => {
+            await expect(useCaseSinVerificacion.registrar({ ...inputRegistro, contrasena: 'debil' }))
+                .rejects.toThrow(BadRequestError);
+        });
 
-    it('debe lanzar NotFoundError si el rol cliente no está configurado', async () => {
-        mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
-        mockRolRepo.buscarPorClave.mockResolvedValue(null);
+        it('debe lanzar ConflictError si el correo ya está registrado', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(usuarioFake);
 
-        await expect(useCase.registrar(inputRegistro)).rejects.toThrow(NotFoundError);
-    });
+            await expect(useCaseSinVerificacion.registrar(inputRegistro)).rejects.toThrow(ConflictError);
+        });
 
-    it('nunca debe pasar la contraseña en texto plano al repositorio', async () => {
-        mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
-        mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_secreto' as never);
-        mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
-        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        it('debe lanzar NotFoundError si el rol cliente no está configurado', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(null);
 
-        await useCase.registrar(inputRegistro);
+            await expect(useCaseSinVerificacion.registrar(inputRegistro)).rejects.toThrow(NotFoundError);
+        });
 
-        expect(mockUsuarioRepo.crear).toHaveBeenCalledWith(
-            expect.objectContaining({ hashContrasena: 'hash_secreto' })
-        );
-        expect(mockUsuarioRepo.crear).not.toHaveBeenCalledWith(
-            expect.objectContaining({ contrasena: expect.anything() })
-        );
-    });
+        it('nunca debe pasar la contraseña en texto plano al repositorio', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
+            mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_secreto' as never);
+            mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
+            mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
 
-    it('debe asignar siempre el rol cliente sin importar el input', async () => {
-        mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
-        mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_secreto' as never);
-        mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
-        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+            await useCaseSinVerificacion.registrar(inputRegistro);
 
-        await useCase.registrar(inputRegistro);
+            expect(mockUsuarioRepo.crear).toHaveBeenCalledWith(
+                expect.objectContaining({ hashContrasena: 'hash_secreto' })
+            );
+            expect(mockUsuarioRepo.crear).not.toHaveBeenCalledWith(
+                expect.objectContaining({ contrasena: expect.anything() })
+            );
+        });
 
-        expect(mockRolRepo.buscarPorClave).toHaveBeenCalledWith(ROLES.CLIENTE);
-        expect(mockUsuarioRepo.crear).toHaveBeenCalledWith(
-            expect.objectContaining({ idRol: rolClienteFake.id })
-        );
-    });
+        it('debe asignar siempre el rol cliente sin importar el input', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
+            mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_secreto' as never);
+            mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
+            mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
 
-    it('debe retornar token y datos del usuario al registrarse exitosamente', async () => {
-        mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
-        mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_secreto' as never);
-        mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
-        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+            await useCaseSinVerificacion.registrar(inputRegistro);
 
-        const result = await useCase.registrar(inputRegistro);
+            expect(mockRolRepo.buscarPorClave).toHaveBeenCalledWith(ROLES.CLIENTE);
+            expect(mockUsuarioRepo.crear).toHaveBeenCalledWith(
+                expect.objectContaining({ idRol: rolClienteFake.id })
+            );
+        });
 
-        expect(result.token).toBe('jwt-token-falso');
-        expect(result.usuario).toEqual({
-            id: usuarioFake.id,
-            correo: inputRegistro.correo,
-            rol: ROLES.CLIENTE,
+        it('debe retornar token y datos del usuario al registrarse exitosamente', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
+            mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_secreto' as never);
+            mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
+            mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+
+            const result = await useCaseSinVerificacion.registrar(inputRegistro);
+
+            expect(result.token).toBe('jwt-token-falso');
+            expect(result.usuario).toEqual({
+                id: usuarioFake.id,
+                correo: inputRegistro.correo,
+                rol: ROLES.CLIENTE,
+            });
         });
     });
 
     describe('con verificación de email habilitada', () => {
+
+        beforeEach(() => {
+            jest.clearAllMocks();
+            env.EMAIL_VERIFICATION_ENABLED = true;
+        });
+
         it('debe generar token, hashear y enviar email en vez de retornar JWT', async () => {
             mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
             mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
