@@ -1,5 +1,4 @@
 import { Resend } from 'resend';
-import Handlebars from 'handlebars';
 import { IEmailService } from '@core/ports/out/email/IEmailService';
 import { env } from '@config/env';
 import { loadTemplate } from './templateLoader';
@@ -7,7 +6,7 @@ import { loadTemplate } from './templateLoader';
 export class ResendEmailService implements IEmailService {
 
     private readonly resend: Resend;
-    private readonly templateVerificacion: HandlebarsTemplateDelegate;
+    private readonly templateVerificacion = loadTemplate('verificacion');
 
     constructor() {
         this.resend = new Resend(env.RESEND_API_KEY);
