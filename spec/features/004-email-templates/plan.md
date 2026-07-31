@@ -21,6 +21,7 @@ Handlebars es el estándar de la industria para emails HTML: sintaxis `{{variabl
 | 5. Modificar `ResendEmailService` | ✅ Implementado (`6e5c98d`, `9c1ae9e`) — logo en sección 7 |
 | 6. Tests | ✅ Implementado (`6e5c98d`) — logo en sección 7 |
 | 7. Logo en el template (opción B) | ✅ Implementado — incluye validación 400 si el logo no existe |
+| 8. **Fase 2:** rediseño profesional con MJML (build-time) | 🔲 En diseño — docs actualizadas, sin implementar |
 
 ## Arquitectura hexagonal y SOLID
 
@@ -264,6 +265,117 @@ private async verificarLogoDisponible(logoUrl: string): Promise<void> {
 **Por qué `HEAD` y no descargar la imagen:** `HEAD` no transfiere el body (solo headers). Es el request más barato para verificar existencia. Node 18+ tiene `fetch` nativo, cero dependencias.
 
 **Por qué TTL en memoria y no persistente:** el logo cambia raramente; 5 minutos de desactualización son irrelevantes. Memoria por instancia evita estado compartido y complicaciones de Redis/caché externo. Si la app corre multi-instancia, cada una verifica a lo sumo 1 vez cada 5 min.
+
+---
+
+## Fase 2 · Rediseño profesional con MJML (build-time)
+
+_La Fase 1 está implementada y funcionando. Esta fase rediseña los templates con MJML 5, compilado en build-time. NO cambia la arquitectura: Handlebars sigue siendo la capa de render y los templates siguen siendo detalles internos del adapter._
+
+### Decisión y por qué
+
+| Opción | Veredicto |
+|--------|-----------|
+| **A — MJML build-time** | ✅ **Elegida.** HTML de calidad profesional sin costo en runtime. |
+| **B — MJML runtime** | ❌ Descartada: CPU por render + paquete pesado en producción, sin ventajas sobre A. |
+| **C — HTML a mano con tablas** | ❌ Descartada: con 5 templates proyectados, los hacks de Outlook se repiten 5 veces y la consistencia entre correos se rompe. |
+
+**MJML 5.4.0**: licencia MIT (verificada en el repo oficial y FAQ de mjml.io), $0. Requiere **Node ≥ 22** (el proyecto corre Node 24.11.1 ✅). Es un monorepo: `mjml-cli`, `mjml-core`, `mjml-validator`, `mjml-preset-core`, `@babel/runtime` + transitivas — **hay que auditar el árbol antes de instalar** (regla del proyecto).
+
+### Cómo funciona el pipeline
+
+```
+templates/verificacion.mjml   ← fuente (se commitea, con placeholders {{...}})
+        │  mjml CLI (prebuild, dentro de npm run build)
+        ▼
+templates/verificacion.hbs    ← HTML compilado (tablas + estilos inline), placeholders intactos
+        │  Handlebars (runtime, templateLoader existente)
+        ▼
+HTML final con datos (link, logoUrl, horasExpiracion)
+```
+
+1. El build corre el CLI de MJML sobre `src/adapters/out/email/templates/*.mjml` → genera el HTML compilado junto al `.mjml`.
+2. El `cpSync` actual del build ya copia `.hbs` a `dist/` — ajustar el filter para que cubra el archivo generado.
+3. `templateLoader` y `ResendEmailService` **no se tocan** — siguen cargando el template compilado y renderizando con Handlebars.
+
+### Spike de integración (primer paso de la implementación)
+
+El riesgo técnico principal: ¿los placeholders de Handlebars sobreviven la compilación de MJML?
+
+- `{{logoUrl}}` en atributo `src` de `<mj-image>` → el validator de MJML puede quejarse de URLs no válidas.
+- `{{{link}}}` en `href` de `<mj-button>` → idem.
+- `{{horasExpiracion}}` en texto dentro de `<mj-text>` → debería pasar sin problema.
+
+**Fallback documentado** (si el spike falla): compilar con tokens literales (`__LINK__`, `__LOGO_URL__`) y reemplazarlos post-compilación (helper de Handlebars o `string.replace` en el loader). La decisión se toma con evidencia del spike, no por adelantado.
+
+### Estructura del template (verificacion.mjml)
+
+```mjml
+<mjml>
+  <mj-body background-color="#f6f6f6">
+    <mj-section>
+      <mj-column>
+        <mj-image src="{{logoUrl}}" width="160px" alt="FadeForge" />
+        <mj-text font-size="28px" font-weight="bold" align="center">Bienvenido a FadeForge</mj-text>
+        <mj-text align="center">Haz clic en el siguiente enlace para confirmar tu correo electrónico</mj-text>
+        <mj-button background-color="#111" color="#ffffff" href="{{{link}}}">Confirmar correo</mj-button>
+        <mj-text font-size="12px" color="#777" align="center">Este enlace expira en {{horasExpiracion}} horas.</mj-text>
+        <mj-divider />
+        <mj-text font-size="12px" color="#999" align="center">Si no creaste esta cuenta, podés ignorar este mensaje.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
+```
+
+### Layout base reutilizable (5 templates proyectados)
+
+Con 5 templates previstos, el header (logo) y el footer (expiración + disclaimer) deben ser **una sola fuente de verdad**: MJML soporta `<mj-include path="..." />` para partials. Diseño:
+
+- `templates/partials/header.mjml` — logo centrado.
+- `templates/partials/footer.mjml` — divider + disclaimer + expiración.
+- `templates/*.mjml` — cada correo incluye header/footer y define solo su cuerpo.
+
+Esto garantiza consistencia visual por construcción, no por disciplina. (Si el spike muestra que `mj-include` complica el pipeline, fallback: un solo `.mjml` por template duplicando header/footer — decisión con evidencia.)
+
+### Tests (Fase 2)
+
+- `templateLoader.test.ts` existente: los asserts sobre textos, `alt="FadeForge"` y `<img` **siguen pasando** (MJML genera `<img alt="FadeForge">`). Verificar en el spike.
+- Nuevo test: el HTML compilado contiene las etiquetas esperadas (`<table`, `role="presentation"`, botón como `<a>` con estilos inline).
+- Test de regresión: el HTML compilado renderiza los placeholders igual que hoy.
+
+### Archivos afectados (Fase 2)
+
+| Archivo | Cambio |
+|---------|--------|
+| `package.json` | `mjml` en `devDependencies` + script de prebuild (CLI de MJML) |
+| `src/adapters/out/email/templates/verificacion.mjml` | **Nuevo** — fuente del template |
+| `src/adapters/out/email/templates/partials/*.mjml` | **Nuevos** — header/footer si `mj-include` pasa el spike |
+| `src/adapters/out/email/templates/verificacion.hbs` | **Generado** — por el build (¿se commitea o solo existe en `dist/`? decisión en implementación) |
+| `npm run build` | Pipeline: `mjml` → HTML → `cpSync` a `dist/` |
+| `tests/unit/adapters/out/email/templateLoader.test.ts` | Ajustar/agregar asserts sobre el HTML compilado |
+
+Sin cambios (idealmente): `IEmailService`, `ResendEmailService`, casos de uso, controllers, routes.
+
+### Decisiones (Fase 2)
+
+| Decisión | Por qué |
+|----------|---------|
+| **MJML build-time (Opción A)** | Calidad profesional sin costo en runtime; el HTML compilado es un asset más del build. MIT, $0. |
+| **Handlebars sigue siendo la capa de render** | No se cambia la arquitectura de la Fase 1: el adapter sigue renderizando con Handlebars. |
+| **`mjml` en devDependencies** | Solo se usa en el build. En producción no se instala el paquete pesado. |
+| **`mj-include` para header/footer** | 5 templates → una sola fuente de verdad para header/footer. Consistencia por construcción. |
+| **Spike antes de implementar** | El riesgo real es si `{{}}` sobrevive a MJML. Se decide con evidencia, no por adelantado. |
+
+### Riesgos (Fase 2)
+
+| Riesgo | Mitigación |
+|--------|-----------|
+| **Validator de MJML rechaza `{{}}` en atributos** | Spike primero. Fallback: tokens `__X__` + reemplazo post-compilación. |
+| **`mj-include` complica el pipeline** | Fallback: duplicar header/footer por template. |
+| **Árbol de dependencias grande de `mjml`** | Auditoría antes de instalar (regla del proyecto). Solo devDependencies. |
+| **`.hbs` generado vs source-of-truth** | Decisión explícita: ¿se commitea el HTML compilado o se genera en build? (Pendiente — depende del CI y del flujo del equipo.) |
+| **Node < 22 en algún entorno** | `mjml@5` exige Node ≥ 22. El proyecto corre Node 24.11.1. Verificar engines del CI. |
 
 ---
 

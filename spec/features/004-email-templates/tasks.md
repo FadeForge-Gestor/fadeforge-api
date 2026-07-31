@@ -78,10 +78,56 @@ _Checklist accionable derivada del `plan.md`._
   - [x] Red caída cacheada → no se reintenta dentro del TTL.
   - [x] TTL expirado → se vuelve a verificar.
 
+## Fase 2 · Rediseño profesional con MJML (build-time) 🔲
+
+_Docs actualizadas — sin implementar._
+
+### Auditoría de la dependencia
+
+- [ ] `npm show mjml` — verificar versión, licencia (MIT), dependencias y vulnerabilidades.
+- [ ] Auditar el árbol transitivo (`mjml-cli`, `mjml-core`, `mjml-validator`, `mjml-preset-core`, `@babel/runtime`).
+- [ ] Confirmar Node ≥ 22 (proyecto: 24.11.1 ✅).
+- [ ] Instalar `mjml` como **devDependency** (solo build-time, nunca en producción).
+
+### Spike de integración
+
+- [ ] Crear un `.mjml` de prueba con `{{logoUrl}}` en `src`, `{{{link}}}` en `href` y `{{horasExpiracion}}` en texto.
+- [ ] Compilar con el CLI de MJML y verificar que los placeholders sobreviven intactos.
+- [ ] Si el validator falla → probar fallback con tokens `__LINK__`/`__LOGO_URL__` + reemplazo post-compilación.
+- [ ] Probar `mj-include` con un partial header/footer; si complica el pipeline, descartarlo (fallback: duplicar).
+
+### Template profesional
+
+- [ ] Crear `src/adapters/out/email/templates/verificacion.mjml`:
+  - [ ] Header: logo (`{{logoUrl}}`, 160px, alt FadeForge).
+  - [ ] Título "Bienvenido a FadeForge" + texto de instrucciones.
+  - [ ] Botón CTA "Confirmar correo" (`{{{link}}}`) con paleta FadeForge (#111).
+  - [ ] Footer: expiración (`{{horasExpiracion}}`) + disclaimer.
+- [ ] (Si pasa el spike) Crear `templates/partials/header.mjml` y `footer.mjml` reutilizables.
+
+### Pipeline de build
+
+- [ ] Agregar script de prebuild: compilar `*.mjml` → HTML con placeholders intactos.
+- [ ] Ajustar `npm run build`: generar el HTML compilado y copiarlo a `dist/`.
+- [ ] Decidir y documentar: ¿el HTML compilado se commitea o se genera solo en build?
+- [ ] Verificar `npm run build` en limpio (borrando `dist/` antes).
+
+### Tests
+
+- [ ] Verificar que los tests existentes de `templateLoader` siguen pasando con el HTML compilado.
+- [ ] Nuevo test: el HTML compilado contiene `<table`, `role="presentation"` y botón `<a>` con estilos inline.
+- [ ] Test de regresión: textos y placeholders renderizan igual que hoy.
+
+### Validación visual
+
+- [ ] Generar preview local del HTML compilado (mismo flujo que hoy).
+- [ ] Revisar render en Gmail/Outlook/móvil (Litmus o envío de prueba con Resend).
+
 ## Validación final
 
 - [ ] Ejecutar `npm test` y verificar que todos los tests pasan.
 - [ ] Ejecutar `npm run build` y verificar:
   - [ ] Compila sin errores.
   - [ ] `dist/adapters/out/email/templates/` existe con los `.hbs`.
+  - [ ] (Fase 2) Los templates compilados por MJML están en `dist/adapters/out/email/templates/`.
 - [ ] Ejecutar `npm run dev` y verificar que los templates se cargan al arrancar.
