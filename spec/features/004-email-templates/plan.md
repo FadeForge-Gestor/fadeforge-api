@@ -298,15 +298,18 @@ HTML final con datos (link, logoUrl, horasExpiracion)
 2. El `cpSync` actual del build ya copia `.hbs` a `dist/` — ajustar el filter para que cubra el archivo generado.
 3. `templateLoader` y `ResendEmailService` **no se tocan** — siguen cargando el template compilado y renderizando con Handlebars.
 
-### Spike de integración (primer paso de la implementación)
+### Spike de integración ✅ (resultados)
 
-El riesgo técnico principal: ¿los placeholders de Handlebars sobreviven la compilación de MJML?
+El riesgo técnico principal era: ¿los placeholders de Handlebars sobreviven la compilación de MJML? **Sí, sin warnings del validator:**
 
-- `{{logoUrl}}` en atributo `src` de `<mj-image>` → el validator de MJML puede quejarse de URLs no válidas.
-- `{{{link}}}` en `href` de `<mj-button>` → idem.
-- `{{horasExpiracion}}` en texto dentro de `<mj-text>` → debería pasar sin problema.
+- ✅ `{{logoUrl}}` en atributo `src` de `<mj-image>` — sobrevive.
+- ✅ `{{{link}}}` en `href` de `<mj-button>` — sobrevive (triple-stache intacto).
+- ✅ `{{horasExpiracion}}` en texto dentro de `<mj-text>` — sobrevive.
+- ✅ `mj-include` funciona con `--config.allowIncludes true` (está deshabilitado por defecto por seguridad; se habilita porque los templates son archivos commiteados y confiados, no input de usuario).
+- ✅ El glob `templates/*.mjml` NO es recursivo: los partials en `templates/partials/` no se intentan compilar como templates completos.
+- ⚠️ El glob requiere **forward slashes** y la carpeta de salida debe **existir** (con múltiples inputs el CLI exige un directorio existente).
 
-**Fallback documentado** (si el spike falla): compilar con tokens literales (`__LINK__`, `__LOGO_URL__`) y reemplazarlos post-compilación (helper de Handlebars o `string.replace` en el loader). La decisión se toma con evidencia del spike, no por adelantado.
+**No hizo falta el fallback de tokens `__X__`** — los placeholders pasan directo.
 
 ### Estructura del template (verificacion.mjml)
 
@@ -348,14 +351,16 @@ Esto garantiza consistencia visual por construcción, no por disciplina. (Si el 
 
 | Archivo | Cambio |
 |---------|--------|
-| `package.json` | `mjml` en `devDependencies` + script de prebuild (CLI de MJML) |
-| `src/adapters/out/email/templates/verificacion.mjml` | **Nuevo** — fuente del template |
-| `src/adapters/out/email/templates/partials/*.mjml` | **Nuevos** — header/footer si `mj-include` pasa el spike |
-| `src/adapters/out/email/templates/verificacion.hbs` | **Generado** — por el build (¿se commitea o solo existe en `dist/`? decisión en implementación) |
-| `npm run build` | Pipeline: `mjml` → HTML → `cpSync` a `dist/` |
-| `tests/unit/adapters/out/email/templateLoader.test.ts` | Ajustar/agregar asserts sobre el HTML compilado |
+| `package.json` | `mjml` en `devDependencies` + `"build:emails"` + `"build"` con pipeline MJML → tsc → cpSync |
+| `src/adapters/out/email/templates/verificacion.mjml` | **Nuevo** — fuente del template (se commitea) |
+| `src/adapters/out/email/templates/partials/header.mjml` | **Nuevo** — header reutilizable (logo) |
+| `src/adapters/out/email/templates/partials/footer.mjml` | **Nuevo** — footer reutilizable (expiración + disclaimer) |
+| `src/adapters/out/email/templates/verificacion.html` | **Generado y commiteado** — HTML compilado por MJML con placeholders |
+| `src/adapters/out/email/templates/verificacion.hbs` | **Eliminado** — reemplazado por `.mjml` + `.html` compilado |
+| `src/adapters/out/email/templateLoader.ts` | Lee `.html` en vez de `.hbs` (una línea) |
+| `tests/unit/adapters/out/email/templateLoader.test.ts` | Asserts de estructura profesional (tablas, `role="presentation"`, botón inline) |
 
-Sin cambios (idealmente): `IEmailService`, `ResendEmailService`, casos de uso, controllers, routes.
+Sin cambios: `IEmailService`, `ResendEmailService`, casos de uso, controllers, routes.
 
 ### Decisiones (Fase 2)
 
@@ -364,18 +369,22 @@ Sin cambios (idealmente): `IEmailService`, `ResendEmailService`, casos de uso, c
 | **MJML build-time (Opción A)** | Calidad profesional sin costo en runtime; el HTML compilado es un asset más del build. MIT, $0. |
 | **Handlebars sigue siendo la capa de render** | No se cambia la arquitectura de la Fase 1: el adapter sigue renderizando con Handlebars. |
 | **`mjml` en devDependencies** | Solo se usa en el build. En producción no se instala el paquete pesado. |
-| **`mj-include` para header/footer** | 5 templates → una sola fuente de verdad para header/footer. Consistencia por construcción. |
-| **Spike antes de implementar** | El riesgo real es si `{{}}` sobrevive a MJML. Se decide con evidencia, no por adelantado. |
+| **`overrides: { lodash: 4.18.1 }`** | `mjml` traía lodash 4.17.21 con advisories (GHSA-r5fr-rjxr-66jc). La versión 4.18.1 ya estaba en el árbol vía cloudinary. Baseline de `npm audit` documentado en `spec/constitution/tech-stack.md`. |
+| **`mj-include` con `allowIncludes true`** | Header/footer como una sola fuente de verdad. Seguro: los templates son archivos commiteados por el equipo, no input de usuario. |
+| **HTML compilado se commitea** | `npm run dev` funciona sin correr el build antes; CI regenera con `build:emails` de todos modos. Cambiar `.mjml` requiere recompilar (se documenta). |
+| **Loader lee `.html`** | El output del CLI de MJML es `.html`; el loader solo cambia la extensión, Handlebars compila igual. |
+| **Spike con resultados ✅** | Los placeholders sobreviven sin fallback de tokens. Decisión tomada con evidencia. |
 
 ### Riesgos (Fase 2)
 
 | Riesgo | Mitigación |
 |--------|-----------|
-| **Validator de MJML rechaza `{{}}` en atributos** | Spike primero. Fallback: tokens `__X__` + reemplazo post-compilación. |
-| **`mj-include` complica el pipeline** | Fallback: duplicar header/footer por template. |
-| **Árbol de dependencias grande de `mjml`** | Auditoría antes de instalar (regla del proyecto). Solo devDependencies. |
-| **`.hbs` generado vs source-of-truth** | Decisión explícita: ¿se commitea el HTML compilado o se genera en build? (Pendiente — depende del CI y del flujo del equipo.) |
+| **Validator de MJML rechaza `{{}}` en atributos** | ✅ Descartado por el spike: los placeholders sobreviven sin warnings. |
+| **`mj-include` complica el pipeline** | ✅ Resuelto: requiere `--config.allowIncludes true` (documentado en el script de build). |
+| **Árbol de dependencias grande de `mjml`** | ✅ Auditado: 0 advisories propios; solo lodash 4.17.21 saneado con `overrides`. Solo devDependencies. |
+| **HTML compilado desactualizado vs `.mjml`** | Se commitea el `.html` compilado y `npm run build` lo regenera. Cambiar `.mjml` sin recompilar = HTML viejo en dev; se documenta en el plan y en un comentario del `.mjml` si hace falta. |
 | **Node < 22 en algún entorno** | `mjml@5` exige Node ≥ 22. El proyecto corre Node 24.11.1. Verificar engines del CI. |
+| **`npm audit` baseline pre-existente** | 15 vulns pre-existentes (express/prisma/jest) documentadas en `spec/constitution/tech-stack.md`; no bloquean. `npm audit fix` no se corre a ciegas. |
 
 ---
 

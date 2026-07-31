@@ -59,6 +59,18 @@ FadeForge API es una REST API construida con arquitectura hexagonal, principios 
 - Tests unitarios en `tests/unit/`, espejando la ruta de `src/`; cubren use cases con mocks de repositorios, sin base de datos ni HTTP.
 - SOLID aplicado en todo el dominio: SRP (un use case = una responsabilidad), OCP (casos de uso nuevos en archivos nuevos), LSP (implementaciones cumplen el contrato al 100%), ISP (interfaces pequeñas por dominio), DIP (use cases dependen de interfaces, nunca de implementaciones).
 
+## Auditoría de dependencias
+
+- Toda librería nueva se audita ANTES de instalarse: licencia, reputación, advisories (GitHub Advisory Database vía API) y se informa al usuario con el reporte antes de instalar.
+- Después de instalar se corre `npm audit` y se compara contra el baseline conocido (abajo): se reporta qué es pre-existente y qué introdujo la librería nueva. `npm audit fix` NO se corre a ciegas (puede saltar majors de express/prisma).
+- Versiones con advisories que no pueden actualizarse por compatibilidad se fijan con `overrides` en `package.json` y se documentan acá.
+
+**Baseline conocido (jul 2026):** vulnerabilidades pre-existentes en dependencias directas — Express 5.2.1 (`path-to-regexp`, `qs`, `body-parser`) y Prisma 7.5.0 (`@prisma/config`, `@prisma/dev`, `effect`, `hono`, `valibot`, `defu`, `chevrotain`) — más transitivas de dev (Jest, ts-jest, swagger, nodemon: `@babel/core`, `picomatch`, `js-yaml`, `brace-expansion`). No bloquean desarrollo; se sanean cuando el ecosistema libere versiones parcheadas.
+
+**Overrides vigentes:**
+
+- `lodash: 4.18.1` — forzado porque `mjml@5.4.0` trae lodash 4.17.21 (GHSA-r5fr-rjxr-66jc, code injection vía `_.template` + prototype pollution). 4.18.1 ya estaba en el árbol vía `cloudinary` y está fuera del rango vulnerable.
+
 ## Límites duros
 
 - Nunca subir `.env` al repositorio; no exponer credenciales, APIs ni keys.

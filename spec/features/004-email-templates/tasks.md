@@ -82,45 +82,46 @@ _Checklist accionable derivada del `plan.md`._
 
 _Docs actualizadas — sin implementar._
 
-### Auditoría de la dependencia
+### Auditoría de la dependencia ✅
 
-- [ ] `npm show mjml` — verificar versión, licencia (MIT), dependencias y vulnerabilidades.
-- [ ] Auditar el árbol transitivo (`mjml-cli`, `mjml-core`, `mjml-validator`, `mjml-preset-core`, `@babel/runtime`).
-- [ ] Confirmar Node ≥ 22 (proyecto: 24.11.1 ✅).
-- [ ] Instalar `mjml` como **devDependency** (solo build-time, nunca en producción).
+- [x] `npm show mjml` — verificar versión, licencia (MIT), dependencias y vulnerabilidades.
+- [x] Auditar el árbol transitivo (`mjml-cli`, `mjml-core`, `mjml-validator`, `mjml-preset-core`, `@babel/runtime`).
+- [x] Confirmar Node ≥ 22 (proyecto: 24.11.1 ✅).
+- [x] Instalar `mjml` como **devDependency** (solo build-time, nunca en producción).
+- [x] `npm audit` post-instalación: 20 vulns → 15 tras `overrides: { "lodash": "4.18.1" }` (mjml introdujo solo lodash 4.17.21, ya saneado). Baseline pre-existente documentado en `spec/constitution/tech-stack.md`.
 
-### Spike de integración
+### Spike de integración ✅
 
-- [ ] Crear un `.mjml` de prueba con `{{logoUrl}}` en `src`, `{{{link}}}` en `href` y `{{horasExpiracion}}` en texto.
-- [ ] Compilar con el CLI de MJML y verificar que los placeholders sobreviven intactos.
-- [ ] Si el validator falla → probar fallback con tokens `__LINK__`/`__LOGO_URL__` + reemplazo post-compilación.
-- [ ] Probar `mj-include` con un partial header/footer; si complica el pipeline, descartarlo (fallback: duplicar).
+- [x] Crear un `.mjml` de prueba con `{{logoUrl}}` en `src`, `{{{link}}}` en `href` y `{{horasExpiracion}}` en texto.
+- [x] Compilar con el CLI de MJML y verificar que los placeholders sobreviven intactos (✅ sin fallback de tokens).
+- [x] Probar `mj-include` con un partial header/footer (✅ funciona con `--config.allowIncludes true`).
+- [x] Verificar que el glob `*.mjml` no compila los partials (✅ no recursivo; usar forward slashes y carpeta de salida existente).
 
-### Template profesional
+### Template profesional ✅
 
-- [ ] Crear `src/adapters/out/email/templates/verificacion.mjml`:
-  - [ ] Header: logo (`{{logoUrl}}`, 160px, alt FadeForge).
-  - [ ] Título "Bienvenido a FadeForge" + texto de instrucciones.
-  - [ ] Botón CTA "Confirmar correo" (`{{{link}}}`) con paleta FadeForge (#111).
-  - [ ] Footer: expiración (`{{horasExpiracion}}`) + disclaimer.
-- [ ] (Si pasa el spike) Crear `templates/partials/header.mjml` y `footer.mjml` reutilizables.
+- [x] Crear `src/adapters/out/email/templates/verificacion.mjml`:
+  - [x] Header: logo (`{{logoUrl}}`, 160px, alt FadeForge).
+  - [x] Título "Bienvenido a FadeForge" + texto de instrucciones.
+  - [x] Botón CTA "Confirmar correo" (`{{{link}}}`) con paleta FadeForge (#111).
+  - [x] Footer: expiración (`{{horasExpiracion}}`) + disclaimer.
+- [x] Crear `templates/partials/header.mjml` y `footer.mjml` reutilizables.
 
-### Pipeline de build
+### Pipeline de build ✅
 
-- [ ] Agregar script de prebuild: compilar `*.mjml` → HTML con placeholders intactos.
-- [ ] Ajustar `npm run build`: generar el HTML compilado y copiarlo a `dist/`.
-- [ ] Decidir y documentar: ¿el HTML compilado se commitea o se genera solo en build?
-- [ ] Verificar `npm run build` en limpio (borrando `dist/` antes).
+- [x] Agregar script de prebuild: `build:emails` compila `*.mjml` → HTML con placeholders intactos.
+- [x] Ajustar `npm run build`: pipeline `build:emails && tsc && cpSync` (filter `.hbs` + `.html`).
+- [x] Decidir y documentar: el HTML compilado se commitea (dev sin build) y `build:emails` lo regenera.
+- [x] Verificar `npm run build` en limpio (borrando `dist/` antes) — ✅ `dist/.../templates/` queda solo con `verificacion.html` + `partials/`.
 
-### Tests
+### Tests ✅
 
-- [ ] Verificar que los tests existentes de `templateLoader` siguen pasando con el HTML compilado.
-- [ ] Nuevo test: el HTML compilado contiene `<table`, `role="presentation"` y botón `<a>` con estilos inline.
-- [ ] Test de regresión: textos y placeholders renderizan igual que hoy.
+- [x] Verificar que los tests existentes de `templateLoader` siguen pasando con el HTML compilado (✅ 286 tests).
+- [x] Nuevo test: el HTML compilado contiene `<table`, `role="presentation"` y media queries.
+- [x] Test de regresión: textos y placeholders renderizan igual que hoy (✅).
 
 ### Validación visual
 
-- [ ] Generar preview local del HTML compilado (mismo flujo que hoy).
+- [x] Generar preview local del HTML compilado con el logo real (✅ abierto en navegador).
 - [ ] Revisar render en Gmail/Outlook/móvil (Litmus o envío de prueba con Resend).
 
 ## Validación final
