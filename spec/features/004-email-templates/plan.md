@@ -10,6 +10,18 @@ Handlebars es el estándar de la industria para emails HTML: sintaxis `{{variabl
 
 ---
 
+## Estado de implementación
+
+| Paso | Estado |
+|------|--------|
+| 1. Dependencia (`handlebars`) | ✅ Implementado (`6e5c98d`) |
+| 2. Build: copiar `.hbs` al `dist/` | ✅ Implementado (`6e5c98d`) |
+| 3. Template loader | ✅ Implementado (`6e5c98d`) |
+| 4. Template de verificación | ✅ Implementado (`6e5c98d`) — falta logo (sección 7) |
+| 5. Modificar `ResendEmailService` | ✅ Implementado (`6e5c98d`, `9c1ae9e`) — falta logo (sección 7) |
+| 6. Tests | ✅ Implementado (`6e5c98d`) — falta logo (sección 7) |
+| 7. Logo en el template (opción B) | 🔲 Pendiente — agregado en esta revisión |
+
 ## Arquitectura hexagonal y SOLID
 
 ### Dónde vive cada cosa
@@ -162,6 +174,49 @@ El test usa `loadTemplate` para compilar el `.hbs` y verifica el HTML renderizad
 
 No necesita instanciar `ResendEmailService`. Testea solo la transformación string → string.
 
+### 7. Logo de la app en el template (opción B)
+
+El logo se sirve desde Cloudinary en la carpeta `fadeforge/{env}/templates_email/` (el asset `logo_app` ya está subido en `dev`). La URL NO se hardcodea en el template: se pasa como variable de Handlebars `{{logoUrl}}`, calculada por el adapter según `env.NODE_ENV`.
+
+**Template (`verificacion.hbs`):**
+
+```html
+<img src="{{logoUrl}}" alt="FadeForge" />
+<h1>Bienvenido a FadeForge</h1>
+<p>Haz clic en el siguiente enlace para confirmar tu correo electrónico:</p>
+<a href="{{link}}">Confirmar correo</a>
+<p>Este enlace expira en {{horasExpiracion}} horas.</p>
+<p>Si no creaste esta cuenta, podés ignorar este mensaje.</p>
+```
+
+**Adapter (`resendEmail.service.ts`):**
+
+```typescript
+async enviarVerificacion(correo: string, token: string): Promise<void> {
+    const link = `${env.FRONTEND_URL}/confirmar?token=${token}`;
+    const carpeta = env.NODE_ENV === 'production' ? 'prod' : 'dev';
+    const logoUrl = `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/fadeforge/${carpeta}/templates_email/logo_app`;
+
+    await this.resend.emails.send({
+        from: env.EMAIL_FROM,
+        to: correo,
+        subject: 'Confirma tu correo electrónico — FadeForge',
+        html: this.templateVerificacion({
+            link,
+            horasExpiracion: env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS,
+            logoUrl,
+        }),
+    });
+}
+```
+
+**Por qué es así:**
+
+- **Hexagonal:** el cálculo de la URL es responsabilidad del adapter (infraestructura). El template es solo presentación; no sabe de Cloudinary ni de entornos.
+- **SRP:** `ResendEmailService` construye el contexto del template (qué URL usar según entorno); el template solo interpola.
+- **OCP:** si mañana el logo cambia de proveedor (CDN propio, S3), solo cambia el adapter. El `.hbs` no se toca.
+- **Fail-fast:** el patrón de URL es determinístico; no requiere llamadas de red ni verificación de existencia del asset.
+
 ---
 
 ## Archivos afectados
@@ -170,9 +225,9 @@ No necesita instanciar `ResendEmailService`. Testea solo la transformación stri
 |---------|--------|
 | `package.json` | Agregar `handlebars` + modificar `"build"` script |
 | `src/adapters/out/email/templateLoader.ts` | **Nuevo** — helper que lee y compila templates |
-| `src/adapters/out/email/templates/verificacion.hbs` | **Nuevo** — template del correo de verificación |
-| `src/adapters/out/email/resendEmail.service.ts` | Reemplazar HTML inline por template compilado |
-| `tests/unit/adapters/out/email/templateLoader.test.ts` | **Nuevo** — test del loader y template |
+| `src/adapters/out/email/templates/verificacion.hbs` | **Nuevo** — template del correo de verificación (incluye `{{logoUrl}}`) |
+| `src/adapters/out/email/resendEmail.service.ts` | Reemplazar HTML inline por template compilado + calcular y pasar `logoUrl` según entorno |
+| `tests/unit/adapters/out/email/templateLoader.test.ts` | **Nuevo** — test del loader y template (incluye `{{logoUrl}}`) |
 
 Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos de uso, controllers, routes.
 
@@ -186,6 +241,8 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **Loader fuera de `templates/`** | `templates/` es solo assets `.hbs`. El loader es código TypeScript. Separación clara. |
 | **`readFileSync` en constructor** | Carga única al arrancar. Si falta el archivo, falla temprano. No hay beneficio en lazy loading. |
 | **`fs.cpSync` en build** | Cero dependencias nuevas. Nativo de Node 16.7+. Filtra solo `.hbs`, no copia todo `src/`. |
+| **Logo como variable `{{logoUrl}}`** | El template no hardcodea URLs. El adapter calcula la URL según `NODE_ENV` (`dev`/`prod`), siguiendo el patrón existente de `FRONTEND_URL`. |
+| **Carpeta `templates_email` en Cloudinary** | Separada de `servicios/`. Los assets de correo no se mezclan con imágenes de negocio. El asset `logo_app` ya está subido en `dev`. |
 | **No se tocan interfaces** | El template es un detalle interno del adapter. El dominio no cambia. |
 
 ---
@@ -197,3 +254,5 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **Ruta de templates en producción** | `__dirname` resuelve a `dist/adapters/out/email/`. El build copia los `.hbs` a `dist/adapters/out/email/templates/`. `join(__dirname, 'templates', 'archivo.hbs')` funciona en dev y prod. |
 | **Build script más complejo** | `"build"` ejecuta `tsc && node -e ...`. Documentado en `package.json`. Si alguien corre `tsc` suelto, no se copian los `.hbs`. |
 | **Template no existe en disco** | `readFileSync` lanza error en el constructor. Falla al arrancar, no en runtime. Es comportamiento deseado (fail-fast). |
+| **Logo no existe en Cloudinary (404)** | El `<img>` falla silenciosamente en el cliente de correo (no rompe el envío). El patrón de URL es determinístico y el asset se sube manualmente por entorno. Al pasar a prod, subir el logo a `fadeforge/prod/templates_email/` antes de habilitar envíos reales. |
+| **URL de logo con caracteres especiales** | Handlebars escapa caracteres especiales en `{{logoUrl}}` (HTML-escape). Las URLs de Cloudinary (patrón `https://...`) no contienen caracteres que Handlebars escape, por lo que no hace falta triple-stache `{{{ }}}`. |
