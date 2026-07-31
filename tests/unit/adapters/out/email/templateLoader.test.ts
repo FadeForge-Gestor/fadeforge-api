@@ -19,17 +19,17 @@ describe('templateLoader', () => {
             expect(html).toContain('48');
         });
 
-        it('debe renderizar {{logoUrl}} con el valor proporcionado', () => {
+        it('debe incluir el header de marca con el nombre de la empresa sobre fondo oscuro', () => {
             const template = loadTemplate('verificacion');
-            const html = template({ link: 'https://example.com/token', horasExpiracion: 24, logoUrl: 'https://res.cloudinary.com/fadeforge/image/upload/v1/fadeforge/dev/templates_email/logo_app' });
-            expect(html).toContain('https://res.cloudinary.com/fadeforge/image/upload/v1/fadeforge/dev/templates_email/logo_app');
+            const html = template({ link: 'https://example.com/token', horasExpiracion: 24 });
+            expect(html).toContain('FadeForge');
+            expect(html).toMatch(/background[^;]*#111111/);
         });
 
-        it('debe incluir la etiqueta <img> del logo con alt FadeForge', () => {
+        it('debe incluir el copyright y los derechos reservados en el footer', () => {
             const template = loadTemplate('verificacion');
-            const html = template({ link: 'https://example.com/token', horasExpiracion: 24, logoUrl: 'https://example.com/logo.png' });
-            expect(html).toContain('<img');
-            expect(html).toContain('alt="FadeForge"');
+            const html = template({ link: 'https://example.com/token', horasExpiracion: 24 });
+            expect(html).toContain('© 2026 FadeForge. Todos los derechos reservados.');
         });
 
         it('debe generar el HTML con los textos esperados del correo de verificación', () => {
