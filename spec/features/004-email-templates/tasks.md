@@ -66,6 +66,11 @@ _Checklist accionable derivada del `plan.md`._
   - [x] Test: `404` del logo → `BadRequestError`.
   - [x] Test: `200` del logo → el correo se envía.
   - [x] Test: error de red al verificar → el correo se envía.
+- [x] Cachear el resultado de la verificación con TTL de 5 min en memoria:
+  - [x] Un solo `HEAD` dentro del TTL (dos envíos seguidos → un fetch).
+  - [x] `404` cacheado → se relanza `BadRequestError` sin nuevo fetch.
+  - [x] Red caída cacheada → no se reintenta dentro del TTL.
+  - [x] TTL expirado → se vuelve a verificar.
 
 ## Validación final
 

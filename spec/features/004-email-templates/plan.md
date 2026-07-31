@@ -225,15 +225,39 @@ El logo es un recurso del adapter, no del dominio. Si el asset no está en Cloud
 - **Otro status (2xx, 5xx)** → se envía el correo normalmente.
 - **Error de red (`fetch` lanza)** → se envía el correo normalmente. Un problema transitorio de red no debe bloquear el registro del cliente.
 
+**Caché con TTL (5 min):** el resultado de la verificación se guarda en memoria (`logoDisponible: boolean | null` + `ultimaVerificacionLogo`). Dentro del TTL no se vuelve a consultar Cloudinary:
+
+- `true` (200 o red caída) → el correo se envía sin nuevo `HEAD`.
+- `false` (404 confirmado) → se relanza `BadRequestError` sin nuevo `HEAD`.
+- Pasado el TTL → se vuelve a verificar.
+
+Esto evita martillar Cloudinary si está caído: con la versión sin caché, cada registro en una caída de 5 minutos disparaba un `HEAD` fallido.
+
 ```typescript
 private async verificarLogoDisponible(logoUrl: string): Promise<void> {
-    let respuesta: Response;
-    try {
-        respuesta = await fetch(logoUrl, { method: 'HEAD' });
-    } catch {
+    const ahora = Date.now();
+
+    if (this.logoDisponible !== null && ahora - this.ultimaVerificacionLogo < LOGO_TTL_MS) {
+        if (!this.logoDisponible) {
+            throw new BadRequestError('No se encontró el logo de la app para el correo de verificación');
+        }
         return;
     }
-    if (respuesta.status === 404) {
+
+    this.logoDisponible = true;
+
+    try {
+        const respuesta = await fetch(logoUrl, { method: 'HEAD' });
+        if (respuesta.status === 404) {
+            this.logoDisponible = false;
+        }
+    } catch {
+        // Problema de red transitorio: el envío continúa (logoDisponible queda en true).
+    } finally {
+        this.ultimaVerificacionLogo = Date.now();
+    }
+
+    if (!this.logoDisponible) {
         throw new BadRequestError('No se encontró el logo de la app para el correo de verificación');
     }
 }
@@ -242,6 +266,8 @@ private async verificarLogoDisponible(logoUrl: string): Promise<void> {
 **Por qué `BadRequestError` y no `NotFoundError`:** el logo no es un recurso que el cliente pueda pedir; es un requisito interno del envío de correo. Si falta, el request del cliente (registro/reenvío de verificación) no se puede completar tal como está → 400. Si usáramos 404, el cliente podría creer que su cuenta no existe.
 
 **Por qué `HEAD` y no descargar la imagen:** `HEAD` no transfiere el body (solo headers). Es el request más barato para verificar existencia. Node 18+ tiene `fetch` nativo, cero dependencias.
+
+**Por qué TTL en memoria y no persistente:** el logo cambia raramente; 5 minutos de desactualización son irrelevantes. Memoria por instancia evita estado compartido y complicaciones de Redis/caché externo. Si la app corre multi-instancia, cada una verifica a lo sumo 1 vez cada 5 min.
 
 ---
 
@@ -283,4 +309,4 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **Template no existe en disco** | `readFileSync` lanza error en el constructor. Falla al arrancar, no en runtime. Es comportamiento deseado (fail-fast). |
 | **Logo no existe en Cloudinary (404)** | `enviarVerificacion()` verifica con `HEAD` antes de enviar y lanza `BadRequestError` (400) si da 404. El correo nunca sale roto. El error es visible en la respuesta API. |
 | **URL de logo con caracteres especiales** | Handlebars escapa caracteres especiales en `{{logoUrl}}` (HTML-escape). Las URLs de Cloudinary (patrón `https://...`) no contienen caracteres que Handlebars escape, por lo que no hace falta triple-stache `{{{ }}}`. |
-| **Overhead del `HEAD` por envío** | Un request ligero por correo de verificación. Frecuencia baja (solo registro/reenvío), costo despreciable. Alternativa futura: cachear el resultado con TTL. |
+| **Overhead del `HEAD` por envío** | Cacheado con TTL de 5 min en memoria (`logoDisponible` + `ultimaVerificacionLogo`): a lo sumo 1 `HEAD` por instancia cada 5 min, independiente de la cantidad de envíos. Multi-instancia: 1 `HEAD` por instancia por ventana. |
