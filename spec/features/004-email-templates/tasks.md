@@ -8,6 +8,10 @@ _Checklist accionable derivada del `plan.md`._
 - [x] Ejecutar `npm install handlebars`.
 - [x] Verificar que `npm test` y `npm run build` siguen funcionando.
 
+## URL de la imagen
+
+- https://res.cloudinary.com/dzueymb9s/image/upload/v1785459761/logo_bzre7h.png
+
 ## Build script ✅
 
 - [x] Modificar `package.json`:
