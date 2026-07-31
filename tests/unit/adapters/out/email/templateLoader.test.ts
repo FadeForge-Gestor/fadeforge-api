@@ -48,13 +48,14 @@ describe('templateLoader', () => {
             expect(html).toMatch(/@media/);
         });
 
-        it('debe renderizar el botón CTA como <a> con estilos inline y el link', () => {
+        it('debe renderizar el botón CTA full-width (misma proporción que el header) con estilos inline y el link', () => {
             const template = loadTemplate('verificacion');
-            const html = template({ link: 'https://example.com/confirmar?token=abc', horasExpiracion: 24, logoUrl: 'https://example.com/logo.png' });
-            const boton = /<a[^>]*href="https:\/\/example\.com\/confirmar\?token=abc"[^>]*>[\s\S]*?Confirmar correo[\s\S]*?<\/a>/.exec(html);
+            const html = template({ link: 'https://example.com/confirmar?token=abc', horasExpiracion: 24 });
+            const boton = /<table[^>]*border-collapse:separate[^>]*>[\s\S]*?Confirmar correo[\s\S]*?<\/table>/.exec(html);
             expect(boton).not.toBeNull();
+            expect(boton![0]).toContain('width:100%');
             expect(boton![0]).toContain('background:#111111');
-            expect(boton![0]).toContain('style=');
+            expect(boton![0]).toContain('href="https://example.com/confirmar?token=abc"');
         });
 
         it('debe lanzar error si el template no existe', () => {
