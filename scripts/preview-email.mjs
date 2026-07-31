@@ -1,0 +1,51 @@
+/**
+ * Preview local de templates de email.
+ *
+ * Renderiza el HTML compilado por MJML con los datos reales (LOGO_URL del .env)
+ * y lo abre en el navegador. La salida va a dist/preview/ (gitignored).
+ *
+ * Uso: npm run preview:email
+ */
+import fs from "node:fs";
+import path from "node:path";
+import { exec } from "node:child_process";
+import Handlebars from "handlebars";
+
+const TEMPLATE_NAME = process.env.EMAIL_TEMPLATE ?? "verificacion";
+
+const cwd = process.cwd();
+const envFile = path.join(cwd, ".env");
+if (!fs.existsSync(envFile)) {
+  console.error("No se encontro .env en la raiz del proyecto.");
+  process.exit(1);
+}
+
+const env = fs.readFileSync(envFile, "utf8");
+const envVar = (key) => env.match(new RegExp(`^${key}=(.*)$`, "m"))?.[1] ?? "";
+
+const logoUrl = envVar("LOGO_URL");
+
+const templatesDir = path.join(cwd, "src", "adapters", "out", "email", "templates");
+const source = path.join(templatesDir, `${TEMPLATE_NAME}.html`);
+if (!fs.existsSync(source)) {
+  console.error(`No existe el template compilado: ${source}. Corre antes: npm run build:emails`);
+  process.exit(1);
+}
+
+const html = fs.readFileSync(source, "utf8");
+const rendered = Handlebars.compile(html)({
+  logoUrl,
+  horasExpiracion: 24,
+});
+
+const outDir = path.join(cwd, "dist", "preview");
+fs.mkdirSync(outDir, { recursive: true });
+const outFile = path.join(outDir, `${TEMPLATE_NAME}.html`);
+fs.writeFileSync(outFile, rendered);
+
+console.log(`Preview renderizado: ${outFile}`);
+if (process.platform === "win32") {
+  exec(`start "" "${outFile}"`);
+} else {
+  exec(`open "${outFile}"`);
+}

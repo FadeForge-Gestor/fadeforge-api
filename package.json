@@ -5,7 +5,9 @@
   "main": "src/app.ts",
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node -r tsconfig-paths/register src/app.ts",
-    "build": "tsc",
+    "build:emails": "mjml src/adapters/out/email/templates/*.mjml -o src/adapters/out/email/templates/ --config.allowIncludes true",
+    "build": "npm run build:emails && tsc && node -e \"const fs=require('fs');fs.cpSync('src','dist',{filter:f=>fs.statSync(f).isDirectory()||f.endsWith('.hbs')||f.endsWith('.html'),recursive:true})\"",
+    "preview:email": "node scripts/preview-email.mjs",
     "start": "node dist/app.js",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -26,6 +28,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.5.2",
+    "handlebars": "^4.7.9",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.2.0",
     "pg": "^8.20.0",
@@ -48,11 +51,15 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "jest": "^30.3.0",
+    "mjml": "^5.4.0",
     "nodemon": "^3.1.14",
     "prisma": "^7.5.0",
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "lodash": "4.18.1"
   }
 }

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
 // Son requeridos estps campos
-const required = ['DATABASE_URL', 'JWT_SECRET', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+const required = ['DATABASE_URL', 'JWT_SECRET', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'LOGO_URL'];
 
 const emailVerificationEnabled = process.env.EMAIL_VERIFICATION_ENABLED === 'true';
 
@@ -21,6 +21,7 @@ export const env = {
     CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME!,
     CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY!,
     CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET!,
+    LOGO_URL: process.env.LOGO_URL!,
     RESEND_API_KEY: process.env.RESEND_API_KEY ?? '',
     EMAIL_FROM: process.env.EMAIL_FROM ?? 'onboarding@resend.dev',
     EMAIL_VERIFICATION_ENABLED: emailVerificationEnabled,
