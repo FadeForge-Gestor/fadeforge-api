@@ -18,9 +18,9 @@ Handlebars es el estándar de la industria para emails HTML: sintaxis `{{variabl
 | 2. Build: copiar `.hbs` al `dist/` | ✅ Implementado (`6e5c98d`) |
 | 3. Template loader | ✅ Implementado (`6e5c98d`) |
 | 4. Template de verificación | ✅ Implementado (`6e5c98d`) — falta logo (sección 7) |
-| 5. Modificar `ResendEmailService` | ✅ Implementado (`6e5c98d`, `9c1ae9e`) — falta logo (sección 7) |
-| 6. Tests | ✅ Implementado (`6e5c98d`) — falta logo (sección 7) |
-| 7. Logo en el template (opción B) | 🔲 Pendiente — agregado en esta revisión |
+| 5. Modificar `ResendEmailService` | ✅ Implementado (`6e5c98d`, `9c1ae9e`) — logo en sección 7 |
+| 6. Tests | ✅ Implementado (`6e5c98d`) — logo en sección 7 |
+| 7. Logo en el template (opción B) | ✅ Implementado — incluye validación 400 si el logo no existe |
 
 ## Arquitectura hexagonal y SOLID
 
@@ -217,6 +217,32 @@ async enviarVerificacion(correo: string, token: string): Promise<void> {
 - **OCP:** si mañana el logo cambia de proveedor (CDN propio, S3), solo cambia el adapter. El `.hbs` no se toca.
 - **Fail-fast:** el patrón de URL es determinístico; no requiere llamadas de red ni verificación de existencia del asset.
 
+### 8. Validación del logo — error 400 si no existe
+
+El logo es un recurso del adapter, no del dominio. Si el asset no está en Cloudinary, el `<img>` fallaría silenciosamente y el correo llegaría roto al cliente. Para detectarlo, `enviarVerificacion()` hace un `HEAD` request a la URL del logo antes de enviar:
+
+- **`404`** → el logo NO existe → lanza `BadRequestError` (HTTP 400). El `errorMiddleware` lo traduce en la respuesta API.
+- **Otro status (2xx, 5xx)** → se envía el correo normalmente.
+- **Error de red (`fetch` lanza)** → se envía el correo normalmente. Un problema transitorio de red no debe bloquear el registro del cliente.
+
+```typescript
+private async verificarLogoDisponible(logoUrl: string): Promise<void> {
+    let respuesta: Response;
+    try {
+        respuesta = await fetch(logoUrl, { method: 'HEAD' });
+    } catch {
+        return;
+    }
+    if (respuesta.status === 404) {
+        throw new BadRequestError('No se encontró el logo de la app para el correo de verificación');
+    }
+}
+```
+
+**Por qué `BadRequestError` y no `NotFoundError`:** el logo no es un recurso que el cliente pueda pedir; es un requisito interno del envío de correo. Si falta, el request del cliente (registro/reenvío de verificación) no se puede completar tal como está → 400. Si usáramos 404, el cliente podría creer que su cuenta no existe.
+
+**Por qué `HEAD` y no descargar la imagen:** `HEAD` no transfiere el body (solo headers). Es el request más barato para verificar existencia. Node 18+ tiene `fetch` nativo, cero dependencias.
+
 ---
 
 ## Archivos afectados
@@ -243,6 +269,7 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **`fs.cpSync` en build** | Cero dependencias nuevas. Nativo de Node 16.7+. Filtra solo `.hbs`, no copia todo `src/`. |
 | **Logo como variable `{{logoUrl}}`** | El template no hardcodea URLs. El adapter calcula la URL según `NODE_ENV` (`dev`/`prod`), siguiendo el patrón existente de `FRONTEND_URL`. |
 | **Carpeta `templates_email` en Cloudinary** | Separada de `servicios/`. Los assets de correo no se mezclan con imágenes de negocio. El asset `logo_app` ya está subido en `dev`. |
+| **`HEAD` + `BadRequestError` si el logo da 404** | El correo no debe salir roto. Detección temprana con el request más barato posible. 400 (no 404) porque el logo es un requisito interno del envío, no un recurso consultable. |
 | **No se tocan interfaces** | El template es un detalle interno del adapter. El dominio no cambia. |
 
 ---
@@ -254,5 +281,6 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **Ruta de templates en producción** | `__dirname` resuelve a `dist/adapters/out/email/`. El build copia los `.hbs` a `dist/adapters/out/email/templates/`. `join(__dirname, 'templates', 'archivo.hbs')` funciona en dev y prod. |
 | **Build script más complejo** | `"build"` ejecuta `tsc && node -e ...`. Documentado en `package.json`. Si alguien corre `tsc` suelto, no se copian los `.hbs`. |
 | **Template no existe en disco** | `readFileSync` lanza error en el constructor. Falla al arrancar, no en runtime. Es comportamiento deseado (fail-fast). |
-| **Logo no existe en Cloudinary (404)** | El `<img>` falla silenciosamente en el cliente de correo (no rompe el envío). El patrón de URL es determinístico y el asset se sube manualmente por entorno. Al pasar a prod, subir el logo a `fadeforge/prod/templates_email/` antes de habilitar envíos reales. |
+| **Logo no existe en Cloudinary (404)** | `enviarVerificacion()` verifica con `HEAD` antes de enviar y lanza `BadRequestError` (400) si da 404. El correo nunca sale roto. El error es visible en la respuesta API. |
 | **URL de logo con caracteres especiales** | Handlebars escapa caracteres especiales en `{{logoUrl}}` (HTML-escape). Las URLs de Cloudinary (patrón `https://...`) no contienen caracteres que Handlebars escape, por lo que no hace falta triple-stache `{{{ }}}`. |
+| **Overhead del `HEAD` por envío** | Un request ligero por correo de verificación. Frecuencia baja (solo registro/reenvío), costo despreciable. Alternativa futura: cachear el resultado con TTL. |

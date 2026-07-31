@@ -42,19 +42,30 @@ _Checklist accionable derivada del `plan.md`._
   - [x] Test: `{{horasExpiracion}}` se renderiza como string.
   - [x] Test: HTML generado contiene los textos esperados.
 
-## Logo de la app en el template (opción B) 🔲
+## Logo de la app en el template (opción B) ✅
 
-- [ ] Subir el asset `logo_app` a Cloudinary en `fadeforge/dev/templates_email/` (✅ ya hecho por el usuario en el dashboard).
-- [ ] Modificar `src/adapters/out/email/templates/verificacion.hbs`:
-  - [ ] Agregar `<img src="{{logoUrl}}" alt="FadeForge" />` al inicio del template.
-- [ ] Modificar `src/adapters/out/email/resendEmail.service.ts`:
-  - [ ] Calcular `carpeta` según `env.NODE_ENV` (`prod` si `production`, si no `dev`).
-  - [ ] Construir `logoUrl` con el patrón `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/fadeforge/${carpeta}/templates_email/logo_app`.
-  - [ ] Pasar `logoUrl` al render del template junto a `link` y `horasExpiracion`.
-- [ ] Actualizar `tests/unit/adapters/out/email/templateLoader.test.ts`:
-  - [ ] Test: `{{logoUrl}}` se renderiza con el valor proporcionado.
-  - [ ] Test: el HTML contiene la etiqueta `<img` con `alt="FadeForge"`.
-  - [ ] Test: renderizar el template con `logoUrl` de prueba y verificar que aparece en el HTML.
+- [x] Subir el asset `logo_app` a Cloudinary en `fadeforge/dev/templates_email/` (hecho por el usuario en el dashboard).
+- [x] Modificar `src/adapters/out/email/templates/verificacion.hbs`:
+  - [x] Agregar `<img src="{{logoUrl}}" alt="FadeForge" />` al inicio del template.
+- [x] Modificar `src/adapters/out/email/resendEmail.service.ts`:
+  - [x] Calcular `carpeta` según `env.NODE_ENV` (`prod` si `production`, si no `dev`).
+  - [x] Construir `logoUrl` con el patrón `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/fadeforge/${carpeta}/templates_email/logo_app`.
+  - [x] Pasar `logoUrl` al render del template junto a `link` y `horasExpiracion`.
+- [x] Actualizar `tests/unit/adapters/out/email/templateLoader.test.ts`:
+  - [x] Test: `{{logoUrl}}` se renderiza con el valor proporcionado.
+  - [x] Test: el HTML contiene la etiqueta `<img` con `alt="FadeForge"`.
+  - [x] Test: renderizar el template con `logoUrl` de prueba y verificar que aparece en el HTML.
+
+## Error 400 si el logo no existe ✅
+
+- [x] Modificar `src/adapters/out/email/resendEmail.service.ts`:
+  - [x] Verificar existencia del logo con `fetch(logoUrl, { method: 'HEAD' })` antes de enviar.
+  - [x] Si responde `404` → lanzar `BadRequestError` (HTTP 400).
+  - [x] Si hay error de red (`fetch` lanza) → continuar con el envío.
+- [x] Crear `tests/unit/adapters/out/email/resendEmail.service.test.ts`:
+  - [x] Test: `404` del logo → `BadRequestError`.
+  - [x] Test: `200` del logo → el correo se envía.
+  - [x] Test: error de red al verificar → el correo se envía.
 
 ## Validación final
 
