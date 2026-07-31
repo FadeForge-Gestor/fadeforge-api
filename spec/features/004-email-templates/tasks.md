@@ -10,7 +10,7 @@ _Checklist accionable derivada del `plan.md`._
 
 ## URL de la imagen
 
-- https://res.cloudinary.com/dzueymb9s/image/upload/v1785459761/logo_bzre7h.png
+- La URL real del logo vive solo en `.env` como `LOGO_URL`. No se documenta la URL literal en el repo — es un valor sensible de entorno.
 
 ## Build script ✅
 
@@ -48,17 +48,19 @@ _Checklist accionable derivada del `plan.md`._
 
 ## Logo de la app en el template (opción B) ✅
 
-- [x] Subir el asset `logo_app` a Cloudinary en `fadeforge/dev/templates_email/` (hecho por el usuario en el dashboard).
+- [x] Subir el logo a Cloudinary (hecho por el usuario en el dashboard).
+- [x] Agregar `LOGO_URL` como variable **requerida** en `src/config/env.ts` (fail-fast si falta).
+- [x] Documentar `LOGO_URL` en `.env.template` con un valor de ejemplo falso (nunca valores reales).
 - [x] Modificar `src/adapters/out/email/templates/verificacion.hbs`:
   - [x] Agregar `<img src="{{logoUrl}}" alt="FadeForge" />` al inicio del template.
 - [x] Modificar `src/adapters/out/email/resendEmail.service.ts`:
-  - [x] Calcular `carpeta` según `env.NODE_ENV` (`prod` si `production`, si no `dev`).
-  - [x] Construir `logoUrl` con el patrón `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/fadeforge/${carpeta}/templates_email/logo_app`.
+  - [x] `obtenerLogoUrl()` devuelve `env.LOGO_URL` (sin adivinar patrones de carpeta/public_id).
   - [x] Pasar `logoUrl` al render del template junto a `link` y `horasExpiracion`.
 - [x] Actualizar `tests/unit/adapters/out/email/templateLoader.test.ts`:
   - [x] Test: `{{logoUrl}}` se renderiza con el valor proporcionado.
   - [x] Test: el HTML contiene la etiqueta `<img` con `alt="FadeForge"`.
   - [x] Test: renderizar el template con `logoUrl` de prueba y verificar que aparece en el HTML.
+- [x] Actualizar el mock de `@config/env` en `tests/unit/adapters/out/email/resendEmail.service.test.ts` con un `LOGO_URL` de prueba (valor falso).
 
 ## Error 400 si el logo no existe ✅
 

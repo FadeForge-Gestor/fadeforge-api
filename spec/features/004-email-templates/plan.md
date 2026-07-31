@@ -176,7 +176,7 @@ No necesita instanciar `ResendEmailService`. Testea solo la transformación stri
 
 ### 7. Logo de la app en el template (opción B)
 
-El logo se sirve desde Cloudinary en la carpeta `fadeforge/{env}/templates_email/` (el asset `logo_app` ya está subido en `dev`). La URL NO se hardcodea en el template: se pasa como variable de Handlebars `{{logoUrl}}`, calculada por el adapter según `env.NODE_ENV`.
+El logo se sirve desde Cloudinary y su URL se configura en `.env` como `LOGO_URL`. NO se hardcodea en el template ni se adivina un patrón en el código: es una variable de Handlebars `{{logoUrl}}` que el adapter lee de la configuración.
 
 **Template (`verificacion.hbs`):**
 
@@ -189,33 +189,29 @@ El logo se sirve desde Cloudinary en la carpeta `fadeforge/{env}/templates_email
 <p>Si no creaste esta cuenta, podés ignorar este mensaje.</p>
 ```
 
+**Configuración (`.env` / `.env.template`):**
+
+```
+LOGO_URL=https://res.cloudinary.com/<cloud-name>/image/upload/v1/<public-id>
+```
+
+`LOGO_URL` es una variable **requerida** (como `DATABASE_URL`, `JWT_SECRET`, etc.): si falta, la app no arranca (fail-fast). Se incluye en `env.ts` con el resto de las variables de Cloudinary.
+
 **Adapter (`resendEmail.service.ts`):**
 
 ```typescript
-async enviarVerificacion(correo: string, token: string): Promise<void> {
-    const link = `${env.FRONTEND_URL}/confirmar?token=${token}`;
-    const carpeta = env.NODE_ENV === 'production' ? 'prod' : 'dev';
-    const logoUrl = `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/fadeforge/${carpeta}/templates_email/logo_app`;
-
-    await this.resend.emails.send({
-        from: env.EMAIL_FROM,
-        to: correo,
-        subject: 'Confirma tu correo electrónico — FadeForge',
-        html: this.templateVerificacion({
-            link,
-            horasExpiracion: env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS,
-            logoUrl,
-        }),
-    });
+private obtenerLogoUrl(): string {
+    return env.LOGO_URL;
 }
 ```
 
 **Por qué es así:**
 
-- **Hexagonal:** el cálculo de la URL es responsabilidad del adapter (infraestructura). El template es solo presentación; no sabe de Cloudinary ni de entornos.
-- **SRP:** `ResendEmailService` construye el contexto del template (qué URL usar según entorno); el template solo interpola.
-- **OCP:** si mañana el logo cambia de proveedor (CDN propio, S3), solo cambia el adapter. El `.hbs` no se toca.
-- **Fail-fast:** el patrón de URL es determinístico; no requiere llamadas de red ni verificación de existencia del asset.
+- **Hexagonal:** la URL del logo es configuración de infraestructura, no lógica de negocio. El template es solo presentación; no sabe de Cloudinary ni de entornos.
+- **SRP:** `ResendEmailService` inyecta la configuración al template; el template solo interpola.
+- **OCP:** si mañana el logo cambia de proveedor (CDN propio, S3), solo cambia el valor de `LOGO_URL`. El `.hbs` y el servicio no se tocan.
+- **Por qué `LOGO_URL` y no un patrón construido en código:** el `public_id` real que asigna Cloudinary (con versión y nombre autogenerado, ej. `logo_abc123.png` en la raíz) no sigue ningún patrón predecible. Construir la URL en código obliga a que el asset viva exactamente en una carpeta/nombre que el código conoce — frágil y difícil de mantener. Configurar la URL literal la hace independiente de dónde/qué nombre tenga el asset, y al re-subir el logo solo se actualiza una línea del `.env`.
+- **Fail-fast:** `LOGO_URL` requerida en `env.ts` → si falta, la app no arranca.
 
 ### 8. Validación del logo — error 400 si no existe
 
@@ -293,8 +289,9 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **Loader fuera de `templates/`** | `templates/` es solo assets `.hbs`. El loader es código TypeScript. Separación clara. |
 | **`readFileSync` en constructor** | Carga única al arrancar. Si falta el archivo, falla temprano. No hay beneficio en lazy loading. |
 | **`fs.cpSync` en build** | Cero dependencias nuevas. Nativo de Node 16.7+. Filtra solo `.hbs`, no copia todo `src/`. |
-| **Logo como variable `{{logoUrl}}`** | El template no hardcodea URLs. El adapter calcula la URL según `NODE_ENV` (`dev`/`prod`), siguiendo el patrón existente de `FRONTEND_URL`. |
-| **Carpeta `templates_email` en Cloudinary** | Separada de `servicios/`. Los assets de correo no se mezclan con imágenes de negocio. El asset `logo_app` ya está subido en `dev`. |
+| **Logo como variable `{{logoUrl}}`** | El template no hardcodea URLs. El adapter lee `env.LOGO_URL` (configuración) y la pasa al template. |
+| **`LOGO_URL` requerida en `.env`** | La URL literal del asset es la única verdad verificada; no se adivina ningún patrón de carpeta/public_id. Cambiar de logo = actualizar una línea del `.env`. |
+| **Carpeta en Cloudinary** | El asset no depende de ninguna carpeta específica. Si se organiza en `fadeforge/{env}/...` es decisión del dashboard; el código no lo asume. |
 | **`HEAD` + `BadRequestError` si el logo da 404** | El correo no debe salir roto. Detección temprana con el request más barato posible. 400 (no 404) porque el logo es un requisito interno del envío, no un recurso consultable. |
 | **No se tocan interfaces** | El template es un detalle interno del adapter. El dominio no cambia. |
 
@@ -308,5 +305,6 @@ Sin cambios: `core/ports/out/email/IEmailService.ts`, `NullEmailService`, casos 
 | **Build script más complejo** | `"build"` ejecuta `tsc && node -e ...`. Documentado en `package.json`. Si alguien corre `tsc` suelto, no se copian los `.hbs`. |
 | **Template no existe en disco** | `readFileSync` lanza error en el constructor. Falla al arrancar, no en runtime. Es comportamiento deseado (fail-fast). |
 | **Logo no existe en Cloudinary (404)** | `enviarVerificacion()` verifica con `HEAD` antes de enviar y lanza `BadRequestError` (400) si da 404. El correo nunca sale roto. El error es visible en la respuesta API. |
+| **`LOGO_URL` no configurada** | Variable requerida en `env.ts`: si falta, la app no arranca (fail-fast). Evita correos enviados sin logo. |
 | **URL de logo con caracteres especiales** | Handlebars escapa caracteres especiales en `{{logoUrl}}` (HTML-escape). Las URLs de Cloudinary (patrón `https://...`) no contienen caracteres que Handlebars escape, por lo que no hace falta triple-stache `{{{ }}}`. |
 | **Overhead del `HEAD` por envío** | Cacheado con TTL de 5 min en memoria (`logoDisponible` + `ultimaVerificacionLogo`): a lo sumo 1 `HEAD` por instancia cada 5 min, independiente de la cantidad de envíos. Multi-instancia: 1 `HEAD` por instancia por ventana. |

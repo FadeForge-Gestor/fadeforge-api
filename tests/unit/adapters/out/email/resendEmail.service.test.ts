@@ -15,7 +15,8 @@ jest.mock('@config/env', () => ({
         EMAIL_FROM: 'test@fadeforge.com',
         FRONTEND_URL: 'http://localhost:3000',
         EMAIL_VERIFICATION_EXPIRES_IN_HOURS: 24,
-        CLOUDINARY_CLOUD_NAME: 'fadeforge',
+        CLOUDINARY_CLOUD_NAME: 'fadeforge-test',
+        LOGO_URL: 'https://res.cloudinary.com/fadeforge-test/image/upload/v1/logo-prueba.png',
         NODE_ENV: 'development',
     },
 }));

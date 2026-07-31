@@ -41,8 +41,7 @@ export class ResendEmailService implements IEmailService {
     }
 
     private obtenerLogoUrl(): string {
-        const carpeta = env.NODE_ENV === 'production' ? 'prod' : 'dev';
-        return `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/v1/fadeforge/${carpeta}/templates_email/logo_app`;
+        return env.LOGO_URL;
     }
 
     private async verificarLogoDisponible(logoUrl: string): Promise<void> {
