@@ -42,6 +42,7 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
             idRol: rolCliente.id,
             correo: input.correo,
             hashContrasena,
+            emailVerificado: false, // self-service: empieza sin verificar, debe confirmar el correo
         });
 
         const usuarioData = {

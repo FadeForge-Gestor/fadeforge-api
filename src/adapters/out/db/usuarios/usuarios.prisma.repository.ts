@@ -74,6 +74,7 @@ export class UsuariosPrismaRepository implements IUsuarioRepository {
                         id_usuario: nuevo.id,
                         correo: input.correo,
                         hash_contrasena: input.hashContrasena,
+                        email_verificado: input.emailVerificado ?? false,
                     },
                 });
 

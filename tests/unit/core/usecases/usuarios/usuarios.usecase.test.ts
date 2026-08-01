@@ -119,6 +119,18 @@ describe('UsuariosUseCase', () => {
             );
             expect(result).toEqual(usuarioFake);
         });
+
+        it('debe crear el usuario con emailVerificado true (el admin avala la identidad)', async () => {
+            mockRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorId.mockResolvedValue(rolFake);
+            mockRepo.crear.mockResolvedValue(usuarioFake);
+
+            await useCase.crear(inputCrear);
+
+            expect(mockRepo.crear).toHaveBeenCalledWith(
+                expect.objectContaining({ emailVerificado: true })
+            );
+        });
     });
 
     describe('actualizar', () => {
