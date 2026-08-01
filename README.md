@@ -1,5 +1,9 @@
 # Fadeforge API
 
+<p align="center">
+  <img src="https://res.cloudinary.com/dzueymb9s/image/upload/v1785459761/logo_bzre7h.png" alt="FadeForge" width="200" />
+</p>
+
 REST API para un sistema de gestión de citas de barbería. Construida con arquitectura hexagonal, principios SOLID y lógica de negocio explícita en el dominio.
 
 ## ¿Qué hace esta API?
