@@ -66,6 +66,45 @@ _Checklist accionable derivada del `plan.md`._
 - [ ] `prisma/seed.ts`:
   - [ ] El admin inicial crea su credencial con `email_verificado: true`.
 
+## Parte 4 — Corregir la validación del token (doble hash de bcrypt)
+
+### Contrato del repositorio 🔲
+
+- [ ] `src/core/ports/out/email/ITokenVerificacionRepository.ts`:
+  - [ ] Renombrar `buscarPorTokenHash(tokenHash)` → `buscarPorToken(token: string)` (recibe el token en claro).
+
+### Repositorio 🔲
+
+- [ ] `src/adapters/out/email/tokenVerificacion.prisma.repository.ts`:
+  - [ ] Comparar el token raw contra `token.token_hash` con `bcrypt.compare` (sin re-hashear).
+
+### Use case 🔲
+
+- [ ] `src/core/usecases/auth/confirmarEmail.usecase.ts`:
+  - [ ] Eliminar `const tokenHash = await bcrypt.hash(token, 10);` (línea 15).
+  - [ ] Llamar `buscarPorToken(token)` con el token en claro.
+
+### Tests 🔲
+
+- [ ] Renombrar el mock `buscarPorTokenHash` → `buscarPorToken` en:
+  - [ ] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`.
+  - [ ] `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts`.
+  - [ ] `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts`.
+- [ ] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`:
+  - [ ] Aserción de que el repo recibe el token SIN hashear (`toHaveBeenCalledWith('token-plano-123')`).
+  - [ ] Quitar `jest.mock('bcrypt')` (el use case deja de usar bcrypt).
+- [ ] NUEVO `tests/unit/adapters/out/email/tokenVerificacion.prisma.repository.test.ts`:
+  - [ ] Con bcrypt REAL (solo mockear `prisma`): `buscarPorToken` encuentra el registro con el token correcto.
+  - [ ] Con un token incorrecto devuelve `null`.
+
+### Plantilla del correo ✅ (commit `000abe7`)
+
+- [x] `src/adapters/out/email/templates/verificacion.mjml`:
+  - [x] Link de confirmación visible como texto bajo el botón (fallback para probar el endpoint sin frontend).
+  - [x] `verificacion.html` regenerado con MJML (`npm run build:emails`).
+- [x] `tests/unit/adapters/out/email/templateLoader.test.ts`:
+  - [x] Test de que el link se renderiza como texto visible.
+
 ## Tests 🔲
 
 - [ ] `tests/unit/core/usecases/auth/login.usecase.test.ts`:
@@ -85,5 +124,6 @@ _Checklist accionable derivada del `plan.md`._
 
 - [ ] Ejecutar `npm test` y verificar que todos los tests pasan.
 - [ ] Ejecutar `npm run build` y verificar que compila sin errores.
-- [ ] Probar manualmente (feature ON): registrar cliente → intentar login → 403 con mensaje → confirmar con el link del correo → login exitoso con `emailVerificado: true`. Crear usuario por admin (`POST /usuarios`) → login directo sin confirmar; admin del seed → login directo.
+- [ ] Probar manualmente (feature ON): registrar cliente → intentar login → 403 con mensaje → confirmar con el link del correo (visible como texto en el email) → login exitoso con `emailVerificado: true`. Crear usuario por admin (`POST /usuarios`) → login directo sin confirmar; admin del seed → login directo.
+- [ ] Verificar que un token incorrecto responde 400 y no marca `email_verificado` (regresión del doble hash).
 - [ ] Actualizar `spec/constitution/roadmap.md` (mover 005 a "Hecho") al completar la implementación.

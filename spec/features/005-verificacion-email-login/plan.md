@@ -76,7 +76,7 @@ API_URL: process.env.API_URL ?? `http://localhost:${process.env.PORT ?? 3000}`,
 const link = `${env.API_URL}/api/v1/auth/confirmar?token=${token}`;
 ```
 
-El endpoint ya existe y está correcto (`GET /api/v1/auth/confirmar`, sin auth, token por query param — verificado). Este cambio solo corrige el destino del link.
+El endpoint ya existe (`GET /api/v1/auth/confirmar`, sin auth, token por query param), pero su validación de token tiene un bug (doble hash de bcrypt): ver **Parte 4**. Este cambio solo corrige el destino del link.
 
 ---
 
@@ -110,6 +110,30 @@ export interface CrearUsuarioRepositoryInput {
 
 ---
 
+## Parte 4 — Corregir la validación del token (doble hash de bcrypt)
+
+En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una vez). En la confirmación, `confirmarEmail.usecase.ts` re-hasheaba el token (`bcrypt.hash(token, 10)` → hash con salt nuevo) y `buscarPorTokenHash` hacía `bcrypt.compare(hash2, hash_almacenado)`: como `bcrypt.compare` espera el token EN CLARO como primer argumento, comparaba `hash(hash2)` contra `hash1` → nunca coinciden. Resultado: `/auth/confirmar` siempre respondía 400 "El token de verificación es inválido o expiró".
+
+### 11. Contrato del repositorio
+
+`src/core/ports/out/email/ITokenVerificacionRepository.ts` — renombrar `buscarPorTokenHash(tokenHash)` → `buscarPorToken(token: string)`: el contrato recibe el token en claro. El nombre anterior mentía sobre lo que el repositorio realmente esperaba (la implementación ya hacía `bcrypt.compare` con el primer argumento como plaintext).
+
+### 12. Repositorio
+
+`src/adapters/out/email/tokenVerificacion.prisma.repository.ts` — implementación: `bcrypt.compare(token, token.token_hash)` contra el raw recibido. Sin cambios de query; solo nombres de variables para que el contrato sea honesto.
+
+### 13. Use case
+
+`src/core/usecases/auth/confirmarEmail.usecase.ts` — eliminar `const tokenHash = await bcrypt.hash(token, 10);` (línea 15) y pasar el token raw: `buscarPorToken(token)`. El hashing de bcrypt queda solo en la persistencia (`registroCliente.usecase.ts` al crear el token) y en la comparación del repositorio.
+
+### 14. Tests
+
+- Renombrar el mock `buscarPorTokenHash` → `buscarPorToken` en: `confirmarEmail.usecase.test.ts`, `registroCliente.usecase.test.ts`, `reenviarVerificacion.usecase.test.ts`.
+- `confirmarEmail.usecase.test.ts`: aserción de que el repo recibe el token SIN hashear (`toHaveBeenCalledWith('token-plano-123')`) y quitar `jest.mock('bcrypt')` (el use case deja de usarlo).
+- NUEVO `tests/unit/adapters/out/email/tokenVerificacion.prisma.repository.test.ts`: regresión con bcrypt REAL (solo se mockea `prisma`): crear el hash con `bcrypt.hash`, `buscarPorToken` lo encuentra con el raw correcto y devuelve `null` con uno incorrecto. Es el test que faltaba y dejó pasar el bug.
+
+---
+
 ## Decisiones
 
 | Decisión | Por qué |
@@ -120,6 +144,8 @@ export interface CrearUsuarioRepositoryInput {
 | **`API_URL` configurable con default dev** | Mismo principio que `LOGO_URL`: URL literal, independiente de dónde corra el backend. Default sensato para dev local. |
 | **No se toca el JWT** | El payload actual (`id`, `rol`, `correo`) no cambia; si entrás es porque estás verificado, agregar el flag al token es ruido. |
 | **Admin avala la identidad (trust anchor)** | La verificación de correo es para el self-service (probar propiedad). El admin ya validó la identidad fuera de banda → la cuenta nace verificada (`UsuariosUseCase.crear` pasa `true`; el seed también). Patrón estándar de Okta/GitHub/Salesforce. |
+| **`GET /auth/confirmar` se mantiene en GET** | Los clientes de correo solo siguen links por GET (un link POST requeriría JS o form, que el correo bloquea). El token es la *capability*: aleatorio, un solo uso (se borra al validar), con expiración. El patrón "GET renderiza página + POST consume" (anti pre-fetch de clientes de correo) se difiere hasta tener frontend. |
+| **El use case no hashea el token al validar** | `bcrypt.compare` espera el token en claro como primer argumento; hashear antes rompe la comparación (salt aleatorio). El hash solo se genera una vez, al persistir el token. |
 
 ## Riesgos
 
@@ -128,6 +154,7 @@ export interface CrearUsuarioRepositoryInput {
 | **Tests de login dependientes del `.env` real** | El check lee `env.EMAIL_VERIFICATION_ENABLED`. Los tests nuevos mockean `@config/env` (patrón ya usado en `resendEmail.service.test.ts`); el fake `credencialesFake` existente agrega `emailVerificado: true` para que los tests actuales sigan verdes sin importar el `.env` local. |
 | **`API_URL` olvidada en `.env` en prod** | Default dev (`localhost:3000`) — en prod debe configurarse explícitamente. Se documenta en `.env.template` como opcional. |
 | **Mock de `@config/env` sin `API_URL`** | El mock de `resendEmail.service.test.ts` se actualiza con `API_URL` de prueba (igual que se hizo con `LOGO_URL`). |
+| **El bug del doble hash era invisible para los tests** | `buscarPorTokenHash` estaba mockeado en los 3 tests que lo tocaban → el roundtrip real de bcrypt nunca se ejercitaba. Se agrega un test de regresión en el repositorio con bcrypt real (solo se mockea `prisma`). |
 
 ## Archivos afectados
 
@@ -148,5 +175,14 @@ export interface CrearUsuarioRepositoryInput {
 | `prisma/seed.ts` | Admin inicial con `email_verificado: true` |
 | `tests/unit/core/usecases/usuarios/usuarios.usecase.test.ts` | Caso nuevo: `crear` pasa `emailVerificado: true` |
 | `.env.template` | Documentar `API_URL` (opcional, default dev) |
+| `src/core/ports/out/email/ITokenVerificacionRepository.ts` | Renombrar `buscarPorTokenHash` → `buscarPorToken(token)` (recibe el token en claro) |
+| `src/adapters/out/email/tokenVerificacion.prisma.repository.ts` | Comparar el token raw contra el hash almacenado (sin doble hash) |
+| `src/core/usecases/auth/confirmarEmail.usecase.ts` | Quitar el `bcrypt.hash` previo; pasar el token raw al repo |
+| `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts` | Mock renombrado + aserción de token sin hashear + quitar mock de bcrypt |
+| `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts` | Mock renombrado (`buscarPorToken`) |
+| `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts` | Mock renombrado (`buscarPorToken`) |
+| NUEVO `tests/unit/adapters/out/email/tokenVerificacion.prisma.repository.test.ts` | Regresión con bcrypt real: token correcto se encuentra, incorrecto devuelve `null` |
+| `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Link de confirmación visible como texto bajo el botón (fallback sin frontend) — hecho en `000abe7` |
+| `tests/unit/adapters/out/email/templateLoader.test.ts` | Test del link visible — hecho en `000abe7` |
 
-Sin cambios: `IAuthRepository`, `IEmailService`, `auth.routes.ts`, `auth.controller.ts`, `templateLoader.ts`, templates.
+Sin cambios: `IAuthRepository`, `IEmailService`, `auth.routes.ts`, `auth.controller.ts`, `templateLoader.ts`, `.env.template` (solo documentado), `src/config/env.ts` (solo Parte 2).
