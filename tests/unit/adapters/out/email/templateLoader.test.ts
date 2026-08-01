@@ -58,6 +58,13 @@ describe('templateLoader', () => {
             expect(boton![0]).toContain('href="https://example.com/confirmar?token=abc"');
         });
 
+        it('debe mostrar el link de confirmación como texto visible (fallback para probar el endpoint sin depender del botón)', () => {
+            const template = loadTemplate('verificacion');
+            const html = template({ link: 'https://example.com/confirmar?token=abc', horasExpiracion: 24 });
+            expect(html).toContain('¿No funciona el botón? Copia y pega este enlace en tu navegador:');
+            expect(html).toContain('https://example.com/confirmar?token=abc');
+        });
+
         it('debe lanzar error si el template no existe', () => {
             expect(() => loadTemplate('template-inexistente')).toThrow();
         });
