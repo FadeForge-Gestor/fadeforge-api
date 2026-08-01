@@ -27,4 +27,5 @@ export const env = {
     EMAIL_VERIFICATION_ENABLED: emailVerificationEnabled,
     EMAIL_VERIFICATION_EXPIRES_IN_HOURS: parseInt(process.env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS ?? '24'),
     FRONTEND_URL: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    API_URL: process.env.API_URL ?? `http://localhost:${process.env.PORT ?? 3000}`,
 }

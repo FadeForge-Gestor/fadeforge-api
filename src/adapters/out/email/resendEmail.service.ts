@@ -23,7 +23,7 @@ export class ResendEmailService implements IEmailService {
     }
 
     async enviarVerificacion(correo: string, token: string): Promise<void> {
-        const link = `${env.FRONTEND_URL}/confirmar?token=${token}`;
+        const link = `${env.API_URL}/api/v1/auth/confirmar?token=${token}`;
         const logoUrl = this.obtenerLogoUrl();
 
         await this.verificarLogoDisponible(logoUrl);
