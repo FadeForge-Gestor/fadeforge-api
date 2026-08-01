@@ -68,34 +68,34 @@ _Checklist accionable derivada del `plan.md`._
 
 ## Parte 4 — Corregir la validación del token (doble hash de bcrypt)
 
-### Contrato del repositorio 🔲
+### Contrato del repositorio ✅
 
-- [ ] `src/core/ports/out/email/ITokenVerificacionRepository.ts`:
-  - [ ] Renombrar `buscarPorTokenHash(tokenHash)` → `buscarPorToken(token: string)` (recibe el token en claro).
+- [x] `src/core/ports/out/email/ITokenVerificacionRepository.ts`:
+  - [x] Renombrar `buscarPorTokenHash(tokenHash)` → `buscarPorToken(token: string)` (recibe el token en claro).
 
-### Repositorio 🔲
+### Repositorio ✅
 
-- [ ] `src/adapters/out/email/tokenVerificacion.prisma.repository.ts`:
-  - [ ] Comparar el token raw contra `token.token_hash` con `bcrypt.compare` (sin re-hashear).
+- [x] `src/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.ts`:
+  - [x] Comparar el token raw contra `token.token_hash` con `bcrypt.compare` (sin re-hashear).
 
-### Use case 🔲
+### Use case ✅
 
-- [ ] `src/core/usecases/auth/confirmarEmail.usecase.ts`:
-  - [ ] Eliminar `const tokenHash = await bcrypt.hash(token, 10);` (línea 15).
-  - [ ] Llamar `buscarPorToken(token)` con el token en claro.
+- [x] `src/core/usecases/auth/confirmarEmail.usecase.ts`:
+  - [x] Eliminar `const tokenHash = await bcrypt.hash(token, 10);` (línea 15).
+  - [x] Llamar `buscarPorToken(token)` con el token en claro.
 
-### Tests 🔲
+### Tests ✅
 
-- [ ] Renombrar el mock `buscarPorTokenHash` → `buscarPorToken` en:
-  - [ ] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`.
-  - [ ] `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts`.
-  - [ ] `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts`.
-- [ ] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`:
-  - [ ] Aserción de que el repo recibe el token SIN hashear (`toHaveBeenCalledWith('token-plano-123')`).
-  - [ ] Quitar `jest.mock('bcrypt')` (el use case deja de usar bcrypt).
-- [ ] NUEVO `tests/unit/adapters/out/email/tokenVerificacion.prisma.repository.test.ts`:
-  - [ ] Con bcrypt REAL (solo mockear `prisma`): `buscarPorToken` encuentra el registro con el token correcto.
-  - [ ] Con un token incorrecto devuelve `null`.
+- [x] Renombrar el mock `buscarPorTokenHash` → `buscarPorToken` en:
+  - [x] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`.
+  - [x] `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts`.
+  - [x] `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts`.
+- [x] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`:
+  - [x] Aserción de que el repo recibe el token SIN hashear (`toHaveBeenCalledWith('token-plano-123')`).
+  - [x] Quitar `jest.mock('bcrypt')` (el use case deja de usar bcrypt).
+- [x] NUEVO `tests/unit/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.test.ts`:
+  - [x] Con bcrypt REAL (solo mockear `prisma`): `buscarPorToken` encuentra el registro con el token correcto.
+  - [x] Con un token incorrecto devuelve `null`.
 
 ### Plantilla del correo ✅ (commit `000abe7`)
 

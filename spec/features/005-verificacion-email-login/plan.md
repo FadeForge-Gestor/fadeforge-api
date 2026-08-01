@@ -120,7 +120,7 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 
 ### 12. Repositorio
 
-`src/adapters/out/email/tokenVerificacion.prisma.repository.ts` — implementación: `bcrypt.compare(token, token.token_hash)` contra el raw recibido. Sin cambios de query; solo nombres de variables para que el contrato sea honesto.
+`src/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.ts` — implementación: `bcrypt.compare(token, token.token_hash)` contra el raw recibido. Sin cambios de query; solo nombres de variables para que el contrato sea honesto.
 
 ### 13. Use case
 
@@ -130,7 +130,7 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 
 - Renombrar el mock `buscarPorTokenHash` → `buscarPorToken` en: `confirmarEmail.usecase.test.ts`, `registroCliente.usecase.test.ts`, `reenviarVerificacion.usecase.test.ts`.
 - `confirmarEmail.usecase.test.ts`: aserción de que el repo recibe el token SIN hashear (`toHaveBeenCalledWith('token-plano-123')`) y quitar `jest.mock('bcrypt')` (el use case deja de usarlo).
-- NUEVO `tests/unit/adapters/out/email/tokenVerificacion.prisma.repository.test.ts`: regresión con bcrypt REAL (solo se mockea `prisma`): crear el hash con `bcrypt.hash`, `buscarPorToken` lo encuentra con el raw correcto y devuelve `null` con uno incorrecto. Es el test que faltaba y dejó pasar el bug.
+- NUEVO `tests/unit/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.test.ts`: regresión con bcrypt REAL (solo se mockea `prisma`): crear el hash con `bcrypt.hash`, `buscarPorToken` lo encuentra con el raw correcto y devuelve `null` con uno incorrecto. Es el test que faltaba y dejó pasar el bug.
 
 ---
 
@@ -176,12 +176,12 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 | `tests/unit/core/usecases/usuarios/usuarios.usecase.test.ts` | Caso nuevo: `crear` pasa `emailVerificado: true` |
 | `.env.template` | Documentar `API_URL` (opcional, default dev) |
 | `src/core/ports/out/email/ITokenVerificacionRepository.ts` | Renombrar `buscarPorTokenHash` → `buscarPorToken(token)` (recibe el token en claro) |
-| `src/adapters/out/email/tokenVerificacion.prisma.repository.ts` | Comparar el token raw contra el hash almacenado (sin doble hash) |
+| `src/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.ts` | Comparar el token raw contra el hash almacenado (sin doble hash) |
 | `src/core/usecases/auth/confirmarEmail.usecase.ts` | Quitar el `bcrypt.hash` previo; pasar el token raw al repo |
 | `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts` | Mock renombrado + aserción de token sin hashear + quitar mock de bcrypt |
 | `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts` | Mock renombrado (`buscarPorToken`) |
 | `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts` | Mock renombrado (`buscarPorToken`) |
-| NUEVO `tests/unit/adapters/out/email/tokenVerificacion.prisma.repository.test.ts` | Regresión con bcrypt real: token correcto se encuentra, incorrecto devuelve `null` |
+| NUEVO `tests/unit/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.test.ts` | Regresión con bcrypt real: token correcto se encuentra, incorrecto devuelve `null` |
 | `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Link de confirmación visible como texto bajo el botón (fallback sin frontend) — hecho en `000abe7` |
 | `tests/unit/adapters/out/email/templateLoader.test.ts` | Test del link visible — hecho en `000abe7` |
 
