@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
-import { prisma } from '../db/prisma.client';
+import { prisma } from '../prisma.client';
 
 export class TokenVerificacionPrismaRepository implements ITokenVerificacionRepository {
 
@@ -19,17 +19,17 @@ export class TokenVerificacionPrismaRepository implements ITokenVerificacionRepo
         });
     }
 
-    async buscarPorTokenHash(tokenHash: string): Promise<{ idUsuario: number; expiraEn: Date } | null> {
+    async buscarPorToken(token: string): Promise<{ idUsuario: number; expiraEn: Date } | null> {
         const ahora = new Date();
         await prisma.tokens_verificacion.deleteMany({
             where: { expira_en: { lt: ahora } },
         });
 
         const tokens = await prisma.tokens_verificacion.findMany();
-        for (const token of tokens) {
-            const coincide = await bcrypt.compare(tokenHash, token.token_hash);
+        for (const registro of tokens) {
+            const coincide = await bcrypt.compare(token, registro.token_hash);
             if (coincide) {
-                return { idUsuario: token.id_usuario, expiraEn: token.expira_en };
+                return { idUsuario: registro.id_usuario, expiraEn: registro.expira_en };
             }
         }
         return null;

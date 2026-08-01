@@ -11,7 +11,7 @@ import { RolesPrismaRepository } from '@adapters/out/db/roles/roles.prisma.repos
 import { CredencialesPrismaRepository } from '@adapters/out/db/credenciales/credenciales.prisma.repository';
 import { ResendEmailService } from '@adapters/out/email/resendEmail.service';
 import { NullEmailService } from '@adapters/out/email/nullEmail.service';
-import { TokenVerificacionPrismaRepository } from '@adapters/out/email/tokenVerificacion.prisma.repository';
+import { TokenVerificacionPrismaRepository } from '@adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository';
 import { IdempotencyMemoryRepository } from '@adapters/out/memory/idempotency/idempotency.memory.repository';
 import { idempotency } from '@middlewares/idempotency.middleware';
 import { validate } from '@middlewares/validate.middleware';

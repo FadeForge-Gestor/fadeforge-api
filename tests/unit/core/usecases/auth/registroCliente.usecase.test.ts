@@ -77,7 +77,7 @@ const mockEmailService: jest.Mocked<IEmailService> = {
 
 const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
     crear: jest.fn(),
-    buscarPorTokenHash: jest.fn(),
+    buscarPorToken: jest.fn(),
     eliminarPorIdUsuario: jest.fn(),
     contarEnviosHoy: jest.fn(),
 };
