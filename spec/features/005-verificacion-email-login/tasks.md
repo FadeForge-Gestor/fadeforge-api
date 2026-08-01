@@ -105,6 +105,61 @@ _Checklist accionable derivada del `plan.md`._
 - [x] `tests/unit/adapters/out/email/templateLoader.test.ts`:
   - [x] Test de que el link se renderiza como texto visible.
 
+## Parte 5 — Semántica HTTP: POST consume, GET valida 🔲
+
+### Schema Zod 🔲
+
+- [ ] `src/adapters/in/http/auth/auth.schema.ts`:
+  - [ ] Nuevo `confirmarEmailSchema = z.object({ token: z.string().min(1, 'El token es requerido') })`.
+
+### Puerto de entrada 🔲
+
+- [ ] NUEVO `src/core/ports/in/auth/IValidarTokenVerificacionUseCase.ts`:
+  - [ ] `validar(token: string): Promise<{ valido: boolean }>`.
+
+### Use case 🔲
+
+- [ ] NUEVO `src/core/usecases/auth/validarTokenVerificacion.usecase.ts`:
+  - [ ] `ValidarTokenVerificacionUseCase`: busca con `buscarTokenValido`, chequea expiración, devuelve `{ valido }`.
+  - [ ] CERO efectos: no elimina, no actualiza (read-only).
+
+### Repositorio 🔲
+
+- [ ] `src/core/ports/out/email/ITokenVerificacionRepository.ts`:
+  - [ ] Método read-only `buscarTokenValido(token)`.
+- [ ] `src/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.ts`:
+  - [ ] `buscarTokenValido`: mismo `bcrypt.compare`, sin `deleteMany` ni consumo.
+
+### Controller 🔲
+
+- [ ] `src/adapters/in/http/auth/auth.controller.ts`:
+  - [ ] `confirmarEmail` (GET) → `validar` → 200 `{ valido: true }` o 400. Sin token en la respuesta.
+  - [ ] `confirmarEmailPost` (POST) → `confirmar(req.body.token)` → 200 `{ mensaje }`. Sin token en la respuesta.
+
+### Routes 🔲
+
+- [ ] `src/adapters/in/http/auth/auth.routes.ts`:
+  - [ ] `POST /confirmar` con `validate(confirmarEmailSchema)`.
+  - [ ] El GET se mantiene (magic link), ahora read-only.
+
+### Docs 🔲
+
+- [ ] `src/adapters/in/http/auth/auth.docs.ts`:
+  - [ ] Swagger `POST /auth/confirmar` (requestBody `{ token }`, respuestas 200/400).
+  - [ ] GET documentado como validación read-only (200 con `{ valido }`).
+
+### Tests 🔲
+
+- [ ] `tests/unit/adapters/in/http/auth/auth.schema.test.ts`:
+  - [ ] `confirmarEmailSchema`: token válido pasa; vacío/faltante falla.
+- [ ] NUEVO `tests/unit/core/usecases/auth/validarTokenVerificacion.usecase.test.ts`:
+  - [ ] Token válido → `{ valido: true }`.
+  - [ ] Token expirado → `{ valido: false }`.
+  - [ ] Token inexistente → `{ valido: false }`.
+  - [ ] NUNCA llama a `eliminarPorIdUsuario` ni `actualizarEmailVerificado` (read-only).
+- [ ] `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`:
+  - [ ] Caso: tras un POST exitoso el token se eliminó (reuso → 400).
+
 ## Tests 🔲
 
 - [ ] `tests/unit/core/usecases/auth/login.usecase.test.ts`:
@@ -124,6 +179,8 @@ _Checklist accionable derivada del `plan.md`._
 
 - [ ] Ejecutar `npm test` y verificar que todos los tests pasan.
 - [ ] Ejecutar `npm run build` y verificar que compila sin errores.
-- [ ] Probar manualmente (feature ON): registrar cliente → intentar login → 403 con mensaje → confirmar con el link del correo (visible como texto en el email) → login exitoso con `emailVerificado: true`. Crear usuario por admin (`POST /usuarios`) → login directo sin confirmar; admin del seed → login directo.
+- [ ] Probar manualmente (feature ON): registrar cliente → intentar login → 403 con mensaje → `POST /auth/confirmar` con `{ token }` del correo → login exitoso con `emailVerificado: true`. Crear usuario por admin (`POST /usuarios`) → login directo sin confirmar; admin del seed → login directo.
+- [ ] Verificar que `GET /auth/confirmar?token=...` valida SIN mutar: responde `{ valido: true }` y `email_verificado` sigue `false` en BD (read-only).
+- [ ] Verificar que reutilizar el mismo token tras un POST exitoso responde 400 (un solo uso).
 - [ ] Verificar que un token incorrecto responde 400 y no marca `email_verificado` (regresión del doble hash).
 - [ ] Actualizar `spec/constitution/roadmap.md` (mover 005 a "Hecho") al completar la implementación.

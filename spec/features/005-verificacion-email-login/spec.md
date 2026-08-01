@@ -4,7 +4,7 @@
 
 ## Qué hace
 
-Tres cambios sobre el flujo de verificación de correo electrónico (feature 002):
+Cinco cambios sobre el flujo de verificación de correo electrónico (feature 002):
 
 1. **Bloquea el login de cuentas sin correo verificado.** Cuando la verificación está habilitada (`EMAIL_VERIFICATION_ENABLED=true`), un usuario con `email_verificado=false` no puede iniciar sesión: recibe un `403 Forbidden` con mensaje claro. Cuando la verificación está deshabilitada, el login se comporta como hoy (sin bloqueo).
 
@@ -13,6 +13,8 @@ Tres cambios sobre el flujo de verificación de correo electrónico (feature 002
 3. **El admin avala la identidad al crear usuarios.** Los usuarios creados por admin (`POST /usuarios`) y el admin del seed nacen con `email_verificado=true`: el admin ya validó la identidad por un canal fuera de banda, así que la cuenta entra directo (modelo *trust anchor*). Sin esto, con el bloqueo de la Parte 1 activo, el admin del seed y los usuarios creados por admin quedarían bloqueados del login.
 
 4. **Corrige la validación del token de confirmación.** El endpoint `GET /api/v1/auth/confirmar` siempre respondía "El token de verificación es inválido o expiró", aun con un token recién enviado, por un doble hash de bcrypt: el use case hasheaba el token en claro (salt nuevo) y el repositorio comparaba ese hash contra el hash almacenado. `bcrypt.compare(plano, hash)` nunca puede coincidir recibiendo un hash como "plano". El fix: el use case pasa el token en claro al repositorio, que lo compara contra el hash guardado en BD.
+
+5. **Semántica HTTP correcta en la confirmación.** `POST /auth/confirmar` con el token en el body (`{ token }`) es el **consumidor canónico**: valida, marca `email_verificado=true` y elimina el token (de un solo uso). `GET /auth/confirmar?token=...` (el link del correo) pasa a ser de **solo validación**: responde si el token existe y no expiró, sin escribir en BD. Un GET nunca debe mutar (contrato HTTP): el método es parte del diseño, no un detalle — un GET que escribe confunde a quien consume la API.
 
 ## Por qué
 
@@ -52,15 +54,17 @@ En el registro se guarda `token_hash = bcrypt.hash(token)` (el token en claro se
 - [ ] El link del correo de verificación apunta a `API_URL/api/v1/auth/confirmar?token=...`.
 - [ ] `API_URL` es una variable de entorno configurable, con default sensato para desarrollo (`http://localhost:PORT`).
 - [ ] El mock de `@config/env` en los tests incluye `API_URL` y `EMAIL_VERIFICATION_ENABLED`.
-- [ ] `GET /api/v1/auth/confirmar?token=<token recién enviado>` marca `email_verificado=true` (test de regresión con bcrypt REAL, sin mockear bcrypt).
+- [ ] `POST /auth/confirmar` con `{ token }` en el body consume el token, marca `email_verificado=true`, lo elimina y responde 200 JSON (test de regresión con bcrypt REAL, sin mockear bcrypt).
+- [ ] `GET /auth/confirmar?token=...` valida sin mutar: 200 `{ valido: true }` con token válido y no expirado, 400 si es inválido. **No escribe en BD** (un GET no debe tener efectos).
+- [ ] El token es **de un solo uso**: `POST /auth/confirmar` lo elimina al consumirlo; reutilizar el mismo token responde 400.
+- [ ] Las respuestas de `GET`/`POST /auth/confirmar` **no incluyen el token** en el JSON; solo el email lo contiene.
 - [ ] Un token incorrecto no verifica la cuenta y responde 400 (no revela si el correo existe).
 - [ ] Todos los tests pasan (`npm test`) y `npm run build` compila.
 - [ ] Documentación Swagger de `/auth/login` actualizada con el `403`.
 
 ## Fuera de alcance
 
-- Página/HTML de éxito tras confirmar el correo (el frontend la va a manejar con su propia ruta `/correo-confirmado`).
-- Migrar `/auth/confirmar` de GET a POST. Se mantiene GET: es el estándar magic-link (los clientes de correo solo siguen links por GET; el token es la *capability*: aleatorio, un solo uso, con expiración). El patrón defensivo "GET renderiza una página de confirmación + POST consume el token" (contra el pre-fetch de clientes de correo/proxies) queda para cuando exista el frontend.
+- Página/HTML de éxito tras confirmar el correo servida por el GET (el patrón completo "GET renderiza la página + POST consume") — queda para cuando exista el frontend. Hoy el GET valida y devuelve JSON.
 - `GET /auth/me` (perfil del usuario logueado) — gap de frontend, feature aparte.
 - Logo en el template del correo — pendiente de la feature 004 (el `{{logoUrl}}` se pasa pero ningún template lo renderiza).
 - Limpieza periódica de cuentas sin verificar.

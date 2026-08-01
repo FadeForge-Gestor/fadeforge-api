@@ -134,6 +134,73 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 
 ---
 
+## Parte 5 — Semántica HTTP: POST consume, GET valida
+
+La confirmación pasa a tener la nomenclatura correcta: consumir un token de un solo uso es una mutación (marca `email_verificado=true` y borra el token) y debe vivir en un POST. El GET del link del correo queda read-only: valida sin escribir. Un GET que muta es una trampa para el siguiente desarrollador (el contrato HTTP dice read-only, aunque Express no lo imponga).
+
+### 15. Schema Zod
+
+`src/adapters/in/http/auth/auth.schema.ts` — nuevo `confirmarEmailSchema`:
+
+```typescript
+export const confirmarEmailSchema = z.object({
+    token: z.string().min(1, 'El token es requerido'),
+});
+```
+
+### 16. Puerto de entrada
+
+NUEVO `src/core/ports/in/auth/IValidarTokenVerificacionUseCase.ts` — contrato read-only para el GET:
+
+```typescript
+export interface IValidarTokenVerificacionUseCase {
+    validar(token: string): Promise<{ valido: boolean }>;
+}
+```
+
+### 17. Use case
+
+NUEVO `src/core/usecases/auth/validarTokenVerificacion.usecase.ts` — `ValidarTokenVerificacionUseCase`: busca el token con `buscarTokenValido`, chequea expiración y devuelve `{ valido: boolean }`. **CERO efectos**: no elimina, no actualiza, no hashea. OCP: archivo nuevo, no se toca `ConfirmarEmailUseCase`.
+
+### 18. Repositorio
+
+`src/core/ports/out/email/ITokenVerificacionRepository.ts` — método read-only nuevo:
+
+```typescript
+buscarTokenValido(token: string): Promise<VerificationTokenData | null>;
+```
+
+`src/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.ts` — implementación: mismo `bcrypt.compare` que `buscarPorToken` pero **sin** `deleteMany` de expirados y sin consumo. `buscarPorToken` queda intacto para el POST (ahí sí limpia y consume).
+
+### 19. Controller
+
+`src/adapters/in/http/auth/auth.controller.ts`:
+
+- `confirmarEmail` (GET) → `validar(req.query.token)` → `200 ok({ valido: true, mensaje: 'El token es válido' })` o 400. **Sin token en la respuesta** (sin frontend, el JSON es la única salida visible; reflejar el token lo deja en logs/caché).
+- `confirmarEmailPost` (POST) → `confirmar(req.body.token)` → `200 ok({ mensaje: 'Correo electrónico verificado. Ya podés iniciar sesión.' })`. **Sin token en la respuesta**.
+
+### 20. Routes
+
+`src/adapters/in/http/auth/auth.routes.ts` — nueva ruta:
+
+```typescript
+router.post('/confirmar', validate(confirmarEmailSchema), (req, res, next) => controller.confirmarEmailPost(req, res, next));
+```
+
+El GET se mantiene (magic link del correo), ahora read-only.
+
+### 21. Docs
+
+`src/adapters/in/http/auth/auth.docs.ts` — Swagger del `POST /auth/confirmar` (requestBody `{ token }`, respuestas 200/400) y actualizar el GET a "validación read-only" (200 con `{ valido }`).
+
+### 22. Tests
+
+- `tests/unit/adapters/in/http/auth/auth.schema.test.ts`: `confirmarEmailSchema` — token válido pasa, vacío/faltante falla.
+- NUEVO `tests/unit/core/usecases/auth/validarTokenVerificacion.usecase.test.ts`: token válido → `{ valido: true }`; expirado → `{ valido: false }`; inexistente → `{ valido: false }`; y NUNCA llama a `eliminarPorIdUsuario` ni `actualizarEmailVerificado` (read-only).
+- `tests/unit/core/usecases/auth/confirmarEmail.usecase.test.ts`: caso nuevo — tras un POST exitoso el token se eliminó (reuso → 400).
+
+---
+
 ## Decisiones
 
 | Decisión | Por qué |
@@ -144,7 +211,9 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 | **`API_URL` configurable con default dev** | Mismo principio que `LOGO_URL`: URL literal, independiente de dónde corra el backend. Default sensato para dev local. |
 | **No se toca el JWT** | El payload actual (`id`, `rol`, `correo`) no cambia; si entrás es porque estás verificado, agregar el flag al token es ruido. |
 | **Admin avala la identidad (trust anchor)** | La verificación de correo es para el self-service (probar propiedad). El admin ya validó la identidad fuera de banda → la cuenta nace verificada (`UsuariosUseCase.crear` pasa `true`; el seed también). Patrón estándar de Okta/GitHub/Salesforce. |
-| **`GET /auth/confirmar` se mantiene en GET** | Los clientes de correo solo siguen links por GET (un link POST requeriría JS o form, que el correo bloquea). El token es la *capability*: aleatorio, un solo uso (se borra al validar), con expiración. El patrón "GET renderiza página + POST consume" (anti pre-fetch de clientes de correo) se difiere hasta tener frontend. |
+| **GET valida, POST consume** | El consumo del token es una mutación (marca verificado y borra el token) → POST, el verbo honesto. Un GET que muta es una trampa para el siguiente dev (el contrato HTTP dice read-only). El GET del link queda read-only: valida y devuelve `{ valido }` — el pre-fetch de clientes de correo ya no puede quemar el token. |
+| **Token de un solo uso** | El POST elimina el token al consumirlo (`eliminarPorIdUsuario`); reutilizarlo responde 400. `crear` es upsert por `id_usuario`: un reenvío invalida el anterior (un token vivo por usuario). |
+| **GET/POST no exponen el token en la respuesta** | Sin frontend el JSON es la única salida visible; reflejar el token lo deja en logs/caché/screenshots. Solo el correo lo contiene (texto visible + link). |
 | **El use case no hashea el token al validar** | `bcrypt.compare` espera el token en claro como primer argumento; hashear antes rompe la comparación (salt aleatorio). El hash solo se genera una vez, al persistir el token. |
 
 ## Riesgos
@@ -155,6 +224,7 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 | **`API_URL` olvidada en `.env` en prod** | Default dev (`localhost:3000`) — en prod debe configurarse explícitamente. Se documenta en `.env.template` como opcional. |
 | **Mock de `@config/env` sin `API_URL`** | El mock de `resendEmail.service.test.ts` se actualiza con `API_URL` de prueba (igual que se hizo con `LOGO_URL`). |
 | **El bug del doble hash era invisible para los tests** | `buscarPorTokenHash` estaba mockeado en los 3 tests que lo tocaban → el roundtrip real de bcrypt nunca se ejercitaba. Se agrega un test de regresión en el repositorio con bcrypt real (solo se mockea `prisma`). |
+| **GET que muta confunde devs** | Mitigado por diseño: el GET es read-only (`buscarTokenValido` sin `deleteMany` ni consumo); el POST es el único consumidor. |
 
 ## Archivos afectados
 
@@ -184,5 +254,15 @@ En el registro se persiste `token_hash = bcrypt.hash(token)` (raw hasheado una v
 | NUEVO `tests/unit/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.test.ts` | Regresión con bcrypt real: token correcto se encuentra, incorrecto devuelve `null` |
 | `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Link de confirmación visible como texto bajo el botón (fallback sin frontend) — hecho en `000abe7` |
 | `tests/unit/adapters/out/email/templateLoader.test.ts` | Test del link visible — hecho en `000abe7` |
+| `src/adapters/in/http/auth/auth.schema.ts` | `confirmarEmailSchema` (token requerido) |
+| NUEVO `src/core/ports/in/auth/IValidarTokenVerificacionUseCase.ts` | Contrato read-only: `validar(token): Promise<{ valido: boolean }>` |
+| NUEVO `src/core/usecases/auth/validarTokenVerificacion.usecase.ts` | Valida sin efectos (no elimina, no actualiza) |
+| `src/core/ports/out/email/ITokenVerificacionRepository.ts` | Método read-only `buscarTokenValido` (sin `deleteMany` ni consumo) |
+| `src/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.ts` | Implementación `buscarTokenValido` read-only |
+| `src/adapters/in/http/auth/auth.controller.ts` | GET read-only + `confirmarEmailPost` |
+| `src/adapters/in/http/auth/auth.routes.ts` | `POST /confirmar` con `validate` |
+| `src/adapters/in/http/auth/auth.docs.ts` | Swagger POST + GET read-only |
+| `tests/unit/adapters/in/http/auth/auth.schema.test.ts` | Casos de `confirmarEmailSchema` |
+| NUEVO `tests/unit/core/usecases/auth/validarTokenVerificacion.usecase.test.ts` | Read-only: valida sin efectos |
 
-Sin cambios: `IAuthRepository`, `IEmailService`, `auth.routes.ts`, `auth.controller.ts`, `templateLoader.ts`, `.env.template` (solo documentado), `src/config/env.ts` (solo Parte 2).
+Sin cambios: `IAuthRepository`, `IEmailService`, `templateLoader.ts`, `.env.template` (solo documentado), `src/config/env.ts` (solo Parte 2).
