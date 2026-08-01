@@ -7,14 +7,19 @@ REST API para un sistema de gestión de citas de barbería. Construida con arqui
 Gestiona el ciclo completo de citas de un negocio de barbería:
 
 - Registro y autenticación de clientes y empleados (JWT)
-- Creación de citas con validación de disponibilidad por empleado
+- Verificación de email al registrarse, con reenvío de correos vía Resend y plantillas MJML/Handlebars
+- Creación de citas con validación de disponibilidad por empleado (anti-solapamiento)
 - Cálculo automático de subtotal, IVA y total según los servicios seleccionados
-- Máquina de estados para el ciclo de vida de una cita (`nueva → pendiente → en_proceso → finalizada / cancelada / reprogramada`)
+- Máquina de estados para el ciclo de vida de una cita (`nueva → pendiente → en_proceso → finalizada / cancelada / reprogramada / no_asistio`)
 - Historial de precios por servicio
 - Control de acceso por rol (admin, empleado, cliente)
+- Endpoints POST idempotentes mediante la cabecera `Idempotency-Key` (evita duplicados por reintentos de red o dobles envíos)
+- Subida de imágenes de servicios a Cloudinary
+- Seguridad en login con rate limiting por IP y por usuario
+- Cambio de contraseña y correo por parte del propio usuario
 - Documentación interactiva con Swagger UI
 
-> El sistema es **single-tenant**: pensado para una sola barbería por instancia. No es una plataforma multi-negocio.
+> El sistema es **monoinstancia (single-tenant)**: pensado para una sola barbería por instancia. No es una plataforma multi-negocio.
 
 ---
 
@@ -22,13 +27,16 @@ Gestiona el ciclo completo de citas de un negocio de barbería:
 
 | Categoría | Tecnología |
 |---|---|
-| Runtime | Node.js |
+| Runtime | Node.js 24 |
 | Framework | Express 5 |
 | Lenguaje | TypeScript |
-| ORM | Prisma |
-| Base de datos | PostgreSQL (multi-schema) |
+| ORM | Prisma 7 |
+| Base de datos | PostgreSQL (multi-schema: citas, seguridad, servicios) |
 | Autenticación | JWT + bcrypt |
 | Validación | Zod |
+| Correos | Resend + MJML + Handlebars |
+| Imágenes | Cloudinary + Multer |
+| Seguridad | express-rate-limit |
 | Testing | Jest + ts-jest |
 | Documentación | Swagger UI |
 
@@ -40,20 +48,28 @@ El proyecto sigue arquitectura hexagonal estricta. El dominio no depende de ning
 
 ```
 src/
+├── app.ts                       ← Punto de entrada
 ├── core/                        ← Dominio puro (sin Express, sin Prisma)
 │   ├── domain/                  ← Entidades y tipos de dominio
 │   ├── ports/
 │   │   ├── in/                  ← Interfaces de casos de uso (lo que entra)
-│   │   └── out/                 ← Interfaces de repositorios (lo que sale)
+│   │   └── out/                 ← Interfaces de repositorios y servicios (lo que sale)
 │   └── usecases/                ← Lógica de negocio
 │
 ├── adapters/
-│   ├── in/http/                 ← Controllers, routes, validadores Zod
-│   └── out/db/                  ← Implementaciones Prisma de los repositorios
+│   ├── in/http/                 ← Controllers, routes, validadores Zod, docs Swagger y middlewares por dominio
+│   └── out/                     ← Adaptadores de salida
+│       ├── db/                  ← Implementaciones Prisma de los repositorios
+│       ├── clock/               ← Reloj del sistema (tiempo real)
+│       ├── cloudinary/          ← Almacenamiento de imágenes
+│       ├── email/               ← Envío de correos (Resend, plantillas MJML)
+│       └── memory/              ← Repositorios en memoria (idempotencia)
 │
-├── config/                      ← Servidor Express, variables de entorno
+├── config/                      ← env.ts, server.ts, swagger.ts
 └── shared/                      ← Errores HTTP, constantes, tipos comunes
 ```
+
+Los middlewares HTTP viven en `adapters/in/http/middlewares/` (alias `@middlewares`). Los tests unitarios espejan la estructura en `tests/unit/`, y el schema con sus migraciones está en `prisma/`.
 
 **Regla central:** los use cases solo conocen interfaces (`IXxxRepository`), nunca implementaciones concretas. Esto hace que la lógica de negocio sea testeable sin base de datos y reemplazable por cualquier otro adaptador.
 
@@ -89,55 +105,106 @@ Las transiciones de estado son explícitas y validadas. No se puede pasar de cua
 
 ```
 nueva → pendiente, cancelada
-pendiente → en_proceso, cancelada, reprogramada
+pendiente → en_proceso, cancelada, reprogramada, no_asistio
 en_proceso → finalizada, cancelada
-finalizada / cancelada / no_asistio → (estados terminales, sin transición)
+reprogramada → pendiente
+no_asistio → cancelada
+finalizada / cancelada → (estados terminales, sin transición)
 ```
 
+Reglas adicionales:
+- Marcar como `no_asistio` solo es posible 15 minutos después de la hora de inicio de la cita.
+- Cancelar una cita siempre exige un motivo.
+
 ### Control de acceso por rol
-- `ADMIN`: acceso total a usuarios, empleados y roles
-- `EMPLEADO`: puede ver y gestionar sus propias citas
-- `CLIENTE`: solo puede ver y crear sus propias citas; no puede ver las de otros
+- `ADMIN`: acceso total a usuarios, empleados, roles (módulo de solo lectura), servicios, categorías, historial de precios y citas.
+- `EMPLEADO`: puede listar citas por rango de fechas y cambiarles el estado.
+- `CLIENTE`: solo puede ver y crear sus propias citas; no puede ver las de otros.
 
 ---
 
 ## Endpoints principales
 
+### Autenticación
+
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/api/v1/auth/login` | Login, devuelve JWT |
-| GET | `/api/v1/admin/usuarios` | Listar usuarios (admin) |
-| POST | `/api/v1/admin/usuarios` | Crear usuario (admin) |
-| GET | `/api/v1/servicios` | Listar servicios públicos |
-| POST | `/api/v1/citas` | Crear cita |
+| POST | `/api/v1/auth/registro` | Registro de cliente (envía verificación por email) |
+| GET | `/api/v1/auth/confirmar` | Confirma el email del usuario |
+| POST | `/api/v1/auth/reenviar-verificacion` | Reenvía el correo de verificación |
+
+### Administración (solo ADMIN)
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/v1/admin/roles` | Listar roles (solo lectura) |
+| GET | `/api/v1/admin/usuarios` | Listar usuarios |
+| POST | `/api/v1/admin/usuarios` | Crear usuario |
+| GET | `/api/v1/admin/empleados` | Listar empleados |
+| POST | `/api/v1/admin/empleados` | Promover un usuario a empleado |
+
+### Categorías y servicios
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/v1/categorias-servicios` | Listar categorías (público) |
+| GET | `/api/v1/servicios/activos` | Listar servicios activos (público) |
+| GET | `/api/v1/servicios/:id` | Obtener servicio por ID |
+| POST | `/api/v1/servicios` | Crear servicio (admin) |
+| POST | `/api/v1/servicios/:id/imagen` | Subir imagen de servicio (admin) |
+
+### Citas
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| POST | `/api/v1/citas` | Crear cita (autenticado) |
+| GET | `/api/v1/citas` | Listar citas por rango de fechas (admin/empleado) |
 | GET | `/api/v1/citas/:id` | Obtener cita por ID |
-| PATCH | `/api/v1/citas/:id/estado` | Cambiar estado de cita |
-| GET | `/api/v1/historial-precios/:id` | Historial de precios de un servicio |
+| GET | `/api/v1/citas/folio/:folio` | Obtener cita por folio |
+| PUT | `/api/v1/citas/:id` | Actualizar cita |
+| PATCH | `/api/v1/citas/:id/estado` | Cambiar estado de cita (admin/empleado) |
+
+### Historial de precios
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/api/v1/historial-precios/:idServicio/actual` | Precio vigente del servicio |
+| GET | `/api/v1/historial-precios/:idServicio` | Historial completo de precios del servicio |
+| POST | `/api/v1/historial-precios` | Registrar un nuevo precio (admin) |
+
+### Credenciales
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| PUT | `/api/v1/credenciales/contrasena` | Cambiar la propia contraseña |
+| PUT | `/api/v1/credenciales/correo` | Cambiar el propio correo |
+| PUT | `/api/v1/credenciales/:id/reset` | Resetear la contraseña de un usuario (admin) |
 
 Documentación completa disponible en `/api/v1/docs` con Swagger UI.
 
 ---
 
-## Technical decisions
+## Decisiones técnicas
 
-### Idempotency on POST endpoints
-All POST endpoints (`/citas`, `/usuarios`, `/empleados`, `/servicios`, `/categorias-servicios`) support idempotent requests via an `Idempotency-Key` header. If the same key is sent twice, the second request returns the cached response without re-executing the operation. This prevents duplicate records caused by network retries or accidental double-submits.
+### Idempotencia en endpoints POST
+Todos los endpoints POST (`/citas`, `/usuarios`, `/empleados`, `/servicios`, `/categorias-servicios`, `/auth/reenviar-verificacion`) soportan peticiones idempotentes mediante la cabecera `Idempotency-Key`. Si se envía la misma clave dos veces, la segunda petición devuelve la respuesta cacheada sin volver a ejecutar la operación. Esto evita registros duplicados causados por reintentos de red o dobles envíos accidentales.
 
-The implementation follows the hexagonal pattern: an `IIdempotencyRepository` port with an in-memory adapter using a `Map` with 24h TTL. Swapping to Redis requires only a new adapter.
+La implementación sigue el patrón hexagonal: un puerto `IIdempotencyRepository` con un adaptador en memoria basado en un `Map` con TTL de 24 horas. Migrar a Redis solo requiere un adaptador nuevo.
 
-### ACID transactions
-Operations that involve multiple writes are wrapped in Prisma `$transaction` to guarantee atomicity:
+### Transacciones ACID
+Las operaciones que involucran múltiples escrituras se envuelven en `$transaction` de Prisma para garantizar atomicidad:
 
-- **User creation**: `usuarios` + `credenciales_usuarios` are created together — if the credential insert fails, the user is rolled back.
-- **Price replacement**: closing the current price (`fecha_fin`) and inserting the new one happen in a single transaction. Before this fix, a failure on the second query would leave the service with no active price, blocking all future appointments that include it.
+- **Creación de usuario**: `usuarios` + `credenciales_usuarios` se crean juntos; si falla la inserción de la credencial, el usuario se revierte.
+- **Reemplazo de precio**: cerrar el precio vigente (`fecha_fin`) e insertar el nuevo ocurren en una sola transacción. Antes de esta corrección, una falla en la segunda consulta dejaba al servicio sin precio activo, bloqueando todas las citas futuras que lo incluyeran.
 
-### N+1 elimination in appointment creation
-The original `crear` method in `CitasUseCase` ran 2 queries per service inside a `for...of` loop — `buscarPorId` + `buscarPrecioActual` — resulting in `2×N` sequential queries.
+### Eliminación del problema N+1 en la creación de citas
+El método `crear` original de `CitasUseCase` ejecutaba 2 consultas por servicio dentro de un bucle `for...of` — `buscarPorId` + `buscarPrecioActual` — resultando en `2×N` consultas secuenciales.
 
-Replaced with two bulk queries in parallel via `Promise.all` (`buscarPorIds` + `buscarPreciosActuales`), followed by in-memory `Map` lookups. Result: always **2 flat queries** regardless of how many services an appointment includes.
+Se reemplazó por dos consultas por lotes en paralelo con `Promise.all` (`buscarPorIds` + `buscarPreciosActuales`), seguidas de búsquedas en memoria con `Map`. Resultado: siempre **2 consultas planas** sin importar cuántos servicios incluya una cita.
 
-### Domain validation
-Password validation lives in the domain layer (`core/domain/usuario/contrasena.ts`), not in the HTTP adapter. Business rules belong to the domain — the controller is only responsible for receiving and responding to HTTP requests.
+### Validación en el dominio
+La validación de la contraseña vive en la capa de dominio (`core/domain/usuario/contrasena.ts`), no en el adaptador HTTP. Las reglas de negocio pertenecen al dominio; el controller solo se encarga de recibir y responder peticiones HTTP.
 
 ---
 
@@ -156,7 +223,7 @@ npm run test:watch      # modo watch
 ## Correr el proyecto
 
 ### Requisitos
-- Node.js 18+
+- Node.js 24 (ver `.nvmrc`)
 - PostgreSQL 14+
 
 ### Instalación
@@ -167,15 +234,9 @@ npm install
 
 ### Variables de entorno
 
-Crear un archivo `.env` en la raíz:
+Copia el archivo `.env.template` a `.env` y completá los valores correspondientes. Las variables requeridas se validan al arrancar el servidor en `src/config/env.ts`.
 
-```env
-DATABASE_URL="postgresql://usuario:password@localhost:5432/fadeforge"
-JWT_SECRET="tu_secreto_aqui"
-JWT_EXPIRES_IN="7d"
-PORT=3000
-NODE_ENV=development
-```
+> `.env` está en `.gitignore` y nunca debe subirse al repositorio.
 
 ### Base de datos
 
@@ -191,3 +252,10 @@ npm run dev
 ```
 
 La API queda disponible en `http://localhost:3000/api/v1`.
+
+### Producción
+
+```bash
+npm run build            # compila TypeScript y las plantillas de email
+npm start                # arranca el servidor compilado
+```
