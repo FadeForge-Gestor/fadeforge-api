@@ -21,10 +21,10 @@ _Con features documentadas con spec:_
 10. **Null Object para el servicio de email** — la app arranca sin `RESEND_API_KEY`: `NullEmailService` no-op inyectado cuando `EMAIL_VERIFICATION_ENABLED=false`; los casos de uso y el controller reciben `IEmailService` siempre, sin `undefined`. [Spec](features/003-null-object-email-service/spec.md)
 11. **Templates HTML para correos (MJML)** — templates Handlebars extraídos a `src/adapters/out/email/templates/`, rediseño Fase 2 con MJML compilado en build-time (`npm run build:emails`), logo desde Cloudinary (`LOGO_URL`) con validación 400 + TTL. [Spec](features/004-email-templates/spec.md)
 12. **Refactor: tipos de puertos a domain** — los 8 puertos con tipos inline migrados a `core/domain/`; los puertos solo importan tipos del dominio, sin cambios de comportamiento. [Spec](refactors/001-hexagonal-tipos-en-dominio/spec.md)
+13. **Verificación de correo — control de acceso** — bloqueo del login sin correo verificado (403 distinguible del 401, condicionado a `EMAIL_VERIFICATION_ENABLED`), link del correo apuntando al backend (`API_URL`), y el admin avala la identidad al crear usuarios (`email_verificado=true`). [Spec](features/005-verificacion-email-login/spec.md)
 
 ## Siguiente 🔜
 
-- **Verificación de correo — control de acceso** — bloquear el login de cuentas sin correo verificado (403 distinguible del 401) + corregir el link del correo para que apunte al backend (`API_URL`). [Spec](features/005-verificacion-email-login/spec.md)
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡
