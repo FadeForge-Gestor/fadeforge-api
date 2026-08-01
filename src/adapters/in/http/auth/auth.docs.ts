@@ -71,10 +71,18 @@
  *                           type: string
  *                         rol:
  *                           type: number
+ *                         emailVerificado:
+ *                           type: boolean
  *       400:
  *         description: Datos inválidos
  *       401:
  *         description: Credenciales inválidas
+ *       403:
+ *         description: Correo electrónico no verificado (solo con `EMAIL_VERIFICATION_ENABLED=true`)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  *       429:
  *         description: |
  *           Rate limit alcanzado o cuenta bloqueada. Tres escenarios posibles:

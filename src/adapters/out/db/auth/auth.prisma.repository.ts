@@ -9,7 +9,10 @@ export class AuthPrismaRepository implements IAuthRepository {
     async buscarPorCorreo(correo: string): Promise<CredencialesAuth | null> {
         const resultado = await prisma.credenciales_usuarios.findUnique({
             where: { correo },
-            include: {
+            select: {
+                correo: true,
+                hash_contrasena: true,
+                email_verificado: true,
                 usuarios: {
                     select: {
                         id: true,
@@ -26,6 +29,7 @@ export class AuthPrismaRepository implements IAuthRepository {
             hashContrasena: resultado.hash_contrasena,
             idUsuario: resultado.usuarios.id,
             claveRol: resultado.usuarios.roles.clave,
+            emailVerificado: resultado.email_verificado,
         };
     }
 }

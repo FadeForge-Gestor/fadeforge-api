@@ -4,10 +4,18 @@ import { LoginUseCase } from '@core/usecases/auth/login.usecase';
 import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
 import { CredencialesAuth } from '@core/domain/auth/auth.entity';
 import { ILoginSecurityRepository } from '@core/ports/out/login-security/ILoginSecurityRepository';
-import { UnauthorizedError, TooManyRequestsError } from '@shared/errors/HttpError';
+import { UnauthorizedError, TooManyRequestsError, ForbiddenError } from '@shared/errors/HttpError';
+import { env } from '@config/env';
 
 jest.mock('bcrypt');
 jest.mock('jsonwebtoken');
+jest.mock('@config/env', () => ({
+    env: {
+        JWT_SECRET: 'test-secret',
+        JWT_EXPIRES_IN: '1h',
+        EMAIL_VERIFICATION_ENABLED: true,
+    },
+}));
 
 const mockedBcrypt = jest.mocked(bcrypt);
 const mockedJwt = jest.mocked(jwt);
@@ -17,6 +25,7 @@ const credencialesFake: CredencialesAuth = {
     hashContrasena: '$2b$10$hasheado',
     idUsuario: 1,
     claveRol: 'cliente',
+    emailVerificado: true,
 };
 
 const mockAuthRepo: jest.Mocked<IAuthRepository> = {
@@ -36,6 +45,7 @@ describe('LoginUseCase', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
+        env.EMAIL_VERIFICATION_ENABLED = true;
         useCase = new LoginUseCase(mockAuthRepo, mockSecurityRepo);
     });
 
@@ -130,6 +140,7 @@ describe('LoginUseCase', () => {
             id: credencialesFake.idUsuario,
             correo: credencialesFake.correo,
             rol: credencialesFake.claveRol,
+            emailVerificado: credencialesFake.emailVerificado,
         });
     });
 
@@ -204,5 +215,45 @@ describe('LoginUseCase', () => {
         ).rejects.toThrow();
 
         expect(mockSecurityRepo.registrarIntentoFallido).toHaveBeenCalledWith('test@test.com');
+    });
+
+    it('debe lanzar ForbiddenError si el correo no está verificado con la feature habilitada', async () => {
+        env.EMAIL_VERIFICATION_ENABLED = true;
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue({ ...credencialesFake, emailVerificado: false });
+        mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
+
+        await expect(
+            useCase.login({ correo: 'test@test.com', contrasena: '123456' })
+        ).rejects.toThrow(ForbiddenError);
+
+        expect(mockedJwt.sign).not.toHaveBeenCalled();
+    });
+
+    it('debe permitir login sin correo verificado con la feature deshabilitada', async () => {
+        env.EMAIL_VERIFICATION_ENABLED = false;
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue({ ...credencialesFake, emailVerificado: false });
+        mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
+        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
+
+        const result = await useCase.login({ correo: 'test@test.com', contrasena: '123456' });
+
+        expect(result.token).toBe('jwt-token-falso');
+        expect(result.usuario.emailVerificado).toBe(false);
+    });
+
+    it('debe retornar emailVerificado true en el usuario cuando el login es exitoso', async () => {
+        mockSecurityRepo.estaBloqueado.mockResolvedValue(false);
+        mockAuthRepo.buscarPorCorreo.mockResolvedValue(credencialesFake);
+        mockedBcrypt.compare = jest.fn().mockResolvedValue(true as never);
+        mockedJwt.sign = jest.fn().mockReturnValue('jwt-token-falso' as never);
+        mockSecurityRepo.resetIntentos.mockResolvedValue(undefined);
+
+        const result = await useCase.login({ correo: 'test@test.com', contrasena: '123456' });
+
+        expect(result.usuario.emailVerificado).toBe(true);
     });
 });

@@ -6,7 +6,7 @@ import { IAuthRepository } from '@core/ports/out/auth/IAuthRepository';
 import { ILoginSecurityRepository } from '@core/ports/out/login-security/ILoginSecurityRepository';
 import { env } from '@config/env';
 
-import { UnauthorizedError, TooManyRequestsError } from '@shared/errors/HttpError';
+import { UnauthorizedError, TooManyRequestsError, ForbiddenError } from '@shared/errors/HttpError';
 
 export class LoginUseCase implements IAuthUseCase {
 
@@ -45,6 +45,10 @@ export class LoginUseCase implements IAuthUseCase {
 
         await this.loginSecurityRepository.resetIntentos(correo);
 
+        if (env.EMAIL_VERIFICATION_ENABLED && !credenciales.emailVerificado) {
+            throw new ForbiddenError('Debes verificar tu correo electrónico antes de iniciar sesión');
+        }
+
         const token = jwt.sign(
             {
                 id: credenciales.idUsuario,
@@ -61,6 +65,7 @@ export class LoginUseCase implements IAuthUseCase {
                 id: credenciales.idUsuario,
                 correo: credenciales.correo,
                 rol: credenciales.claveRol,
+                emailVerificado: credenciales.emailVerificado,
             },
         };
     }
