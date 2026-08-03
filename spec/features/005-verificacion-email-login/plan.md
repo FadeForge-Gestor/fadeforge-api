@@ -148,6 +148,8 @@ export const confirmarEmailSchema = z.object({
 });
 ```
 
+**SOLO token, sin contraseña** (decisión explícita, ver Decisiones): el token prueba la posesión del correo; la contraseña prueba el conocimiento de la cuenta y ya la valida el login. La confirmación valida una sola cosa (SRP).
+
 ### 16. Puerto de entrada
 
 NUEVO `src/core/ports/in/auth/IValidarTokenVerificacionUseCase.ts` — contrato read-only para el GET:
@@ -215,6 +217,7 @@ El GET se mantiene (magic link del correo), ahora read-only.
 | **Token de un solo uso** | El POST elimina el token al consumirlo (`eliminarPorIdUsuario`); reutilizarlo responde 400. `crear` es upsert por `id_usuario`: un reenvío invalida el anterior (un token vivo por usuario). |
 | **GET/POST no exponen el token en la respuesta** | Sin frontend el JSON es la única salida visible; reflejar el token lo deja en logs/caché/screenshots. Solo el correo lo contiene (texto visible + link). |
 | **El use case no hashea el token al validar** | `bcrypt.compare` espera el token en claro como primer argumento; hashear antes rompe la comparación (salt aleatorio). El hash solo se genera una vez, al persistir el token. |
+| **La confirmación NO pide contraseña** | El token prueba **posesión** del correo (single-use, expira, hasheado, llega al email); el login prueba **conocimiento** de la cuenta. Pedir la contraseña en la confirmación es redundante (se valida dos veces) y el estándar de la industria (Stripe, GitHub, Google) no lo hace. Beneficio de seguridad marginal: si un atacante ya lee tu correo, puede resetear la contraseña igual — la confirmación no es el eslabón débil. Costo real: fricción (tipear el password en un momento donde los password managers no autocompletan) y una superficie nueva de validación de contraseñas. |
 
 ## Riesgos
 

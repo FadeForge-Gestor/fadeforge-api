@@ -55,6 +55,7 @@ En el registro se guarda `token_hash = bcrypt.hash(token)` (el token en claro se
 - [ ] `API_URL` es una variable de entorno configurable, con default sensato para desarrollo (`http://localhost:PORT`).
 - [ ] El mock de `@config/env` en los tests incluye `API_URL` y `EMAIL_VERIFICATION_ENABLED`.
 - [ ] `POST /auth/confirmar` con `{ token }` en el body consume el token, marca `email_verificado=true`, lo elimina y responde 200 JSON (test de regresión con bcrypt REAL, sin mockear bcrypt).
+- [ ] La confirmación **solo requiere el token, nunca la contraseña**: probar posesión del correo es responsabilidad del token (factor de posesión); probar conocimiento de la cuenta es responsabilidad exclusiva del `POST /auth/login`. Pedir la contraseña en la confirmación sería redundante (se valida dos veces) y rompe el flujo estándar de verificación (Stripe/GitHub/Google no la piden al confirmar).
 - [ ] `GET /auth/confirmar?token=...` valida sin mutar: 200 `{ valido: true }` con token válido y no expirado, 400 si es inválido. **No escribe en BD** (un GET no debe tener efectos).
 - [ ] El token es **de un solo uso**: `POST /auth/confirmar` lo elimina al consumirlo; reutilizar el mismo token responde 400.
 - [ ] Las respuestas de `GET`/`POST /auth/confirmar` **no incluyen el token** en el JSON; solo el email lo contiene.

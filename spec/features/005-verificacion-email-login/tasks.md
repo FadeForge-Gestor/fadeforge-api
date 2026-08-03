@@ -111,6 +111,7 @@ _Checklist accionable derivada del `plan.md`._
 
 - [ ] `src/adapters/in/http/auth/auth.schema.ts`:
   - [ ] Nuevo `confirmarEmailSchema = z.object({ token: z.string().min(1, 'El token es requerido') })`.
+  - [ ] SOLO token, sin contraseña — la contraseña la valida el login, no la confirmación (decisión en `plan.md`).
 
 ### Puerto de entrada 🔲
 
@@ -180,6 +181,7 @@ _Checklist accionable derivada del `plan.md`._
 - [ ] Ejecutar `npm test` y verificar que todos los tests pasan.
 - [ ] Ejecutar `npm run build` y verificar que compila sin errores.
 - [ ] Probar manualmente (feature ON): registrar cliente → intentar login → 403 con mensaje → `POST /auth/confirmar` con `{ token }` del correo → login exitoso con `emailVerificado: true`. Crear usuario por admin (`POST /usuarios`) → login directo sin confirmar; admin del seed → login directo.
+- [ ] Verificar que `POST /auth/confirmar` solo pide token: enviar el body con una `contrasena` extra no cambia el comportamiento y la confirmación no depende de ella (la contraseña es responsabilidad exclusiva del login).
 - [ ] Verificar que `GET /auth/confirmar?token=...` valida SIN mutar: responde `{ valido: true }` y `email_verificado` sigue `false` en BD (read-only).
 - [ ] Verificar que reutilizar el mismo token tras un POST exitoso responde 400 (un solo uso).
 - [ ] Verificar que un token incorrecto responde 400 y no marca `email_verificado` (regresión del doble hash).
