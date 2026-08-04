@@ -59,6 +59,7 @@ const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
 
 const mockEmailService: jest.Mocked<IEmailService> = {
     enviarVerificacion: jest.fn(),
+    enviarBienvenida: jest.fn(),
 };
 
 describe('ReenviarVerificacionUseCase', () => {

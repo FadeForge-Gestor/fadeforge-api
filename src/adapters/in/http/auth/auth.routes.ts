@@ -40,7 +40,12 @@ const registroUseCase = new RegistroClienteUseCase(
     emailService,
     tokenVerificacionRepo,
 );
-const confirmarEmailUseCase = new ConfirmarEmailUseCase(tokenVerificacionRepo, credencialesRepo);
+const confirmarEmailUseCase = new ConfirmarEmailUseCase(
+    tokenVerificacionRepo,
+    credencialesRepo,
+    usuariosRepo,
+    emailService,
+);
 const validarTokenVerificacionUseCase = new ValidarTokenVerificacionUseCase(tokenVerificacionRepo);
 const reenviarVerificacionUseCase = new ReenviarVerificacionUseCase(
     tokenVerificacionRepo,

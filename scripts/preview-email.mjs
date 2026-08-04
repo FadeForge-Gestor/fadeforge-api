@@ -33,11 +33,16 @@ if (!fs.existsSync(source)) {
 }
 
 const html = fs.readFileSync(source, "utf8");
-const rendered = Handlebars.compile(html)({
+const renderData = {
   logoUrl,
   horasExpiracion: 24,
+  nombre: "Vicente",
   link: "http://localhost:3000/api/v1/auth/confirmar?token=e7a2c4f8-9b1d-4e3a-8c6f-0d5b2a1e9c7d",
-});
+};
+if (TEMPLATE_NAME === "bienvenida") {
+  renderData.avisoFooter = "Gracias por unirte a FadeForge.";
+}
+const rendered = Handlebars.compile(html)(renderData);
 
 const outDir = path.join(cwd, "dist", "preview");
 fs.mkdirSync(outDir, { recursive: true });

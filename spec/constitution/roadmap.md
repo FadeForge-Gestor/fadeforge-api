@@ -22,6 +22,7 @@ _Con features documentadas con spec:_
 11. **Templates HTML para correos (MJML)** — templates Handlebars extraídos a `src/adapters/out/email/templates/`, rediseño Fase 2 con MJML compilado en build-time (`npm run build:emails`), logo desde Cloudinary (`LOGO_URL`) con validación 400 + TTL. [Spec](features/004-email-templates/spec.md)
 12. **Refactor: tipos de puertos a domain** — los 8 puertos con tipos inline migrados a `core/domain/`; los puertos solo importan tipos del dominio, sin cambios de comportamiento. [Spec](refactors/001-hexagonal-tipos-en-dominio/spec.md)
 13. **Verificación de correo — control de acceso** — bloqueo del login sin correo verificado (403 distinguible del 401, condicionado a `EMAIL_VERIFICATION_ENABLED`), link del correo apuntando al backend (`API_URL`), y el admin avala la identidad al crear usuarios (`email_verificado=true`). Semántica HTTP correcta: `POST /auth/confirmar` consume el token (de un solo uso, sin contraseña) y `GET /auth/confirmar` valida sin mutar. Los rechazos de Resend ya no son silenciosos (el SDK devuelve `{ data, error }` sin lanzar) y los fallos de envío se loguean sin romper el flujo. Template del correo con logo (`LOGO_URL` recortado on-the-fly en Cloudinary) y sin el link directo del token en texto visible. [Spec](features/005-verificacion-email-login/spec.md)
+14. **Correo de bienvenida tras la verificación** — al consumir el token en `POST /auth/confirmar`, se envía por primera vez un correo de bienvenida personalizado ("Hola {nombre}, tu cuenta está activa"). El envío es un side-effect: un fallo no revierte la verificación ni cambia el 200 (se loguea). `IEmailService` gana `enviarBienvenida(correo, nombre)`; `ConfirmarEmailUseCase` depende de `IEmailService` e `IUsuarioRepository` (puertos, DIP); template MJML nuevo reusando header/footer. [Spec](features/006-correo-bienvenida/spec.md)
 
 ## Siguiente 🔜
 
@@ -29,6 +30,7 @@ _Con features documentadas con spec:_
 
 ## Backlog / ideas 💡
 
+- **Outbox pattern para correos (garantía de entrega)** — sistema de colas sin infraestructura nueva: tabla `correos_pendientes` en PostgreSQL + worker con reintentos y backoff para envíos de email fallidos. Hoy los correos (verificación y bienvenida) son best-effort: si el envío falla, se loguea y se pierde (decisión de la feature 005/006). Un outbox lo convierte en at-least-once, sobrevive reinicios y sirve para los correos transaccionales futuros (recordatorio de turno, factura, etc.). Requiere: tabla nueva, worker, política de reintentos/dead-letter y tests.
 - **Deuda técnica: renombrar `IEmailService` → `IEmailPort`** — los puertos de salida que representan servicios externos (no persistencia) conviven con dos nomenclaturas: `IStoragePort`/`IClockPort` usan sufijo `Port`, `IEmailService` usa `Service`. Unificar a `IEmailPort` para consistencia. Refactor cosmético: toca puerto, `ResendEmailService`, `NullEmailService`, use cases y tests. NO es un `Repository` (no persiste datos) — la excepción al sufijo `Repository` es correcta.
 - **CD (Continuous Deployment)** — deploy automático al mergear a `main`. Pendiente definir plataforma de deploy (Railway, Render, Fly.io, VPS, etc.).
 
