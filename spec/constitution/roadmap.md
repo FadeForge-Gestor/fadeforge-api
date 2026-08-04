@@ -25,10 +25,13 @@ _Con features documentadas con spec:_
 
 ## Siguiente 🔜
 
+14. **Correo de bienvenida tras la verificación** — al consumir el token en `POST /auth/confirmar`, se envía por primera vez un correo de bienvenida personalizado ("Hola {nombre}, tu cuenta está activa"). El envío es un side-effect: un fallo no revierte la verificación ni cambia el 200 (se loguea). `IEmailService` gana `enviarBienvenida(correo, nombre)`; `ConfirmarEmailUseCase` depende de `IEmailService` e `IUsuarioRepository` (puertos, DIP); template MJML nuevo reusando header/footer. [Spec](features/006-correo-bienvenida/spec.md)
+
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡
 
+- **Outbox pattern para correos (garantía de entrega)** — sistema de colas sin infraestructura nueva: tabla `correos_pendientes` en PostgreSQL + worker con reintentos y backoff para envíos de email fallidos. Hoy los correos (verificación y bienvenida) son best-effort: si el envío falla, se loguea y se pierde (decisión de la feature 005/006). Un outbox lo convierte en at-least-once, sobrevive reinicios y sirve para los correos transaccionales futuros (recordatorio de turno, factura, etc.). Requiere: tabla nueva, worker, política de reintentos/dead-letter y tests.
 - **Deuda técnica: renombrar `IEmailService` → `IEmailPort`** — los puertos de salida que representan servicios externos (no persistencia) conviven con dos nomenclaturas: `IStoragePort`/`IClockPort` usan sufijo `Port`, `IEmailService` usa `Service`. Unificar a `IEmailPort` para consistencia. Refactor cosmético: toca puerto, `ResendEmailService`, `NullEmailService`, use cases y tests. NO es un `Repository` (no persiste datos) — la excepción al sufijo `Repository` es correcta.
 - **CD (Continuous Deployment)** — deploy automático al mergear a `main`. Pendiente definir plataforma de deploy (Railway, Render, Fly.io, VPS, etc.).
 
