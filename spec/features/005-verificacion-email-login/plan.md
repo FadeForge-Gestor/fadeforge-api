@@ -203,6 +203,49 @@ El GET se mantiene (magic link del correo), ahora read-only.
 
 ---
 
+## Parte 6 — Rechazos de Resend visibles (Opción C)
+
+El SDK de Resend no lanza ante un envío fallido: `fetchRequest` devuelve `{ data, error }` (node_modules/resend/dist/index.cjs). `ResendEmailService` chequeaba el resultado pero descartaba el error, y los use cases tenían `catch {}` — el usuario no recibía el correo y la API igual respondía éxito. Detectado al probar la Parte 2: los tokens se guardaban en BD pero el correo no llegaba, y ningún log lo explicaba.
+
+### 23. Servicio
+
+`src/adapters/out/email/resendEmail.service.ts` — si `respuesta.error` viene poblado:
+
+```typescript
+if (respuesta.error) {
+    throw new Error(`Resend rechazó el envío a ${destinatario}: ${respuesta.error.message}`);
+}
+```
+
+### 24. Use cases
+
+`registroCliente.usecase.ts` y `reenviarVerificacion.usecase.ts` — el `catch {}` pasa a `console.error('Error al enviar el correo de verificación a ...:', error)`. El flujo sigue teniendo éxito: el correo es un side-effect, la transacción de registro no depende de él (feature 003: `NullEmailService` cuando la verificación está OFF).
+
+### 25. Tests
+
+- `resendEmail.service.test.ts`: el servicio lanza cuando `respuesta.error` viene poblado (antes solo pasaba por el `if (respuesta.data)`).
+- `registroCliente.usecase.test.ts` / `reenviarVerificacion.usecase.test.ts`: el fallo del envío se loguea y no revienta el use case.
+
+---
+
+## Parte 7 — Template con logo y sin token expuesto
+
+El fallback de la Parte 4 (link con el token como texto visible) era una muleta para probar el endpoint sin frontend; ya cumplió su función. El token debe viajar solo en el `href` del botón, y el header debe mostrar la marca.
+
+### 26. Header
+
+`partials/header.mjml` — el texto "FadeForge" se reemplaza por el logo: `<mj-image src="{{logoUrl}}" alt="FadeForge" width="140px">` sobre la barra negra. El asset original (677x369) tiene el logo (273x262) centrado con mucho margen transparente, así que `LOGO_URL` se recorta on-the-fly en Cloudinary: `upload/c_crop,x_202,y_54,w_273,h_262/...` (no toca el asset).
+
+### 27. Template
+
+`verificacion.mjml` — se elimina "¿No funciona el botón? Copia y pega este enlace" + el link en claro. La nota pasa a "El Token es de un solo uso y expira en {{horasExpiracion}} horas." y se mueve del footer al card, junto al CTA.
+
+### 28. Preview
+
+`scripts/preview-email.mjs` — soporta `EMAIL_LOGO_URL` como override (el preview usa la versión recortada sin tocar el `.env`) e inyecta un link de muestra para que el botón se vea real. `npm run build:emails` regenera el HTML; `npm run preview:email` lo abre en el navegador.
+
+---
+
 ## Decisiones
 
 | Decisión | Por qué |
@@ -218,6 +261,10 @@ El GET se mantiene (magic link del correo), ahora read-only.
 | **GET/POST no exponen el token en la respuesta** | Sin frontend el JSON es la única salida visible; reflejar el token lo deja en logs/caché/screenshots. Solo el correo lo contiene (texto visible + link). |
 | **El use case no hashea el token al validar** | `bcrypt.compare` espera el token en claro como primer argumento; hashear antes rompe la comparación (salt aleatorio). El hash solo se genera una vez, al persistir el token. |
 | **La confirmación NO pide contraseña** | El token prueba **posesión** del correo (single-use, expira, hasheado, llega al email); el login prueba **conocimiento** de la cuenta. Pedir la contraseña en la confirmación es redundante (se valida dos veces) y el estándar de la industria (Stripe, GitHub, Google) no lo hace. Beneficio de seguridad marginal: si un atacante ya lee tu correo, puede resetear la contraseña igual — la confirmación no es el eslabón débil. Costo real: fricción (tipear el password en un momento donde los password managers no autocompletan) y una superficie nueva de validación de contraseñas. |
+| **Los rechazos de Resend lanzan `Error`** | El SDK no lanza (devuelve `{ data, error }`); sin chequeo explícito un fallo queda invisible y la API miente ("correo enviado"). Lanzar en el servicio + loguear en los use cases (sin romper el flujo) hace el fallo auditable. |
+| **El correo es side-effect, no requisito** | El registro no puede depender del envío (feature 003: sin `RESEND_API_KEY` la app arranca con `NullEmailService`). El fallo se loguea; la transacción sigue siendo exitosa. |
+| **Token solo en el `href`, nunca como texto** | Exponer el token como texto visible lo deja en screenshots/logs/caché; el botón cumple el flujo sin revelarlo. El fallback de la Parte 4 se elimina al estabilizarse el flujo (commit `3ce59e3`). |
+| **Logo recortado on-the-fly en Cloudinary** | El asset original tiene margen transparente (logo 273x262 en canvas 677x369). `c_crop,x_202,y_54,w_273,h_262` en la URL recorta sin tocar el asset; `LOGO_URL` sigue siendo una sola variable de entorno. |
 
 ## Riesgos
 
@@ -228,6 +275,7 @@ El GET se mantiene (magic link del correo), ahora read-only.
 | **Mock de `@config/env` sin `API_URL`** | El mock de `resendEmail.service.test.ts` se actualiza con `API_URL` de prueba (igual que se hizo con `LOGO_URL`). |
 | **El bug del doble hash era invisible para los tests** | `buscarPorTokenHash` estaba mockeado en los 3 tests que lo tocaban → el roundtrip real de bcrypt nunca se ejercitaba. Se agrega un test de regresión en el repositorio con bcrypt real (solo se mockea `prisma`). |
 | **GET que muta confunde devs** | Mitigado por diseño: el GET es read-only (`buscarTokenValido` sin `deleteMany` ni consumo); el POST es el único consumidor. |
+| **`EMAIL_FROM` ausente → sandbox de Resend** | Sin `EMAIL_FROM`, Resend usa `onboarding@resend.dev` (sandbox) y Gmail filtra el correo a Spam — el flujo 005 funciona, el correo "no llega". Mitigación pendiente: setear `EMAIL_FROM` con un dominio verificado en Resend (`.env.template` bloqueado por permisos; el usuario debe agregarlo manual). |
 
 ## Archivos afectados
 
@@ -267,5 +315,16 @@ El GET se mantiene (magic link del correo), ahora read-only.
 | `src/adapters/in/http/auth/auth.docs.ts` | Swagger POST + GET read-only |
 | `tests/unit/adapters/in/http/auth/auth.schema.test.ts` | Casos de `confirmarEmailSchema` |
 | NUEVO `tests/unit/core/usecases/auth/validarTokenVerificacion.usecase.test.ts` | Read-only: valida sin efectos |
+| `src/adapters/out/email/resendEmail.service.ts` | Lanza si `respuesta.error` (Parte 6) |
+| `src/core/usecases/auth/registroCliente.usecase.ts` | `console.error` en el catch de envío (Parte 6) |
+| `src/core/usecases/auth/reenviarVerificacion.usecase.ts` | `console.error` en el catch de envío (Parte 6) |
+| `tests/unit/adapters/out/email/resendEmail.service.test.ts` | + caso: rechazo de Resend lanza |
+| `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts` | + caso: fallo de envío se loguea |
+| `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts` | + caso: fallo de envío se loguea |
+| `src/adapters/out/email/templates/partials/header.mjml` | Logo `{{logoUrl}}` en vez del texto "FadeForge" (Parte 7) |
+| `src/adapters/out/email/templates/partials/footer.mjml` | Expiración movida al card (Parte 7) |
+| `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Sin link visible; nota "El Token es de un solo uso..." (Parte 7) |
+| `scripts/preview-email.mjs` | Override `EMAIL_LOGO_URL` + link de muestra (Parte 7) |
+| `.env` (no se commitea) | `LOGO_URL` con `c_crop,x_202,y_54,w_273,h_262` (Parte 7) |
 
 Sin cambios: `IAuthRepository`, `IEmailService`, `templateLoader.ts`, `.env.template` (solo documentado), `src/config/env.ts` (solo Parte 2).

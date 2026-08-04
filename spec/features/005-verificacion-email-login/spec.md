@@ -1,10 +1,10 @@
 # 005 · Verificación de correo — control de acceso al login + link de confirmación
 
-**Estado:** en implementación
+**Estado:** implementado (rama `fix/verificacion-email-login`, pendiente PR a `main`)
 
 ## Qué hace
 
-Cinco cambios sobre el flujo de verificación de correo electrónico (feature 002):
+Siete cambios sobre el flujo de verificación de correo electrónico (feature 002):
 
 1. **Bloquea el login de cuentas sin correo verificado.** Cuando la verificación está habilitada (`EMAIL_VERIFICATION_ENABLED=true`), un usuario con `email_verificado=false` no puede iniciar sesión: recibe un `403 Forbidden` con mensaje claro. Cuando la verificación está deshabilitada, el login se comporta como hoy (sin bloqueo).
 
@@ -15,6 +15,10 @@ Cinco cambios sobre el flujo de verificación de correo electrónico (feature 00
 4. **Corrige la validación del token de confirmación.** El endpoint `GET /api/v1/auth/confirmar` siempre respondía "El token de verificación es inválido o expiró", aun con un token recién enviado, por un doble hash de bcrypt: el use case hasheaba el token en claro (salt nuevo) y el repositorio comparaba ese hash contra el hash almacenado. `bcrypt.compare(plano, hash)` nunca puede coincidir recibiendo un hash como "plano". El fix: el use case pasa el token en claro al repositorio, que lo compara contra el hash guardado en BD.
 
 5. **Semántica HTTP correcta en la confirmación.** `POST /auth/confirmar` con el token en el body (`{ token }`) es el **consumidor canónico**: valida, marca `email_verificado=true` y elimina el token (de un solo uso). `GET /auth/confirmar?token=...` (el link del correo) pasa a ser de **solo validación**: responde si el token existe y no expiró, sin escribir en BD. Un GET nunca debe mutar (contrato HTTP): el método es parte del diseño, no un detalle — un GET que escribe confunde a quien consume la API.
+
+6. **Los rechazos de Resend son visibles.** El SDK de Resend no lanza excepción cuando un envío falla: devuelve `{ data, error }`. El servicio chequeaba el resultado pero descartaba el error, y los use cases tenían `catch {}` — un rechazo (dominio no verificado, quota, API key inválida) dejaba al usuario sin correo con la API respondiendo "correo enviado". Ahora `ResendEmailService` lanza `Error` con el mensaje del SDK y los use cases loguean el fallo (`console.error`) sin romper el flujo: el correo es un side-effect, no un requisito de la transacción.
+
+7. **Template del correo con logo y sin token expuesto.** El header muestra el logo (dorado sobre la barra negra, desde `LOGO_URL`) y se eliminó el texto "Copia y pega este enlace" que exponía el link con el token en claro. El token viaja solo en el `href` del botón; la nota bajo el CTA aclara que es de un solo uso y expira en N horas. `LOGO_URL` apunta a una versión recortada on-the-fly de Cloudinary (`c_crop,x_202,y_54,w_273,h_262`): el asset original (677x369) tiene el logo (273x262) centrado con mucho margen transparente.
 
 ## Por qué
 
@@ -60,6 +64,10 @@ En el registro se guarda `token_hash = bcrypt.hash(token)` (el token en claro se
 - [ ] El token es **de un solo uso**: `POST /auth/confirmar` lo elimina al consumirlo; reutilizar el mismo token responde 400.
 - [ ] Las respuestas de `GET`/`POST /auth/confirmar` **no incluyen el token** en el JSON; solo el email lo contiene.
 - [ ] Un token incorrecto no verifica la cuenta y responde 400 (no revela si el correo existe).
+- [ ] `ResendEmailService` lanza `Error` con el mensaje del SDK cuando `respuesta.error` viene poblado (los rechazos no son silenciosos).
+- [ ] Un fallo de envío de correo no rompe el registro ni el reenvío: los use cases loguean (`console.error`) y responden éxito igual.
+- [ ] El template de verificación no muestra el token ni el link en texto visible; el token viaja solo en el `href` del botón.
+- [ ] El header del template renderiza el logo desde `LOGO_URL` (versión recortada on-the-fly de Cloudinary).
 - [ ] Todos los tests pasan (`npm test`) y `npm run build` compila.
 - [ ] Documentación Swagger de `/auth/login` actualizada con el `403`.
 
@@ -67,5 +75,5 @@ En el registro se guarda `token_hash = bcrypt.hash(token)` (el token en claro se
 
 - Página/HTML de éxito tras confirmar el correo servida por el GET (el patrón completo "GET renderiza la página + POST consume") — queda para cuando exista el frontend. Hoy el GET valida y devuelve JSON.
 - `GET /auth/me` (perfil del usuario logueado) — gap de frontend, feature aparte.
-- Logo en el template del correo — pendiente de la feature 004 (el `{{logoUrl}}` se pasa pero ningún template lo renderiza).
 - Limpieza periódica de cuentas sin verificar.
+- `EMAIL_FROM` con un dominio verificado en Resend — pendiente de configuración: sin él, Resend usa el sandbox (`onboarding@resend.dev`) y Gmail filtra el correo a Spam. Afecta a todos los templates, no solo al de verificación.
