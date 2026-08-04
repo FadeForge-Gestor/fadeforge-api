@@ -1,4 +1,4 @@
-import { loginSchema, registroClienteSchema } from '@adapters/in/http/auth/auth.schema';
+import { loginSchema, registroClienteSchema, confirmarEmailSchema } from '@adapters/in/http/auth/auth.schema';
 
 const clienteValido = {
     nombre: 'Juan',
@@ -85,5 +85,28 @@ describe('registroClienteSchema', () => {
     it('debe fallar si el teléfono tiene menos de 10 caracteres', () => {
         const result = registroClienteSchema.safeParse({ ...clienteValido, telefono: '55123' });
         expect(result.success).toBe(false);
+    });
+});
+
+describe('confirmarEmailSchema', () => {
+
+    it('debe pasar con un token no vacío', () => {
+        const result = confirmarEmailSchema.safeParse({ token: 'token-123' });
+        expect(result.success).toBe(true);
+    });
+
+    it('debe fallar con token vacío', () => {
+        const result = confirmarEmailSchema.safeParse({ token: '' });
+        expect(result.success).toBe(false);
+    });
+
+    it('debe fallar si falta el token', () => {
+        const result = confirmarEmailSchema.safeParse({});
+        expect(result.success).toBe(false);
+    });
+
+    it('ignora campos extra (como una contrasena): la confirmación solo usa el token', () => {
+        const result = confirmarEmailSchema.safeParse({ token: 'token-123', contrasena: 'MiClave123!' });
+        expect(result.success).toBe(true);
     });
 });

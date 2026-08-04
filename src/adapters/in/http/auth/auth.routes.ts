@@ -4,6 +4,7 @@ import { LoginUseCase } from '@core/usecases/auth/login.usecase';
 import { RegistroClienteUseCase } from '@core/usecases/auth/registroCliente.usecase';
 import { ConfirmarEmailUseCase } from '@core/usecases/auth/confirmarEmail.usecase';
 import { ReenviarVerificacionUseCase } from '@core/usecases/auth/reenviarVerificacion.usecase';
+import { ValidarTokenVerificacionUseCase } from '@core/usecases/auth/validarTokenVerificacion.usecase';
 import { AuthPrismaRepository } from '@adapters/out/db/auth/auth.prisma.repository';
 import { LoginSecurityPrismaRepository } from '@adapters/out/db/login-security/loginSecurity.prisma.repository';
 import { UsuariosPrismaRepository } from '@adapters/out/db/usuarios/usuarios.prisma.repository';
@@ -16,7 +17,7 @@ import { IdempotencyMemoryRepository } from '@adapters/out/memory/idempotency/id
 import { idempotency } from '@middlewares/idempotency.middleware';
 import { validate } from '@middlewares/validate.middleware';
 import { authRateLimit, userLoginRateLimit } from '@middlewares/rate-limit.middleware';
-import { loginSchema, registroClienteSchema, reenviarVerificacionSchema } from './auth.schema';
+import { loginSchema, registroClienteSchema, reenviarVerificacionSchema, confirmarEmailSchema } from './auth.schema';
 import { env } from '@config/env';
 
 const router = Router();
@@ -40,6 +41,7 @@ const registroUseCase = new RegistroClienteUseCase(
     tokenVerificacionRepo,
 );
 const confirmarEmailUseCase = new ConfirmarEmailUseCase(tokenVerificacionRepo, credencialesRepo);
+const validarTokenVerificacionUseCase = new ValidarTokenVerificacionUseCase(tokenVerificacionRepo);
 const reenviarVerificacionUseCase = new ReenviarVerificacionUseCase(
     tokenVerificacionRepo,
     emailService,
@@ -52,12 +54,14 @@ const controller = new AuthController(
     registroUseCase,
     confirmarEmailUseCase,
     reenviarVerificacionUseCase,
+    validarTokenVerificacionUseCase,
 );
 
 router.post('/login', authRateLimit, userLoginRateLimit, validate(loginSchema), (req, res, next) => controller.login(req, res, next));
 router.post('/registro', validate(registroClienteSchema), (req, res, next) => controller.registroCliente(req, res, next));
 
 router.get('/confirmar', (req, res, next) => controller.confirmarEmail(req, res, next));
+router.post('/confirmar', validate(confirmarEmailSchema), (req, res, next) => controller.confirmarEmailPost(req, res, next));
 router.post('/reenviar-verificacion', idempotency(idempotencyRepo), validate(reenviarVerificacionSchema), (req, res, next) => controller.reenviarVerificacion(req, res, next));
 
 export default router;

@@ -78,4 +78,48 @@ describe('TokenVerificacionPrismaRepository', () => {
             });
         });
     });
+
+    describe('buscarTokenValido', () => {
+
+        it('debe encontrar el registro con el token correcto (bcrypt REAL) sin mutar (read-only)', async () => {
+            const tokenEnClaro = 'token-plano-123';
+            const tokenHash = await bcrypt.hash(tokenEnClaro, 10);
+
+            const expiraEn = new Date(Date.now() + 60 * 60 * 1000);
+            mockPrisma.tokens_verificacion.findMany.mockResolvedValue([
+                {
+                    id: 1,
+                    id_usuario: 42,
+                    token_hash: tokenHash,
+                    expira_en: expiraEn,
+                    creado_en: new Date(),
+                },
+            ]);
+
+            const resultado = await repository.buscarTokenValido(tokenEnClaro);
+
+            expect(resultado).toEqual({ idUsuario: 42, expiraEn });
+            // Read-only: un GET no debe limpiar ni consumir nada.
+            expect(mockPrisma.tokens_verificacion.deleteMany).not.toHaveBeenCalled();
+        });
+
+        it('debe devolver null con un token incorrecto sin eliminar nada', async () => {
+            const tokenHash = await bcrypt.hash('token-correcto', 10);
+
+            mockPrisma.tokens_verificacion.findMany.mockResolvedValue([
+                {
+                    id: 1,
+                    id_usuario: 42,
+                    token_hash: tokenHash,
+                    expira_en: new Date(Date.now() + 60 * 60 * 1000),
+                    creado_en: new Date(),
+                },
+            ]);
+
+            const resultado = await repository.buscarTokenValido('token-incorrecto');
+
+            expect(resultado).toBeNull();
+            expect(mockPrisma.tokens_verificacion.deleteMany).not.toHaveBeenCalled();
+        });
+    });
 });

@@ -52,6 +52,7 @@ const mockCredencialRepo: jest.Mocked<ICredencialRepository> = {
 const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
     crear: jest.fn(),
     buscarPorToken: jest.fn(),
+    buscarTokenValido: jest.fn(),
     eliminarPorIdUsuario: jest.fn(),
     contarEnviosHoy: jest.fn(),
 };

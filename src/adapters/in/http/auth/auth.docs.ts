@@ -172,7 +172,7 @@
  *
  * /auth/confirmar:
  *   get:
- *     summary: Confirmar correo electrónico
+ *     summary: Validar token de verificación de correo (read-only)
  *     tags: [Auth]
  *     parameters:
  *       - in: query
@@ -182,10 +182,64 @@
  *           type: string
  *         description: Token de verificación recibido por correo
  *     responses:
- *       302:
- *         description: Redirige al frontend tras confirmar
+ *       200:
+ *         description: El token es válido y no expiró (no consume el token — un GET no muta)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     valido:
+ *                       type: boolean
+ *                       example: true
+ *                     mensaje:
+ *                       type: string
+ *                       example: "El token es válido"
  *       400:
- *         description: Token inválido o expirado
+ *         description: Token inválido, expirado o faltante (no escribe en BD)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *   post:
+ *     summary: Confirmar correo electrónico (consume el token)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token]
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Token de verificación recibido por correo (de un solo uso)
+ *     responses:
+ *       200:
+ *         description: Correo verificado. El token queda consumido (un solo uso) y no se devuelve en la respuesta
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 ok:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     mensaje:
+ *                       type: string
+ *                       example: "Correo electrónico verificado. Ya podés iniciar sesión."
+ *       400:
+ *         description: Token inválido, expirado o ya utilizado
  *         content:
  *           application/json:
  *             schema:

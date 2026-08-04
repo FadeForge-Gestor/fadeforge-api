@@ -6,6 +6,7 @@ import { BadRequestError } from '@shared/errors/HttpError';
 const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
     crear: jest.fn(),
     buscarPorToken: jest.fn(),
+    buscarTokenValido: jest.fn(),
     eliminarPorIdUsuario: jest.fn(),
     contarEnviosHoy: jest.fn(),
 };
@@ -59,5 +60,21 @@ describe('ConfirmarEmailUseCase', () => {
 
         await expect(useCase.confirmar('token-expirado')).rejects.toThrow(BadRequestError);
         expect(mockTokenVerificacionRepo.eliminarPorIdUsuario).toHaveBeenCalledWith(1);
+    });
+
+    it('debe lanzar BadRequestError al reutilizar un token ya consumido (un solo uso)', async () => {
+        const futuro = new Date();
+        futuro.setHours(futuro.getHours() + 1);
+
+        // Primer POST exitoso: el token existe y se consume (se elimina en BD).
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValueOnce({
+            idUsuario: 1,
+            expiraEn: futuro,
+        });
+        // Reintento con el mismo token: ya no existe en BD → inválido.
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValueOnce(null);
+
+        await useCase.confirmar('token-plano-123');
+        await expect(useCase.confirmar('token-plano-123')).rejects.toThrow(BadRequestError);
     });
 });

@@ -30,3 +30,12 @@ export const reenviarVerificacionSchema = z.object({
 });
 
 export type ReenviarVerificacionDto = z.infer<typeof reenviarVerificacionSchema>;
+
+// Esquema de validación para confirmar el correo (consumo del token).
+// SOLO token, sin contraseña: el token prueba la posesión del correo;
+// la contraseña la valida el login, no la confirmación.
+export const confirmarEmailSchema = z.object({
+    token: z.string().min(1, 'El token es requerido'),
+});
+
+export type ConfirmarEmailDto = z.infer<typeof confirmarEmailSchema>;

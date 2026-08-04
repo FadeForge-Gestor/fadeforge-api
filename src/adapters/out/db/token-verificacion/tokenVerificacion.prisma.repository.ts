@@ -35,6 +35,19 @@ export class TokenVerificacionPrismaRepository implements ITokenVerificacionRepo
         return null;
     }
 
+    async buscarTokenValido(token: string): Promise<{ idUsuario: number; expiraEn: Date } | null> {
+        // Read-only: valida sin mutar. NO elimina expirados ni consume el token
+        // (un GET no debe tener efectos; el consumo lo hace solo buscarPorToken en el POST).
+        const tokens = await prisma.tokens_verificacion.findMany();
+        for (const registro of tokens) {
+            const coincide = await bcrypt.compare(token, registro.token_hash);
+            if (coincide) {
+                return { idUsuario: registro.id_usuario, expiraEn: registro.expira_en };
+            }
+        }
+        return null;
+    }
+
     async eliminarPorIdUsuario(idUsuario: number): Promise<void> {
         await prisma.tokens_verificacion.deleteMany({
             where: { id_usuario: idUsuario },
