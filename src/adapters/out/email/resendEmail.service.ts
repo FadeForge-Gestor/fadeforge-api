@@ -45,6 +45,7 @@ export class ResendEmailService implements IEmailService {
             this.templateBienvenida({
                 nombre,
                 logoUrl: this.obtenerLogoUrl(),
+                avisoFooter: 'Gracias por unirte a FadeForge.',
             }),
         );
     }

@@ -160,6 +160,8 @@ describe('ResendEmailService', () => {
         expect(args.to).toBe('cliente@example.com');
         expect(args.subject).toBe('Tu cuenta está activa — FadeForge');
         expect(args.html).toContain('Hola Vicente,');
+        expect(args.html).toContain('Gracias por unirte a FadeForge.');
+        expect(args.html).not.toContain('Si no creaste esta cuenta');
     });
 
     it('debe lanzar BadRequestError (400) si el logo no existe al enviar la bienvenida', async () => {

@@ -100,6 +100,17 @@ describe('templateLoader', () => {
             expect(html).toContain('© 2026 FadeForge. Todos los derechos reservados.');
         });
 
+        it('debe mostrar el aviso propio de bienvenida en el footer, no el de verificación', () => {
+            const template = loadTemplate('bienvenida');
+            const html = template({
+                nombre: 'Vicente',
+                logoUrl: 'https://example.com/logo.png',
+                avisoFooter: 'Gracias por unirte a FadeForge.',
+            });
+            expect(html).toContain('Gracias por unirte a FadeForge.');
+            expect(html).not.toContain('Si no creaste esta cuenta');
+        });
+
         it('no debe contener token ni links a URLs inexistentes (el frontend no existe)', () => {
             const template = loadTemplate('bienvenida');
             const html = template({ nombre: 'Vicente', logoUrl: 'https://example.com/logo.png' });
