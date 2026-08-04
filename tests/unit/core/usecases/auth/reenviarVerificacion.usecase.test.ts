@@ -117,4 +117,22 @@ describe('ReenviarVerificacionUseCase', () => {
 
         await expect(useCase.reenviar('juan@test.com')).rejects.toThrow(TooManyRequestsError);
     });
+
+    it('debe loguear el error de envío de email sin romper el reenvío (ya no se traga en silencio)', async () => {
+        mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(usuarioFake);
+        mockCredencialRepo.buscarPorIdUsuario.mockResolvedValue(credencialFake);
+        mockTokenVerificacionRepo.contarEnviosHoy.mockResolvedValue(0);
+        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_token' as never);
+        mockEmailService.enviarVerificacion.mockRejectedValue(new Error('Resend caído'));
+
+        const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+        await useCase.reenviar('juan@test.com');
+
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+            expect.stringContaining('Error al enviar el correo de verificación a juan@test.com'),
+            expect.any(Error)
+        );
+        consoleErrorSpy.mockRestore();
+    });
 });

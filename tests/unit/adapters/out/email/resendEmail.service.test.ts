@@ -126,4 +126,22 @@ describe('ResendEmailService', () => {
         const html = __sendMock.mock.calls[0][0].html;
         expect(html).toContain('http://localhost:4000/api/v1/auth/confirmar?token=token123');
     });
+
+    it('debe lanzar Error si Resend rechaza el envío (el rechazo ya no queda invisible)', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({ status: 200 });
+
+        const { __sendMock } = jest.requireMock('resend') as { __sendMock: jest.Mock };
+        __sendMock.mockResolvedValue({
+            data: null,
+            error: {
+                name: 'validation_error',
+                message: 'El remitente onboarding@resend.dev no puede enviar a este destinatario',
+            },
+        });
+
+        const service = new ResendEmailService();
+
+        await expect(service.enviarVerificacion('cliente@example.com', 'token123'))
+            .rejects.toThrow('no puede enviar a este destinatario');
+    });
 });

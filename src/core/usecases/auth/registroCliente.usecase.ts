@@ -68,9 +68,10 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
 
         try {
             await this.emailService.enviarVerificacion(input.correo, token);
-        } catch {
-            // Si el envío falla, el usuario queda registrado pero sin JWT.
-            // Puede reenviar la verificación después.
+        } catch (error) {
+            // El registro tiene éxito aunque el envío falle (el usuario puede reenviar),
+            // pero el error NO debe quedar invisible: se loguea con la causa.
+            console.error(`Error al enviar el correo de verificación a ${input.correo}:`, error);
         }
 
         return {

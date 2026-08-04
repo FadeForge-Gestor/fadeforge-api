@@ -28,7 +28,10 @@ export class ResendEmailService implements IEmailService {
 
         await this.verificarLogoDisponible(logoUrl);
 
-        await this.resend.emails.send({
+        // El SDK de Resend NO lanza excepción ante un rechazo (4xx/5xx):
+        // devuelve { data: null, error }. Si no miramos el error, un envío
+        // fallido queda invisible (el registro respondía "correo enviado" igual).
+        const respuesta = await this.resend.emails.send({
             from: env.EMAIL_FROM,
             to: correo,
             subject: 'Confirma tu correo electrónico — FadeForge',
@@ -38,6 +41,12 @@ export class ResendEmailService implements IEmailService {
                 logoUrl,
             }),
         });
+
+        if (respuesta.error) {
+            throw new Error(
+                `Resend rechazó el envío a ${correo}: ${respuesta.error.message ?? JSON.stringify(respuesta.error)}`
+            );
+        }
     }
 
     private obtenerLogoUrl(): string {

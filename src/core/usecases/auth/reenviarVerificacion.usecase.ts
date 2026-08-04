@@ -51,9 +51,9 @@ export class ReenviarVerificacionUseCase implements IReenviarVerificacionUseCase
 
         try {
             await this.emailService.enviarVerificacion(correo, token);
-        } catch {
-            // Si el envío falla, el usuario queda registrado pero sin email.
-            // Puede reintentar después.
+        } catch (error) {
+            // El reenvío no rompe el flujo, pero el error no debe quedar invisible.
+            console.error(`Error al enviar el correo de verificación a ${correo}:`, error);
         }
     }
 }
