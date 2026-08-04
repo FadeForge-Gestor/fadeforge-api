@@ -23,7 +23,7 @@ if (!fs.existsSync(envFile)) {
 const env = fs.readFileSync(envFile, "utf8");
 const envVar = (key) => env.match(new RegExp(`^${key}=(.*)$`, "m"))?.[1] ?? "";
 
-const logoUrl = envVar("LOGO_URL");
+const logoUrl = process.env.EMAIL_LOGO_URL ?? envVar("LOGO_URL");
 
 const templatesDir = path.join(cwd, "src", "adapters", "out", "email", "templates");
 const source = path.join(templatesDir, `${TEMPLATE_NAME}.html`);
@@ -36,6 +36,7 @@ const html = fs.readFileSync(source, "utf8");
 const rendered = Handlebars.compile(html)({
   logoUrl,
   horasExpiracion: 24,
+  link: "http://localhost:3000/api/v1/auth/confirmar?token=e7a2c4f8-9b1d-4e3a-8c6f-0d5b2a1e9c7d",
 });
 
 const outDir = path.join(cwd, "dist", "preview");

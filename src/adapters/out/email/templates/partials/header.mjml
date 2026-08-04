@@ -1,5 +1,5 @@
 <mj-section background-color="#f4f4f4" padding="48px 32px 8px 32px">
   <mj-column background-color="#111111" padding="14px 24px">
-    <mj-text align="center" color="#ffffff" font-size="22px" font-weight="bold" line-height="1.2" padding="0">FadeForge</mj-text>
+    <mj-image src="{{logoUrl}}" alt="FadeForge" width="140px" align="center" padding="0" />
   </mj-column>
 </mj-section>
