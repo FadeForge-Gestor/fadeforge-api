@@ -28,6 +28,7 @@ export interface CrearUsuarioRepositoryInput {
     idRol: number;
     correo: string;
     hashContrasena: string; // hash ya calculado, NO la contraseña plana
+    emailVerificado?: boolean; // NUEVO — default false si se omite (self-service empieza sin verificar)
 }
 
 export interface ActualizarUsuarioInput {

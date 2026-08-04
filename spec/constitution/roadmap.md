@@ -18,14 +18,18 @@ _Con features documentadas con spec:_
 
 8. **Control de intentos fallidos de login** — lockout después de 5 intentos fallidos (15 min), rate limit por usuario con `express-rate-limit`, persistencia en PostgreSQL. [Spec](features/001-control-intentos-login/spec.md)
 9. **Verificación de correo electrónico** — email de confirmación con Resend al registrarse, tokens bcrypt, rate limit de reenvío, feature toggle. [Spec](features/002-verificacion-email/spec.md)
+10. **Null Object para el servicio de email** — la app arranca sin `RESEND_API_KEY`: `NullEmailService` no-op inyectado cuando `EMAIL_VERIFICATION_ENABLED=false`; los casos de uso y el controller reciben `IEmailService` siempre, sin `undefined`. [Spec](features/003-null-object-email-service/spec.md)
+11. **Templates HTML para correos (MJML)** — templates Handlebars extraídos a `src/adapters/out/email/templates/`, rediseño Fase 2 con MJML compilado en build-time (`npm run build:emails`), logo desde Cloudinary (`LOGO_URL`) con validación 400 + TTL. [Spec](features/004-email-templates/spec.md)
+12. **Refactor: tipos de puertos a domain** — los 8 puertos con tipos inline migrados a `core/domain/`; los puertos solo importan tipos del dominio, sin cambios de comportamiento. [Spec](refactors/001-hexagonal-tipos-en-dominio/spec.md)
+13. **Verificación de correo — control de acceso** — bloqueo del login sin correo verificado (403 distinguible del 401, condicionado a `EMAIL_VERIFICATION_ENABLED`), link del correo apuntando al backend (`API_URL`), y el admin avala la identidad al crear usuarios (`email_verificado=true`). Semántica HTTP correcta: `POST /auth/confirmar` consume el token (de un solo uso, sin contraseña) y `GET /auth/confirmar` valida sin mutar. Los rechazos de Resend ya no son silenciosos (el SDK devuelve `{ data, error }` sin lanzar) y los fallos de envío se loguean sin romper el flujo. Template del correo con logo (`LOGO_URL` recortado on-the-fly en Cloudinary) y sin el link directo del token en texto visible. [Spec](features/005-verificacion-email-login/spec.md)
 
 ## Siguiente 🔜
 
-- **Refactor: mover tipos de puertos a domain** — corrección de arquitectura hexagonal para que los puertos solo importen tipos desde `core/domain/`. [Spec](refactors/001-hexagonal-tipos-en-dominio/spec.md)
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡
 
+- **Deuda técnica: renombrar `IEmailService` → `IEmailPort`** — los puertos de salida que representan servicios externos (no persistencia) conviven con dos nomenclaturas: `IStoragePort`/`IClockPort` usan sufijo `Port`, `IEmailService` usa `Service`. Unificar a `IEmailPort` para consistencia. Refactor cosmético: toca puerto, `ResendEmailService`, `NullEmailService`, use cases y tests. NO es un `Repository` (no persiste datos) — la excepción al sufijo `Repository` es correcta.
 - **CD (Continuous Deployment)** — deploy automático al mergear a `main`. Pendiente definir plataforma de deploy (Railway, Render, Fly.io, VPS, etc.).
 
 ### Seguridad CI/CD 🔒

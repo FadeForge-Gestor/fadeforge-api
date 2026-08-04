@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { IConfirmarEmailUseCase } from '@core/ports/in/auth/IConfirmarEmailUseCase';
 import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
 import { ICredencialRepository } from '@core/ports/out/credenciales/ICredencialRepository';
@@ -12,8 +11,7 @@ export class ConfirmarEmailUseCase implements IConfirmarEmailUseCase {
     ) {}
 
     async confirmar(token: string): Promise<void> {
-        const tokenHash = await bcrypt.hash(token, 10);
-        const resultado = await this.tokenVerificacionRepository.buscarPorTokenHash(token);
+        const resultado = await this.tokenVerificacionRepository.buscarPorToken(token);
 
         if (!resultado) {
             throw new BadRequestError('El token de verificación es inválido o expiró');

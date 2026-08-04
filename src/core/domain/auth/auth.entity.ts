@@ -9,6 +9,7 @@ export interface LoginOutput {
         id: number;
         correo: string;
         rol: string;
+        emailVerificado: boolean;
     };
 }
 
@@ -36,4 +37,5 @@ export interface CredencialesAuth {
     hashContrasena: string;
     idUsuario: number;
     claveRol: string;
+    emailVerificado: boolean;
 }

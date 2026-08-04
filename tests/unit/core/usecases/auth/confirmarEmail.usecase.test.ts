@@ -1,16 +1,12 @@
-import bcrypt from 'bcrypt';
 import { ConfirmarEmailUseCase } from '@core/usecases/auth/confirmarEmail.usecase';
 import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
 import { ICredencialRepository } from '@core/ports/out/credenciales/ICredencialRepository';
 import { BadRequestError } from '@shared/errors/HttpError';
 
-jest.mock('bcrypt');
-
-const mockedBcrypt = jest.mocked(bcrypt);
-
 const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
     crear: jest.fn(),
-    buscarPorTokenHash: jest.fn(),
+    buscarPorToken: jest.fn(),
+    buscarTokenValido: jest.fn(),
     eliminarPorIdUsuario: jest.fn(),
     contarEnviosHoy: jest.fn(),
 };
@@ -35,21 +31,20 @@ describe('ConfirmarEmailUseCase', () => {
         const futuro = new Date();
         futuro.setHours(futuro.getHours() + 1);
 
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_token' as never);
-        mockTokenVerificacionRepo.buscarPorTokenHash.mockResolvedValue({
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValue({
             idUsuario: 1,
             expiraEn: futuro,
         });
 
         await useCase.confirmar('token-plano-123');
 
+        expect(mockTokenVerificacionRepo.buscarPorToken).toHaveBeenCalledWith('token-plano-123');
         expect(mockTokenVerificacionRepo.eliminarPorIdUsuario).toHaveBeenCalledWith(1);
         expect(mockCredencialRepo.actualizarEmailVerificado).toHaveBeenCalledWith(1, true);
     });
 
     it('debe lanzar BadRequestError si el token no existe', async () => {
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_token' as never);
-        mockTokenVerificacionRepo.buscarPorTokenHash.mockResolvedValue(null);
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValue(null);
 
         await expect(useCase.confirmar('token-inexistente')).rejects.toThrow(BadRequestError);
     });
@@ -58,13 +53,28 @@ describe('ConfirmarEmailUseCase', () => {
         const pasado = new Date();
         pasado.setHours(pasado.getHours() - 1);
 
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_token' as never);
-        mockTokenVerificacionRepo.buscarPorTokenHash.mockResolvedValue({
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValue({
             idUsuario: 1,
             expiraEn: pasado,
         });
 
         await expect(useCase.confirmar('token-expirado')).rejects.toThrow(BadRequestError);
         expect(mockTokenVerificacionRepo.eliminarPorIdUsuario).toHaveBeenCalledWith(1);
+    });
+
+    it('debe lanzar BadRequestError al reutilizar un token ya consumido (un solo uso)', async () => {
+        const futuro = new Date();
+        futuro.setHours(futuro.getHours() + 1);
+
+        // Primer POST exitoso: el token existe y se consume (se elimina en BD).
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValueOnce({
+            idUsuario: 1,
+            expiraEn: futuro,
+        });
+        // Reintento con el mismo token: ya no existe en BD → inválido.
+        mockTokenVerificacionRepo.buscarPorToken.mockResolvedValueOnce(null);
+
+        await useCase.confirmar('token-plano-123');
+        await expect(useCase.confirmar('token-plano-123')).rejects.toThrow(BadRequestError);
     });
 });

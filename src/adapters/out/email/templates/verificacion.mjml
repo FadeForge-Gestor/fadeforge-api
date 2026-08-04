@@ -7,12 +7,14 @@
   </mj-head>
   <mj-body background-color="#f4f4f4">
     <mj-include path="./partials/header.mjml" />
-    <mj-section background-color="#ffffff" padding="32px 32px 40px 32px">
+    <mj-section background-color="#ffffff" padding="40px 32px">
       <mj-column>
-        <mj-text font-size="28px" font-weight="bold" align="center" color="#111111" padding-bottom="8px">Bienvenido a FadeForge</mj-text>
-        <mj-text align="center" font-size="16px" color="#555555">Haz clic en el siguiente enlace para confirmar tu correo electrónico:</mj-text>
-        <mj-spacer height="16px" />
+        <mj-text font-size="26px" font-weight="bold" align="center" color="#111111" padding-bottom="8px">Bienvenido a FadeForge</mj-text>
+        <mj-text align="center" font-size="16px" color="#555555" padding-bottom="4px">Confirmá tu correo electrónico para activar tu cuenta y empezar a reservar tus turnos.</mj-text>
+        <mj-spacer height="20px" />
         <mj-button background-color="#111111" color="#ffffff" href="{{{link}}}" width="100%" padding="14px 0" inner-padding="16px 24px">Confirmar correo</mj-button>
+        <mj-spacer height="20px" />
+        <mj-text align="center" font-size="13px" color="#888888">El Token es de un solo uso y expira en {{horasExpiracion}} horas.</mj-text>
       </mj-column>
     </mj-section>
     <mj-include path="./partials/footer.mjml" />

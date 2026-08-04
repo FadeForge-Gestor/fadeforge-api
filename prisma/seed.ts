@@ -53,6 +53,7 @@ async function main() {
                     create: {
                         correo: correoAdmin,
                         hash_contrasena: hashContrasena,
+                        email_verificado: true,
                     },
                 },
             },

@@ -77,7 +77,8 @@ const mockEmailService: jest.Mocked<IEmailService> = {
 
 const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {
     crear: jest.fn(),
-    buscarPorTokenHash: jest.fn(),
+    buscarPorToken: jest.fn(),
+    buscarTokenValido: jest.fn(),
     eliminarPorIdUsuario: jest.fn(),
     contarEnviosHoy: jest.fn(),
 };
@@ -226,6 +227,27 @@ describe('RegistroClienteUseCase', () => {
             expect(result.usuario).toBeDefined();
             expect(result.token).toBeUndefined();
             expect(mockUsuarioRepo.crear).toHaveBeenCalled();
+        });
+
+        it('debe loguear el error de envío de email (ya no se traga en silencio)', async () => {
+            mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
+            mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
+            mockedBcrypt.hash = jest.fn()
+                .mockResolvedValueOnce('hash_password' as never)
+                .mockResolvedValueOnce('hash_token' as never);
+            mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
+            mockEmailService.enviarVerificacion.mockRejectedValue(new Error('Resend caído'));
+
+            const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+            const result = await useCaseConVerificacion.registrar(inputRegistro);
+
+            expect(result.usuario).toBeDefined();
+            expect(consoleErrorSpy).toHaveBeenCalledWith(
+                expect.stringContaining('Error al enviar el correo de verificación a juan@test.com'),
+                expect.any(Error)
+            );
+            consoleErrorSpy.mockRestore();
         });
     });
 });

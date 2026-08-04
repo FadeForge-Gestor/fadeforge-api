@@ -45,6 +45,7 @@ export class UsuariosUseCase implements IUsuarioUseCase {
                 idRol: input.idRol,
                 correo: input.correo,
                 hashContrasena,
+                emailVerificado: true, // el admin avala la identidad: la cuenta nace verificada
             });
         }
 
