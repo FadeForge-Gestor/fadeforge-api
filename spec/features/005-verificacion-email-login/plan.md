@@ -303,8 +303,8 @@ El fallback de la Parte 4 (link con el token como texto visible) era una muleta 
 | `tests/unit/core/usecases/auth/registroCliente.usecase.test.ts` | Mock renombrado (`buscarPorToken`) |
 | `tests/unit/core/usecases/auth/reenviarVerificacion.usecase.test.ts` | Mock renombrado (`buscarPorToken`) |
 | NUEVO `tests/unit/adapters/out/db/token-verificacion/tokenVerificacion.prisma.repository.test.ts` | Regresión con bcrypt real: token correcto se encuentra, incorrecto devuelve `null` |
-| `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Link de confirmación visible como texto bajo el botón (fallback sin frontend) — hecho en `000abe7` |
-| `tests/unit/adapters/out/email/templateLoader.test.ts` | Test del link visible — hecho en `000abe7` |
+| `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Link de confirmación visible como texto bajo el botón (fallback sin frontend) — hecho en `000abe7`, eliminado en la Parte 7 (`3ce59e3`) |
+| `tests/unit/adapters/out/email/templateLoader.test.ts` | Test del link visible — hecho en `000abe7`, reemplazado en la Parte 7 |
 | `src/adapters/in/http/auth/auth.schema.ts` | `confirmarEmailSchema` (token requerido) |
 | NUEVO `src/core/ports/in/auth/IValidarTokenVerificacionUseCase.ts` | Contrato read-only: `validar(token): Promise<{ valido: boolean }>` |
 | NUEVO `src/core/usecases/auth/validarTokenVerificacion.usecase.ts` | Valida sin efectos (no elimina, no actualiza) |
@@ -324,6 +324,7 @@ El fallback de la Parte 4 (link con el token como texto visible) era una muleta 
 | `src/adapters/out/email/templates/partials/header.mjml` | Logo `{{logoUrl}}` en vez del texto "FadeForge" (Parte 7) |
 | `src/adapters/out/email/templates/partials/footer.mjml` | Expiración movida al card (Parte 7) |
 | `src/adapters/out/email/templates/verificacion.mjml` + `.html` | Sin link visible; nota "El Token es de un solo uso..." (Parte 7) |
+| `tests/unit/adapters/out/email/templateLoader.test.ts` | Test del fallback reemplazado: token solo en `href`, logo desde `{{logoUrl}}` (Parte 7) |
 | `scripts/preview-email.mjs` | Override `EMAIL_LOGO_URL` + link de muestra (Parte 7) |
 | `.env` (no se commitea) | `LOGO_URL` con `c_crop,x_202,y_54,w_273,h_262` (Parte 7) |
 

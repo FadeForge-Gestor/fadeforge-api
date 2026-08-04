@@ -182,6 +182,8 @@ _Checklist accionable derivada del `plan.md`._
   - [x] Nota bajo el botón: "El Token es de un solo uso y expira en {{horasExpiracion}} horas." (movida del footer al card, junto al CTA).
 - [x] `partials/footer.mjml`:
   - [x] Sacar la línea de expiración (ahora en el card); queda el aviso de ignorar + copyright.
+- [x] `tests/unit/adapters/out/email/templateLoader.test.ts`:
+  - [x] Reemplazar el test del fallback ("link como texto visible") por: token oculto como texto (solo en `href` del botón) + nota "El Token es de un solo uso y expira en N horas" + logo renderizado desde `{{logoUrl}}`.
 - [x] `scripts/preview-email.mjs`:
   - [x] Override `EMAIL_LOGO_URL` (no toca el `.env`) y link de muestra para que el botón se vea real en el preview.
 - [x] `.env` (no se commitea):

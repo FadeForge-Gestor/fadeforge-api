@@ -58,11 +58,20 @@ describe('templateLoader', () => {
             expect(boton![0]).toContain('href="https://example.com/confirmar?token=abc"');
         });
 
-        it('debe mostrar el link de confirmación como texto visible (fallback para probar el endpoint sin depender del botón)', () => {
+        it('debe ocultar el token como texto visible: viaja solo en el href del botón', () => {
             const template = loadTemplate('verificacion');
             const html = template({ link: 'https://example.com/confirmar?token=abc', horasExpiracion: 24 });
-            expect(html).toContain('¿No funciona el botón? Copia y pega este enlace en tu navegador:');
-            expect(html).toContain('https://example.com/confirmar?token=abc');
+            expect(html).not.toContain('¿No funciona el botón? Copia y pega este enlace en tu navegador:');
+            expect(html).not.toContain('Copia y pega este enlace');
+            expect(html).toContain('El Token es de un solo uso y expira en 24 horas.');
+            expect(html).toContain('href="https://example.com/confirmar?token=abc"');
+        });
+
+        it('debe renderizar el logo en el header desde {{logoUrl}}', () => {
+            const template = loadTemplate('verificacion');
+            const html = template({ link: 'https://example.com/token', horasExpiracion: 24, logoUrl: 'https://example.com/logo.png' });
+            expect(html).toContain('alt="FadeForge"');
+            expect(html).toContain('src="https://example.com/logo.png"');
         });
 
         it('debe lanzar error si el template no existe', () => {
