@@ -1,6 +1,6 @@
 # 006 · Correo de bienvenida tras la verificación
 
-**Estado:** planificado (rama `feat/correo-bienvenida`, pendiente de implementar)
+**Estado:** implementado (rama `feat/correo-bienvenida`)
 
 ## Qué hace
 

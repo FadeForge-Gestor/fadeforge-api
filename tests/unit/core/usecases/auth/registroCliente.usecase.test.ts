@@ -73,6 +73,7 @@ const mockRolRepo: jest.Mocked<IRolRepository> = {
 
 const mockEmailService: jest.Mocked<IEmailService> = {
     enviarVerificacion: jest.fn(),
+    enviarBienvenida: jest.fn(),
 };
 
 const mockTokenVerificacionRepo: jest.Mocked<ITokenVerificacionRepository> = {

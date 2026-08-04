@@ -144,4 +144,48 @@ describe('ResendEmailService', () => {
         await expect(service.enviarVerificacion('cliente@example.com', 'token123'))
             .rejects.toThrow('no puede enviar a este destinatario');
     });
+
+    it('debe enviar la bienvenida al correo correcto con el subject y el saludo por nombre', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({ status: 200 });
+
+        const { __sendMock } = jest.requireMock('resend') as { __sendMock: jest.Mock };
+        __sendMock.mockReset();
+        __sendMock.mockResolvedValue({});
+
+        const service = new ResendEmailService();
+        await service.enviarBienvenida('cliente@example.com', 'Vicente');
+
+        expect(__sendMock).toHaveBeenCalledTimes(1);
+        const args = __sendMock.mock.calls[0][0];
+        expect(args.to).toBe('cliente@example.com');
+        expect(args.subject).toBe('Tu cuenta está activa — FadeForge');
+        expect(args.html).toContain('Hola Vicente,');
+    });
+
+    it('debe lanzar BadRequestError (400) si el logo no existe al enviar la bienvenida', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({ status: 404 });
+
+        const service = new ResendEmailService();
+
+        await expect(service.enviarBienvenida('cliente@example.com', 'Vicente'))
+            .rejects.toThrow(BadRequestError);
+    });
+
+    it('debe lanzar Error si Resend rechaza la bienvenida', async () => {
+        (global.fetch as jest.Mock).mockResolvedValue({ status: 200 });
+
+        const { __sendMock } = jest.requireMock('resend') as { __sendMock: jest.Mock };
+        __sendMock.mockResolvedValue({
+            data: null,
+            error: {
+                name: 'validation_error',
+                message: 'El remitente onboarding@resend.dev no puede enviar a este destinatario',
+            },
+        });
+
+        const service = new ResendEmailService();
+
+        await expect(service.enviarBienvenida('cliente@example.com', 'Vicente'))
+            .rejects.toThrow('no puede enviar a este destinatario');
+    });
 });

@@ -78,4 +78,34 @@ describe('templateLoader', () => {
             expect(() => loadTemplate('template-inexistente')).toThrow();
         });
     });
+
+    describe('bienvenida', () => {
+        it('debe compilar el template de bienvenida sin errores', () => {
+            const template = loadTemplate('bienvenida');
+            expect(template).toBeInstanceOf(Function);
+        });
+
+        it('debe renderizar el título y el saludo por nombre', () => {
+            const template = loadTemplate('bienvenida');
+            const html = template({ nombre: 'Vicente', logoUrl: 'https://example.com/logo.png' });
+            expect(html).toContain('¡Tu cuenta está activa!');
+            expect(html).toContain('Hola Vicente,');
+        });
+
+        it('debe incluir el header con logo desde {{logoUrl}} y el footer con copyright', () => {
+            const template = loadTemplate('bienvenida');
+            const html = template({ nombre: 'Vicente', logoUrl: 'https://example.com/logo.png' });
+            expect(html).toContain('alt="FadeForge"');
+            expect(html).toContain('src="https://example.com/logo.png"');
+            expect(html).toContain('© 2026 FadeForge. Todos los derechos reservados.');
+        });
+
+        it('no debe contener token ni links a URLs inexistentes (el frontend no existe)', () => {
+            const template = loadTemplate('bienvenida');
+            const html = template({ nombre: 'Vicente', logoUrl: 'https://example.com/logo.png' });
+            expect(html).not.toContain('token');
+            expect(html).not.toContain('http://localhost:3000');
+            expect(html).not.toContain('href="');
+        });
+    });
 });

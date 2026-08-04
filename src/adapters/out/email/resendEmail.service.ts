@@ -11,6 +11,7 @@ export class ResendEmailService implements IEmailService {
 
     private readonly resend: Resend;
     private readonly templateVerificacion = loadTemplate('verificacion');
+    private readonly templateBienvenida = loadTemplate('bienvenida');
 
     // Caché del resultado de la verificación del logo:
     // null = sin verificar, true = disponible (o no confirmado por red), false = 404 confirmado.
@@ -20,10 +21,35 @@ export class ResendEmailService implements IEmailService {
     constructor() {
         this.resend = new Resend(env.RESEND_API_KEY);
         this.templateVerificacion = loadTemplate('verificacion');
+        this.templateBienvenida = loadTemplate('bienvenida');
     }
 
     async enviarVerificacion(correo: string, token: string): Promise<void> {
         const link = `${env.API_URL}/api/v1/auth/confirmar?token=${token}`;
+
+        await this.enviar(
+            correo,
+            'Confirma tu correo electrónico — FadeForge',
+            this.templateVerificacion({
+                link,
+                horasExpiracion: env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS,
+                logoUrl: this.obtenerLogoUrl(),
+            }),
+        );
+    }
+
+    async enviarBienvenida(correo: string, nombre: string): Promise<void> {
+        await this.enviar(
+            correo,
+            'Tu cuenta está activa — FadeForge',
+            this.templateBienvenida({
+                nombre,
+                logoUrl: this.obtenerLogoUrl(),
+            }),
+        );
+    }
+
+    private async enviar(correo: string, subject: string, html: string): Promise<void> {
         const logoUrl = this.obtenerLogoUrl();
 
         await this.verificarLogoDisponible(logoUrl);
@@ -34,12 +60,8 @@ export class ResendEmailService implements IEmailService {
         const respuesta = await this.resend.emails.send({
             from: env.EMAIL_FROM,
             to: correo,
-            subject: 'Confirma tu correo electrónico — FadeForge',
-            html: this.templateVerificacion({
-                link,
-                horasExpiracion: env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS,
-                logoUrl,
-            }),
+            subject,
+            html,
         });
 
         if (respuesta.error) {

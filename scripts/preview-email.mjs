@@ -36,6 +36,7 @@ const html = fs.readFileSync(source, "utf8");
 const rendered = Handlebars.compile(html)({
   logoUrl,
   horasExpiracion: 24,
+  nombre: "Vicente",
   link: "http://localhost:3000/api/v1/auth/confirmar?token=e7a2c4f8-9b1d-4e3a-8c6f-0d5b2a1e9c7d",
 });
 
