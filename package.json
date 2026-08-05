@@ -13,7 +13,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:reset-db": "ts-node -r tsconfig-paths/register prisma/reset-db.ts"
   },
   "keywords": [],
   "author": "VicenteCode",
