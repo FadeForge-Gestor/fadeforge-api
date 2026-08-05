@@ -26,10 +26,12 @@ _Con features documentadas con spec:_
 
 ## Siguiente 🔜
 
+- **Refactor: protección anti-DoS en el flujo de verificación de correo** — rate limiting por IP en `POST /registro`, `GET+POST /confirmar` y `POST /reenviar-verificacion` (hoy solo el login tiene límites) + lookup de tokens O(1) con SHA-256 e índice único (hoy es O(N) de bcrypt por request: amplificación de CPU). Los 3 endpoints de auth quedan protegidos contra abuso que quema plata en Resend y CPU. [Spec](refactors/002-proteccion-dos-auth/spec.md)
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡
 
+- **Refactor: anti-enumeración en `POST /reenviar-verificacion`** — el 404 actual para correos inexistentes filtra cuentas registradas (oráculo de emails para el atacante); respuesta uniforme (200 con el mismo mensaje) para correo inexistente vs no verificado. Nivel 3 de la [spec 002](refactors/002-proteccion-dos-auth/spec.md), fuera de alcance del refactor actual.
 - **Outbox pattern para correos (garantía de entrega)** — sistema de colas sin infraestructura nueva: tabla `correos_pendientes` en PostgreSQL + worker con reintentos y backoff para envíos de email fallidos. Hoy los correos (verificación y bienvenida) son best-effort: si el envío falla, se loguea y se pierde (decisión de la feature 005/006). Un outbox lo convierte en at-least-once, sobrevive reinicios y sirve para los correos transaccionales futuros (recordatorio de turno, factura, etc.). Requiere: tabla nueva, worker, política de reintentos/dead-letter y tests.
 - **Deuda técnica: renombrar `IEmailService` → `IEmailPort`** — los puertos de salida que representan servicios externos (no persistencia) conviven con dos nomenclaturas: `IStoragePort`/`IClockPort` usan sufijo `Port`, `IEmailService` usa `Service`. Unificar a `IEmailPort` para consistencia. Refactor cosmético: toca puerto, `ResendEmailService`, `NullEmailService`, use cases y tests. NO es un `Repository` (no persiste datos) — la excepción al sufijo `Repository` es correcta.
 - **CD (Continuous Deployment)** — deploy automático al mergear a `main`. Pendiente definir plataforma de deploy (Railway, Render, Fly.io, VPS, etc.).
