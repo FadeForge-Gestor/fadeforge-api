@@ -26,7 +26,8 @@ _Con features documentadas con spec:_
 
 ## Siguiente 🔜
 
-- **Refactor: protección anti-DoS en el flujo de verificación de correo** — rate limiting por IP en `POST /registro`, `GET+POST /confirmar` y `POST /reenviar-verificacion` (hoy solo el login tiene límites) + lookup de tokens O(1) con SHA-256 e índice único (hoy es O(N) de bcrypt por request: amplificación de CPU). Los 3 endpoints de auth quedan protegidos contra abuso que quema plata en Resend y CPU. [Spec](refactors/002-proteccion-dos-auth/spec.md)
+- **Refactor: lookup de tokens de verificación O(1) con SHA-256** — reemplaza el escaneo O(N) de bcrypt (`findMany` + `bcrypt.compare` cost-10 por request en `/confirmar`) por digest SHA-256 con índice único y `findUnique`. El hashing pasa al repositorio; `crear` recibe el token en claro. Cierra la amplificación de CPU del endpoint. [Spec](refactors/002-proteccion-dos-auth/spec.md)
+- **Feature: rate limiting por IP en endpoints públicos de auth** — límites por IP en `POST /registro` (5/15min), `GET+POST /confirmar` (30/15min, contador compartido) y `POST /reenviar-verificacion` (5/15min) con `express-rate-limit`. Requiere `app.set('trust proxy', 1)` en `server.ts` (NUNCA `true`: permite spoofear `X-Forwarded-For`), firewall de origen (security group que solo acepte tráfico del CDN) y límites generosos por CGNAT (IPs compartidas en móviles). No detiene botnets — eso es del edge (Cloudflare DDoS/bot management). El dinero de Resend se protege de verdad con los límites por usuario en DB (ya existentes); la IP solo corta el volumen bruto.
 - **Integration tests con PostgreSQL** — service container en CI para tests de integración contra DB real. Requiere carpeta `tests/integration/` y test de los adapters Prisma.
 
 ## Backlog / ideas 💡
