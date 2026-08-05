@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { IReenviarVerificacionUseCase } from '@core/ports/in/auth/IReenviarVerificacionUseCase';
 import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
 import { IEmailService } from '@core/ports/out/email/IEmailService';
@@ -44,10 +43,9 @@ export class ReenviarVerificacionUseCase implements IReenviarVerificacionUseCase
         await this.tokenVerificacionRepository.eliminarPorIdUsuario(usuario.id);
 
         const token = generarToken();
-        const tokenHash = await bcrypt.hash(token, 10);
         const expiraEn = calcularExpiracion(env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS);
 
-        await this.tokenVerificacionRepository.crear(usuario.id, tokenHash, expiraEn);
+        await this.tokenVerificacionRepository.crear(usuario.id, token, expiraEn);
 
         try {
             await this.emailService.enviarVerificacion(correo, token);
