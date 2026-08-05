@@ -186,12 +186,10 @@ describe('RegistroClienteUseCase', () => {
             env.EMAIL_VERIFICATION_ENABLED = true;
         });
 
-        it('debe generar token, hashear y enviar email en vez de retornar JWT', async () => {
+        it('debe generar token y enviar email en vez de retornar JWT (el hashing es del repo)', async () => {
             mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
             mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
-            mockedBcrypt.hash = jest.fn()
-                .mockResolvedValueOnce('hash_password' as never)
-                .mockResolvedValueOnce('hash_token' as never);
+            mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_password' as never);
             mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
 
             const result = await useCaseConVerificacion.registrar(inputRegistro);
@@ -203,23 +201,25 @@ describe('RegistroClienteUseCase', () => {
                 correo: inputRegistro.correo,
                 rol: ROLES.CLIENTE,
             });
+            // bcrypt solo se usa para la CONTRASEÑA, nunca para el token.
+            expect(mockedBcrypt.hash).toHaveBeenCalledTimes(1);
             expect(mockTokenVerificacionRepo.crear).toHaveBeenCalledWith(
                 usuarioFake.id,
-                'hash_token',
+                expect.any(String),
                 expect.any(Date)
             );
+            // El token que se persiste es el mismo que llega al correo.
+            const tokenPersistido = mockTokenVerificacionRepo.crear.mock.calls[0][1];
             expect(mockEmailService.enviarVerificacion).toHaveBeenCalledWith(
                 inputRegistro.correo,
-                expect.any(String)
+                tokenPersistido
             );
         });
 
         it('debe registrar el usuario aunque falle el envío de email', async () => {
             mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
             mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
-            mockedBcrypt.hash = jest.fn()
-                .mockResolvedValueOnce('hash_password' as never)
-                .mockResolvedValueOnce('hash_token' as never);
+            mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_password' as never);
             mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
             mockEmailService.enviarVerificacion.mockRejectedValue(new Error('Resend caído'));
 
@@ -233,9 +233,7 @@ describe('RegistroClienteUseCase', () => {
         it('debe loguear el error de envío de email (ya no se traga en silencio)', async () => {
             mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(null);
             mockRolRepo.buscarPorClave.mockResolvedValue(rolClienteFake);
-            mockedBcrypt.hash = jest.fn()
-                .mockResolvedValueOnce('hash_password' as never)
-                .mockResolvedValueOnce('hash_token' as never);
+            mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_password' as never);
             mockUsuarioRepo.crear.mockResolvedValue(usuarioFake);
             mockEmailService.enviarVerificacion.mockRejectedValue(new Error('Resend caído'));
 

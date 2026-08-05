@@ -61,10 +61,9 @@ export class RegistroClienteUseCase implements IRegistroClienteUseCase {
         }
 
         const token = generarToken();
-        const tokenHash = await bcrypt.hash(token, 10);
         const expiraEn = calcularExpiracion(env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS);
 
-        await this.tokenVerificacionRepository.crear(usuario.id, tokenHash, expiraEn);
+        await this.tokenVerificacionRepository.crear(usuario.id, token, expiraEn);
 
         try {
             await this.emailService.enviarVerificacion(input.correo, token);

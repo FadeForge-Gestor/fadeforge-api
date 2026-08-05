@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import { ReenviarVerificacionUseCase } from '@core/usecases/auth/reenviarVerificacion.usecase';
 import { ITokenVerificacionRepository } from '@core/ports/out/email/ITokenVerificacionRepository';
 import { IEmailService } from '@core/ports/out/email/IEmailService';
@@ -7,10 +6,6 @@ import { ICredencialRepository } from '@core/ports/out/credenciales/ICredencialR
 import { Usuario } from '@core/domain/usuario/usuario.entity';
 import { CredencialRaw } from '@core/domain/credencial/credencial.entity';
 import { NotFoundError, BadRequestError, TooManyRequestsError } from '@shared/errors/HttpError';
-
-jest.mock('bcrypt');
-
-const mockedBcrypt = jest.mocked(bcrypt);
 
 const usuarioFake: Usuario = {
     id: 1,
@@ -79,19 +74,20 @@ describe('ReenviarVerificacionUseCase', () => {
         mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(usuarioFake);
         mockCredencialRepo.buscarPorIdUsuario.mockResolvedValue(credencialFake);
         mockTokenVerificacionRepo.contarEnviosHoy.mockResolvedValue(0);
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_token' as never);
 
         await useCase.reenviar('juan@test.com');
 
         expect(mockTokenVerificacionRepo.eliminarPorIdUsuario).toHaveBeenCalledWith(1);
         expect(mockTokenVerificacionRepo.crear).toHaveBeenCalledWith(
             1,
-            'hash_token',
+            expect.any(String),
             expect.any(Date)
         );
+        // El token que se persiste es el mismo que llega al correo (el hashing es del repo).
+        const tokenPersistido = mockTokenVerificacionRepo.crear.mock.calls[0][1];
         expect(mockEmailService.enviarVerificacion).toHaveBeenCalledWith(
             'juan@test.com',
-            expect.any(String)
+            tokenPersistido
         );
     });
 
@@ -123,7 +119,6 @@ describe('ReenviarVerificacionUseCase', () => {
         mockUsuarioRepo.buscarPorCorreo.mockResolvedValue(usuarioFake);
         mockCredencialRepo.buscarPorIdUsuario.mockResolvedValue(credencialFake);
         mockTokenVerificacionRepo.contarEnviosHoy.mockResolvedValue(0);
-        mockedBcrypt.hash = jest.fn().mockResolvedValue('hash_token' as never);
         mockEmailService.enviarVerificacion.mockRejectedValue(new Error('Resend caído'));
 
         const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
