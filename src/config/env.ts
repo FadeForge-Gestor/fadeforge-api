@@ -28,4 +28,6 @@ export const env = {
     EMAIL_VERIFICATION_EXPIRES_IN_HOURS: parseInt(process.env.EMAIL_VERIFICATION_EXPIRES_IN_HOURS ?? '24'),
     FRONTEND_URL: process.env.FRONTEND_URL ?? 'http://localhost:3000',
     API_URL: process.env.API_URL ?? `http://localhost:${process.env.PORT ?? 3000}`,
+    RATE_LIMIT_WINDOW_MINUTES: parseInt(process.env.RATE_LIMIT_WINDOW_MINUTES ?? '15'),
+    RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS ?? '100'),
 }

@@ -7,7 +7,7 @@ jest.mock('express-rate-limit', () => {
     });
 });
 
-import { authRateLimit, userLoginRateLimit } from '@middlewares/rate-limit.middleware';
+import { authRateLimit, userLoginRateLimit, apiRateLimit, authRegisterRateLimit, authConfirmRateLimit, authResendRateLimit } from '@middlewares/rate-limit.middleware';
 
 describe('authRateLimit', () => {
 
@@ -56,5 +56,85 @@ describe('userLoginRateLimit', () => {
     it('debe incluir mensaje distinguishable del authRateLimit', () => {
         const message = capturedConfigs[1].message as { status: string; message: string };
         expect(message.message).toContain('correo');
+    });
+});
+
+describe('apiRateLimit', () => {
+
+    it('debe exportar una función middleware', () => {
+        expect(typeof apiRateLimit).toBe('function');
+    });
+
+    it('debe configurar una ventana de 15 minutos por defecto', () => {
+        expect(capturedConfigs[2].windowMs).toBe(15 * 60 * 1000);
+    });
+
+    it('debe limitar a 100 peticiones por ventana por defecto', () => {
+        expect(capturedConfigs[2].limit).toBe(100);
+    });
+
+    it('debe incluir mensaje de error mencionando la IP', () => {
+        const message = capturedConfigs[2].message as { status: string; message: string };
+        expect(message.status).toBe('error');
+        expect(message.message).toContain('esta IP');
+    });
+
+    it('debe usar standardHeaders draft-8 y sin legacy headers', () => {
+        expect(capturedConfigs[2].standardHeaders).toBe('draft-8');
+        expect(capturedConfigs[2].legacyHeaders).toBe(false);
+    });
+});
+
+describe('authRegisterRateLimit', () => {
+
+    it('debe exportar una función middleware', () => {
+        expect(typeof authRegisterRateLimit).toBe('function');
+    });
+
+    it('debe limitar a 5 peticiones por ventana de 15 minutos', () => {
+        expect(capturedConfigs[3].windowMs).toBe(15 * 60 * 1000);
+        expect(capturedConfigs[3].limit).toBe(5);
+    });
+
+    it('debe incluir mensaje de error mencionando la IP', () => {
+        const message = capturedConfigs[3].message as { status: string; message: string };
+        expect(message.status).toBe('error');
+        expect(message.message).toContain('esta IP');
+    });
+});
+
+describe('authConfirmRateLimit', () => {
+
+    it('debe exportar una función middleware', () => {
+        expect(typeof authConfirmRateLimit).toBe('function');
+    });
+
+    it('debe limitar a 30 peticiones por ventana de 15 minutos', () => {
+        expect(capturedConfigs[4].windowMs).toBe(15 * 60 * 1000);
+        expect(capturedConfigs[4].limit).toBe(30);
+    });
+
+    it('debe incluir mensaje de error mencionando la IP', () => {
+        const message = capturedConfigs[4].message as { status: string; message: string };
+        expect(message.status).toBe('error');
+        expect(message.message).toContain('esta IP');
+    });
+});
+
+describe('authResendRateLimit', () => {
+
+    it('debe exportar una función middleware', () => {
+        expect(typeof authResendRateLimit).toBe('function');
+    });
+
+    it('debe limitar a 5 peticiones por ventana de 15 minutos', () => {
+        expect(capturedConfigs[5].windowMs).toBe(15 * 60 * 1000);
+        expect(capturedConfigs[5].limit).toBe(5);
+    });
+
+    it('debe incluir mensaje de error mencionando la IP', () => {
+        const message = capturedConfigs[5].message as { status: string; message: string };
+        expect(message.status).toBe('error');
+        expect(message.message).toContain('esta IP');
     });
 });

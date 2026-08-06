@@ -16,7 +16,7 @@ import { TokenVerificacionPrismaRepository } from '@adapters/out/db/token-verifi
 import { IdempotencyMemoryRepository } from '@adapters/out/memory/idempotency/idempotency.memory.repository';
 import { idempotency } from '@middlewares/idempotency.middleware';
 import { validate } from '@middlewares/validate.middleware';
-import { authRateLimit, userLoginRateLimit } from '@middlewares/rate-limit.middleware';
+import { authRateLimit, userLoginRateLimit, authRegisterRateLimit, authConfirmRateLimit, authResendRateLimit } from '@middlewares/rate-limit.middleware';
 import { loginSchema, registroClienteSchema, reenviarVerificacionSchema, confirmarEmailSchema } from './auth.schema';
 import { env } from '@config/env';
 
@@ -63,10 +63,11 @@ const controller = new AuthController(
 );
 
 router.post('/login', authRateLimit, userLoginRateLimit, validate(loginSchema), (req, res, next) => controller.login(req, res, next));
-router.post('/registro', validate(registroClienteSchema), (req, res, next) => controller.registroCliente(req, res, next));
+router.post('/registro', authRegisterRateLimit, validate(registroClienteSchema), (req, res, next) => controller.registroCliente(req, res, next));
 
-router.get('/confirmar', (req, res, next) => controller.confirmarEmail(req, res, next));
-router.post('/confirmar', validate(confirmarEmailSchema), (req, res, next) => controller.confirmarEmailPost(req, res, next));
-router.post('/reenviar-verificacion', idempotency(idempotencyRepo), validate(reenviarVerificacionSchema), (req, res, next) => controller.reenviarVerificacion(req, res, next));
+// GET y POST comparten el mismo limiter → contador por IP compartido
+router.get('/confirmar', authConfirmRateLimit, (req, res, next) => controller.confirmarEmail(req, res, next));
+router.post('/confirmar', authConfirmRateLimit, validate(confirmarEmailSchema), (req, res, next) => controller.confirmarEmailPost(req, res, next));
+router.post('/reenviar-verificacion', authResendRateLimit, idempotency(idempotencyRepo), validate(reenviarVerificacionSchema), (req, res, next) => controller.reenviarVerificacion(req, res, next));
 
 export default router;
