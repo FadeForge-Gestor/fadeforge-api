@@ -23,6 +23,15 @@
  *         message:
  *           type: string
  *           example: "Demasiados intentos para este correo. Intentá de nuevo en 15 minutos."
+ *     IpRateLimitResponse:
+ *       type: object
+ *       properties:
+ *         status:
+ *           type: string
+ *           example: error
+ *         message:
+ *           type: string
+ *           example: "Demasiadas solicitudes desde esta IP. Intentá de nuevo en 15 minutos."
  *
  * tags:
  *   name: Auth
@@ -85,15 +94,21 @@
  *               $ref: '#/components/schemas/ErrorResponse'
  *       429:
  *         description: |
- *           Rate limit alcanzado o cuenta bloqueada. Tres escenarios posibles:
- *           - **Rate limit global**: más de 10 requests por IP en 15 min.
+ *           Rate limit alcanzado o cuenta bloqueada. Cuatro escenarios posibles:
+ *           - **Rate limit global de la API**: más de 100 requests por IP en 15 min (aplica a toda la API).
+ *           - **Rate limit global de login**: más de 10 requests por IP en 15 min.
  *           - **Rate limit por correo**: más de 5 intentos por correo en 15 min.
  *           - **Cuenta bloqueada**: 5 intentos fallidos consecutivos → bloqueo de 15 min.
  *         content:
  *           application/json:
  *             examples:
+ *               rate-limit-api:
+ *                 summary: Rate limit global de la API por IP
+ *                 value:
+ *                   status: error
+ *                   message: "Demasiadas solicitudes desde esta IP. Intentá de nuevo en 15 minutos."
  *               rate-limit-ip:
- *                 summary: Rate limit global por IP
+ *                 summary: Rate limit global de login por IP
  *                 value:
  *                   status: error
  *                   message: "Demasiados intentos de inicio de sesión. Intentá de nuevo en 15 minutos."
@@ -169,6 +184,12 @@
  *         description: Datos inválidos
  *       409:
  *         description: El correo ya está registrado
+ *       429:
+ *         description: Demasiadas solicitudes desde esta IP (máximo 5 en 15 min)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/IpRateLimitResponse'
  *
  * /auth/confirmar:
  *   get:
@@ -207,6 +228,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: Demasiadas solicitudes desde esta IP (máximo 30 en 15 min, contador compartido entre GET y POST)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/IpRateLimitResponse'
  *   post:
  *     summary: Confirmar correo electrónico (consume el token)
  *     tags: [Auth]
@@ -244,6 +271,12 @@
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: Demasiadas solicitudes desde esta IP (máximo 30 en 15 min, contador compartido con el GET)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/IpRateLimitResponse'
  *
  * /auth/reenviar-verificacion:
  *   post:
@@ -275,5 +308,12 @@
  *       404:
  *         description: No se encontró una cuenta con ese correo
  *       429:
- *         description: Límite de reenvíos por día alcanzado
+ *         description: |
+ *           Límite de reenvíos alcanzado. Dos escenarios posibles:
+ *           - **Rate limit por IP**: más de 5 solicitudes desde la misma IP en 15 min.
+ *           - **Límite de reenvíos por día**: superado el máximo de reenvíos para el correo.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/IpRateLimitResponse'
  */

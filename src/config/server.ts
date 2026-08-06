@@ -22,16 +22,24 @@ import historialPrecioRoutes from '@adapters/in/http/historial-precio/historialP
 
 // Importamos el middleware de manejo de errores
 import { errorMiddleware } from '@adapters/in/http/middlewares/error.middleware';
+import { apiRateLimit } from '@adapters/in/http/middlewares/rate-limit.middleware';
 
 
 // Configuración del servidor Express
 const app = express();
 
+// Detrás de un solo salto de confianza (CDN / reverse proxy) para que req.ip sea la IP real del cliente.
+// NUNCA `true`: permitiría spoofear X-Forwarded-For y saltarse el rate limit por IP.
+app.set('trust proxy', 1);
+
 app.use(cors());
 app.use(express.json());
 
-// Documentación Swagger
+// Documentación Swagger (queda fuera del rate limit global: sirve muchos assets estáticos)
 app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Rate limit global por IP para toda la API de negocio
+app.use('/api/v1', apiRateLimit);
 
 const adminRouter = Router();
 adminRouter.use(authenticate, authorize(ROLES.ADMIN));
