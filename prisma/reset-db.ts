@@ -9,7 +9,7 @@ const skipSeed = args.includes('--skip-seed');
 const force = args.includes('--force');
 const pedirAyuda = args.includes('--help') || args.includes('-h');
 
-const SHELL = process.platform === 'win32';
+const SHELL = process.platform === 'win32' ? 'cmd.exe' : '/bin/sh';
 
 interface DbCredentials {
     user: string;
