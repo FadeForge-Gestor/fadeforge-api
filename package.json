@@ -60,6 +60,13 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.9.3"
   },
+  "allowScripts": {
+    "@prisma/engines": true,
+    "bcrypt": true,
+    "prisma": true,
+    "unrs-resolver": true,
+    "@scarf/scarf": false
+  },
   "overrides": {
     "lodash": "4.18.1"
   }
